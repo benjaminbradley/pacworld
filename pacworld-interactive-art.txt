@@ -74,3 +74,59 @@ input controls:
 - output : "give" (characters) or "use" (art)
 - activate/toggle? : activate current "quality"
 - next : move to next "quality"
+
+
+
+
+procedurally generated map:
+	map components
+	- fields (rectangular open space - medium to large)
+	- rooms (a rectangular enclosed space with 1 or 2 doors - small to medium)
+	- pathway (a long rectangle - medium-to-large by small)
+	- rocks (an enclosed rectangle - small)
+	
+	input constants:
+	- 'd' (1d) - starting diameter of character
+	- map size : h x w (in 'd' units)
+	- cell size = (calculated) map size divided by 'd'
+	
+	procedure:
+	1. generate pathways
+		minimum length o/2 (where o is the longest of h or w)
+		maximum length s (where s is the shortest of h or w)
+		random direction:
+			a maximum of 2 (or 3 with a separation clause?) pathways may be parallel to s
+			the others must be parallel to o
+		ok for large pathways to intersect in the middle, medium pathways should only touch at corners at their ends
+		goal is to have between 2s+o and s+2o total length of pathways
+		
+	
+	2. generate fields
+		if two or more pathways could be connected with a field, do it
+		
+	
+	3. populate rooms around fields and pathways
+		- each door must lead to either a field, a pathway, or another room
+
+	4. place rocks
+		- 4 or 5 randomly around the map? maybe skip this step? or it's used to identify inaccessible enclosed spaces?
+	
+	picking a size:
+	inputs: size ranges
+		- gather all weighted values within size ranges
+		- pick a random value based on all of the weights
+
+	"small" size, sidelength distribution:
+	20% 1d
+	50% 2d
+	30% 3d
+	
+	"medium" size sidelength distribution:
+	4d	50%
+	5d	50%
+	
+	"large" size sidelength distribution:
+	6d	30%
+	7d	40% 
+	8d	30%
+

@@ -1,5 +1,24 @@
 NEXT STEPS:
 
-- break testworldmap.py into classes & main code
+- recombine animated sprite code from earlier POC
 - procedurally generated map based on a random seed
 - art pieces
+- get a swirl from an art piece
+- swirling shapes inside
+- activate a swirl
+- other characters
+- get a swirl from another character
+- give a swirl to another character
+- idle behavior for current character (plays itself)
+- switch between characters (for idle)
+- different art pieces
+
+
+DONE:
+- break testworldmap.py into classes & main code
+- ...everything else leading up to this...
+- world map with 
+
+- animated sprites
+- sound
+- graphics
