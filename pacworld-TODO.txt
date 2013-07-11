@@ -1,0 +1,5 @@
+NEXT STEPS:
+
+- break testworldmap.py into classes & main code
+- procedurally generated map based on a random seed
+- art pieces

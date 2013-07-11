@@ -1,0 +1,76 @@
+related idealet: {
+	Interactive Art Protocol
+	each user has a profile
+	sample cases:
+}
+-----------------------------------------------------------------
+
+digital interactive art piece
+working name: pacworld
+
+
+features:
+- idle behavior
+- visitors can interact with the art
+
+
+
+entities:
+- characters
+- environmental features
+
+
+
+main screen:
+- black background
+- one or more characters appear on screen, represented as line drawing shapes.
+- characters travel around the screen and interact with their environment and each other.
+- environmental features may restrict or cause character movement, or 
+
+
+character
+- has a shape and color
+- has one or more shapes inside it, in constant motion
+- has a defining feature to indicate "forward" direction
+- has a "do something" 
+
+environmental feature: wall
+- looks like: a line, straight or curved
+- effect: blocks the character's movement.
+
+environmental feature: slide
+- looks like: conveyor belt w/ arrows
+- effect: moves the character rapidly to a new destination
+
+environmental feature: art piece
+- looks like: (varies, see examples below)
+- effect: (nothing, or varies)
+
+
+
+shapes
+- type : circle, line, triangle, square, pentagon, hexagon, etc...
+
+
+example art: a fractal tree which grows and withers
+
+example art: a spiral which rotates
+
+example art: an animated mandala
+
+
+
+example character: classic pacman
+- shape: circle
+- color: yellow
+- forward: "wedge"
+- interior: solid circle
+
+
+
+input controls:
+- move character (f/b, l/r)
+- input : "ask" (characters) or "observe" (art)
+- output : "give" (characters) or "use" (art)
+- activate/toggle? : activate current "quality"
+- next : move to next "quality"
