@@ -60,6 +60,7 @@ class Shape(sprite.Sprite):
 		self.makeSprite()
 
 	def setSpeed(self):
+		''' sets the shape's speed based on its size '''
 		self.linearSpeed = int(self.side_length / 8)
 		self.rotationSpeed = self.linearSpeed
 		print "DEBUG: linearSpeed is now {0}".format(self.linearSpeed)
@@ -157,6 +158,22 @@ class Shape(sprite.Sprite):
 		# if there's a collision, un-do the move
 		if self.bg.wallCollision(self):
 			self.mapCenter = startpos
+	
+	def moveUp(self):
+		"""docstring for moveUp"""
+		self.move(0, -self.linearSpeed)
+
+	def moveDown(self):
+		"""docstring for moveDown"""
+		self.move(0, self.linearSpeed)
+	
+	def moveLeft(self):
+		"""docstring for moveLeft"""
+		self.move(-self.linearSpeed, 0)
+
+	def moveRight(self):
+		"""docstring for moveRight"""
+		self.move(self.linearSpeed, 0)
 	
 	def moveFwd(self):
 		# Move in the direction we're pointing

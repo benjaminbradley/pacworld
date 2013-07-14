@@ -14,8 +14,8 @@ class Map(sprite.Sprite):
 		
 		# Set our image to a new surface, the size of the World Map
 		self.displaySize = displaySize
-		#self.mapSize = [4*x for x in displaySize]
-		self.mapSize = list(displaySize)
+		self.mapSize = [4*x for x in displaySize]
+		#self.mapSize = list(displaySize)
 		print "DEBUG: Map.__init__(): mapSize is {0}".format(self.mapSize)
 		self.image = Surface(self.mapSize)
 		
@@ -29,17 +29,29 @@ class Map(sprite.Sprite):
 		topRt = (self.mapSize[0], 0)
 		botLt = (0, self.mapSize[1])
 		botRt = (self.mapSize[0], self.mapSize[1])
-		wallDefs = (
+		wallDefs = [
 			(topLt, topRt),
 			(topRt, botRt),
 			(botRt, botLt),
-			(botLt, topLt),
+			(botLt, topLt)
+		]
+		wallDefs += [
 			( (displaySize[0], displaySize[1]/2), (displaySize[0], displaySize[1]) ),
 			( (displaySize[0]*2, 0), (displaySize[0]*2, displaySize[1]/2) ),
 			( (displaySize[0]/2, displaySize[1]), (displaySize[0]*2, displaySize[1]) ),
 			( (displaySize[0]*2, displaySize[1]/2), (displaySize[0]*2, displaySize[1]) ),
 			( (displaySize[0], displaySize[1]*2), (displaySize[0], displaySize[1]*2) ),
-			)
+			( (displaySize[0], displaySize[1]*2.5), (displaySize[0]*2, displaySize[1]*2.5) ),
+			( (displaySize[0], displaySize[1]*3), (displaySize[0]*2, displaySize[1]*3) ),
+			( (displaySize[0]*2, displaySize[1]*2), (displaySize[0]*2, displaySize[1]*3) ),
+			]
+
+		# generate a new map
+		
+		#while
+		#wallDefs.append()
+		
+		# test map
 		for wallPoints in wallDefs:
 			# create the wall def
 			wall = Wall(self.mapSize, wallPoints[0], wallPoints[1])
@@ -58,14 +70,14 @@ class Map(sprite.Sprite):
 		# centered on the position defined as center (within limits)
 		# to the display that has been passed in
 		windowLeft = center[0] - self.displaySize[0]/2
-		if windowLeft < 0: windowLeft = 0
 		if windowLeft+self.displaySize[0] >= self.mapSize[0]: windowLeft = self.mapSize[0]-self.displaySize[0]-1
+		if windowLeft < 0: windowLeft = 0
 		windowTop = center[1] - self.displaySize[1]/2
-		if windowTop < 0: windowTop = 0
 		if windowTop+self.displaySize[1] >= self.mapSize[1]: windowTop = self.mapSize[1]-self.displaySize[1]-1
+		if windowTop < 0: windowTop = 0
 		
 		#print "DEBUG: Map.draw(): map size is {0}".format(self.image.get_size())
-		#print "DEBUG: Map.draw(): center for drawwindow is at {0}, resulting in screenWindow dimensions {1}".format(center, screenWindow)
+		print "DEBUG: Map.draw(): center for drawwindow is at {0}, resulting in a {1}x{2} window with topleft at {3},{4}".format(center, self.displaySize[0], self.displaySize[1], windowLeft, windowTop)
 		screenImage = self.image.subsurface( windowLeft, windowTop, self.displaySize[0], self.displaySize[1] )
 		display.blit(screenImage, (0,0))
 

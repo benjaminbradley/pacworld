@@ -209,7 +209,7 @@ class Wall(sprite.Sprite):
 		# Get width proportionate to display size
 		print "DEBUG: Wall.__init__(): creating new wall from {0} to {1}".format(point1, point2)
 		# draw the line on the surface
-		self.rect = pygame.draw.line(self.image, WHITE, point1, point2, WALL_LINE_WIDTH)
+		self.rect = pygame.draw.line(self.image, colors.WHITE, point1, point2, WALL_LINE_WIDTH)
 		print "DEBUG: Wall.__init__(): wall rect is {0}".format(self.rect)
 		# grab a bitmask for collision detection
 		self.mask = pygame.mask.from_surface(self.image)
@@ -233,7 +233,7 @@ class Map(sprite.Sprite):
 		self.image = Surface(self.mapSize)
 		
 		# Fill the image with a green colour (specified as R,G,B)
-		self.image.fill(BLACK)
+		self.image.fill(colors.BLACK)
 		
 		self.walls = [] # List to hold the walls
 		

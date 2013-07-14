@@ -219,7 +219,7 @@ class World():
 						return False
 					else:
 						# no obstructions, continue:
-						print "DEBUG: added new symbol at {0},{1}".format(posx,posy)
+						#print "DEBUG: added new symbol at {0},{1}".format(posx,posy)
 						newGrid[posy][posx] = path_symbol
 		else:
 			print "PROGRAM ERROR: Unknown type {0}".format(newObject['type'])
@@ -241,7 +241,7 @@ class World():
 
 
 if __name__ == '__main__':
-	gridDisplaySize = (10, 20)
+	gridDisplaySize = (10, 40)
 	#gridDisplaySize = (20, 40)
 	
 	'''

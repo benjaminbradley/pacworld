@@ -149,12 +149,18 @@ class Pacworld:
 						print "Button "+str(i+1)+" released."
 
 			
-			#if event.type == KEYDOWN:
-				# Find which key was pressed and start moving appropriate bat
+			if event.type == KEYDOWN:
+				# Find which key was pressed
 				#if event.key == K_s:
 				#elif event.key == K_w:
-				#if event.key == K_DOWN:
-				#elif event.key == K_UP:
+				if event.key == K_DOWN:
+					self.shape.moveDown()
+				elif event.key == K_UP:
+					self.shape.moveUp()
+				elif event.key == K_RIGHT:
+					self.shape.moveRight()
+				elif event.key == K_LEFT:
+					self.shape.moveLeft()
 			
 			#if event.type == KEYUP:
 				#if event.key == K_s or event.key == K_w:
@@ -167,25 +173,12 @@ class Pacworld:
 		fbAxis = round(self.joystick.get_axis(0), 3)
 		if(abs(fbAxis) > JOYSTICK_NOISE_LEVEL):
 			print "fbAxis is: "+str(fbAxis)
-			if fbAxis < -JOYSTICK_NOISE_LEVEL:
-				self.shape.moveFwd()
-			elif fbAxis > JOYSTICK_NOISE_LEVEL:
-				self.shape.moveBack()
-			#else: # fbAxis within JOYSTICK_NOISE_LEVEL of 0
-			#	fbVec = 0
+			self.shape.move(0, fbAxis * self.shape.linearSpeed)
 		
-		#lrVec = 0
 		lrAxis = round(self.joystick.get_axis(1), 3)
 		if(abs(lrAxis) > JOYSTICK_NOISE_LEVEL):
 			print "lrAxis is: "+str(lrAxis)
-			if lrAxis < -JOYSTICK_NOISE_LEVEL:
-				self.shape.rotateLeft()
-			elif lrAxis > JOYSTICK_NOISE_LEVEL:
-				self.shape.rotateRight()
-			#else: # fbAxis within JOYSTICK_NOISE_LEVEL of 0
-			#	lrVec = 0
-		
-		#self.shape.vector = (lrVec, fbVec)
+			self.shape.move(lrAxis * self.shape.linearSpeed, 0)
 
 			
 if __name__ == '__main__':
