@@ -10,6 +10,11 @@ import colors
 MAX_SIDES = 10
 SIZE_MINIMUM = 5
 SIZE_MAXIMUM = 140
+DIR_UP = 'u'
+DIR_DOWN = 'd'
+DIR_LEFT = 'l'
+DIR_RIGHT = 'r'
+DIRECTIONS = [DIR_UP, DIR_DOWN, DIR_LEFT, DIR_RIGHT]
 
 # The class for Shapes
 class Shape(sprite.Sprite):
@@ -29,6 +34,10 @@ class Shape(sprite.Sprite):
 		self.num_sides = num_sides
 		self.outlineWidth = 4
 		self.angle = 0
+		
+		# data for helper functs startmove/stopmove for keyboard movement
+		self.going_in_dir = {}	# hash of direction (DIR_* constants) to boolean
+		for d in DIRECTIONS: self.going_in_dir[d] = False
 
 		# Work out a speed
 		self.setSpeed()
@@ -115,12 +124,49 @@ class Shape(sprite.Sprite):
 	def reset(self):
 		# Start the shape directly in the centre of the screen
 		self.mapCenter = [self.displaySize[0] / 2, self.displaySize[1] / 2]
+		self.startMapCenter = self.mapCenter
 		# reset other attributes as well
 		self.angle = 0
 		self.makeSprite()
 
 	def update(self, t):
-		pass
+		# check for on-going movement (for kb input)
+		if self.going_in_dir[DIR_DOWN]:
+			self.moveDown()
+		elif self.going_in_dir[DIR_UP]:
+			self.moveUp()
+		# once for each axis
+		if self.going_in_dir[DIR_LEFT]:
+			self.moveLeft()
+		elif self.going_in_dir[DIR_RIGHT]:
+			self.moveRight()
+		
+		# check movement during this update cycle and update angle appropriately
+		if self.startMapCenter != self.mapCenter:
+			dx = self.startMapCenter[0] - self.mapCenter[0]
+			dy = self.startMapCenter[1] - self.mapCenter[1]
+			print "DEBUG: self.startMapCenter={0}, mapCenter={1}, dx={2}, dy={3}".format(self.startMapCenter, self.mapCenter, dx, dy)
+			GRAPHIC_BASE_ANGLE = 90
+			if(dx == 0):
+				if(dy > 0): self.setAngle(GRAPHIC_BASE_ANGLE)
+				else: self.setAngle(180+GRAPHIC_BASE_ANGLE)
+			elif(dy == 0):
+				if(dx > 0): self.setAngle(90+GRAPHIC_BASE_ANGLE)
+				else: self.setAngle(270+GRAPHIC_BASE_ANGLE)
+			else:
+				# Tangent: tan(theta) = Opposite / Adjacent
+				theta = math.atan(float(dy)/float(dx))
+				# 2*pi rad = 360 deg
+				deg = theta * 180 / math.pi
+				newDeg = int(deg+GRAPHIC_BASE_ANGLE)
+				print "DEBUG: self.theta={0}, deg={1}".format(theta, newDeg)
+				if(dy < 0):
+					newDeg += 180
+				self.setAngle(newDeg)
+
+		# set starting mapCenter for the top of the next update cycle
+		self.startMapCenter = list(self.mapCenter)
+		
 
 	def draw(self, display):
 		imageCenter = list(self.mapCenter)
@@ -175,6 +221,12 @@ class Shape(sprite.Sprite):
 		"""docstring for moveRight"""
 		self.move(self.linearSpeed, 0)
 	
+	def startMove(self, direction):
+		self.going_in_dir[direction] = True
+	
+	def stopMove(self, direction):
+		self.going_in_dir[direction] = False
+	
 	def moveFwd(self):
 		# Move in the direction we're pointing
 		theta = 2 * math.pi * ((float(self.angle)+90)%360 / 360)
@@ -209,11 +261,12 @@ class Shape(sprite.Sprite):
 		self.setSpeed()
 		print "DEBUG: Shape.sizeDown(): new size="+str(self.side_length)
 		self.makeSprite()
-
-	def changeAngle(self, delta):
+	
+	def setAngle(self, angle):
+		"""docstring for setAngle"""
 		startAngle = self.angle
 		# update the angle
-		self.angle += delta
+		self.angle = angle
 		# check for wrap-around
 		if(self.angle < 0): self.angle = 360 + self.angle
 		if(self.angle >= 360): self.angle = 360 - self.angle
@@ -225,6 +278,14 @@ class Shape(sprite.Sprite):
 		if hasattr(self, 'bg') and self.bg.wallCollision(self):
 			self.angle = startAngle
 			self.makeSprite()
+			return False
+		else:
+			return True
+		
+		
+	def changeAngle(self, delta):
+		""" angle in degrees. 0 is (12 noon?) """
+		return self.setAngle(self.angle + delta)
 		
 
 	def rotateLeft(self):

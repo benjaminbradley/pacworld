@@ -2,7 +2,7 @@ NEXT STEPS:
 
 - procedurally generated map based on a random seed
 	-- path length should scale up with grid size
-- change controls back to up/dn-lt/rt (from fwd/back-rotate)
+- in Shape.update(), calculate current angle over the past 5 frames, not just the last 1 frame (need to expand startMapCenter to include more history)
 - recombine animated sprite code from earlier POC
 - art pieces
 - get a swirl from an art piece

@@ -9,6 +9,7 @@ from pygame.locals import *
 from pygame import *
 
 from shape import Shape
+from shape import *
 from map import Map
 import colors
 
@@ -154,15 +155,27 @@ class Pacworld:
 				#if event.key == K_s:
 				#elif event.key == K_w:
 				if event.key == K_DOWN:
-					self.shape.moveDown()
+					self.shape.startMove(DIR_DOWN)
 				elif event.key == K_UP:
-					self.shape.moveUp()
+					self.shape.startMove(DIR_UP)
 				elif event.key == K_RIGHT:
-					self.shape.moveRight()
+					self.shape.startMove(DIR_RIGHT)
 				elif event.key == K_LEFT:
-					self.shape.moveLeft()
+					self.shape.startMove(DIR_LEFT)
+				elif event.key == K_ESCAPE:
+					pygame.quit()
+					sys.exit()
 			
-			#if event.type == KEYUP:
+			
+			if event.type == KEYUP:
+				if event.key == K_DOWN:
+					self.shape.stopMove(DIR_DOWN)
+				elif event.key == K_UP:
+					self.shape.stopMove(DIR_UP)
+				elif event.key == K_RIGHT:
+					self.shape.stopMove(DIR_RIGHT)
+				elif event.key == K_LEFT:
+					self.shape.stopMove(DIR_LEFT)
 				#if event.key == K_s or event.key == K_w:
 				#	self.player1Bat.stopMove()
 				#elif event.key == K_DOWN or event.key == K_UP:

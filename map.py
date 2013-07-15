@@ -77,7 +77,7 @@ class Map(sprite.Sprite):
 		if windowTop < 0: windowTop = 0
 		
 		#print "DEBUG: Map.draw(): map size is {0}".format(self.image.get_size())
-		print "DEBUG: Map.draw(): center for drawwindow is at {0}, resulting in a {1}x{2} window with topleft at {3},{4}".format(center, self.displaySize[0], self.displaySize[1], windowLeft, windowTop)
+		#print "DEBUG: Map.draw(): center for drawwindow is at {0}, resulting in a {1}x{2} window with topleft at {3},{4}".format(center, self.displaySize[0], self.displaySize[1], windowLeft, windowTop)
 		screenImage = self.image.subsurface( windowLeft, windowTop, self.displaySize[0], self.displaySize[1] )
 		display.blit(screenImage, (0,0))
 
