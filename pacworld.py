@@ -13,6 +13,8 @@ from shape import *
 from map import Map
 import colors
 
+INPUT_KEYBOARD = 'kb'
+INPUT_JOYSTICK = 'joy'
 JOYSTICK_NOISE_LEVEL = 0.1
 
 NUM_SOUND_CHANNELS = 1
@@ -56,21 +58,25 @@ class Pacworld:
 		# Create a clock to manage time
 		self.clock = pygame.time.Clock()
 		
-		# Initialize the joysticks
+		# Initialize the joysticks (if present)
 		pygame.joystick.init()
 		
 		# Get count of joysticks
 		joystick_count = pygame.joystick.get_count()
+		self.input_mode = None
 		if joystick_count == 0:
-			print "ERROR: no joysticks found"
-			exit()
-
-		self.joystick = pygame.joystick.Joystick(0)
-		self.joystick.init()
-		self.button_status = []
-		self.num_buttons = self.joystick.get_numbuttons()
-		for i in range( self.num_buttons ):
-			self.button_status.append(self.joystick.get_button(i))
+			print "WARN: no joysticks found, using keyboard for input"
+			self.input_mode = INPUT_KEYBOARD
+		else:
+			self.input_mode = INPUT_JOYSTICK
+		
+		if self.input_mode == INPUT_JOYSTICK:
+			self.joystick = pygame.joystick.Joystick(0)
+			self.joystick.init()
+			self.button_status = []
+			self.num_buttons = self.joystick.get_numbuttons()
+			for i in range( self.num_buttons ):
+				self.button_status.append(self.joystick.get_button(i))
 		
 		# Set the window title
 		display.set_caption("Map Test")
@@ -120,78 +126,82 @@ class Pacworld:
 				pygame.quit()
 				sys.exit()
 
-			# Possible joystick actions: JOYAXISMOTION JOYBALLMOTION JOYBUTTONDOWN JOYBUTTONUP JOYHATMOTION
-			if event.type == pygame.JOYBUTTONDOWN:
-				print("Joystick button pressed.")
-				for i in range( self.num_buttons ):
-					if(self.joystick.get_button(i) and not self.button_status[i]):
-						self.button_status[i] = True
-						print "Button "+str(i+1)+" pressed."
-						if(i == 4):
-							self.shape.sizeDown()
-						elif(i == 5):
-							self.shape.sizeUp()
-						elif(i == 6):
-							self.shape.lessSides()
-						elif(i == 7):
-							self.shape.moreSides()
-						elif(i == 8):
-							self.shape.reset()
-						elif(i == 9):	# button 10 triggers program exit
-							print "Quitting program."
-							pygame.quit()
-							sys.exit()
+			if(self.input_mode == INPUT_JOYSTICK):
+				# Possible joystick actions: JOYAXISMOTION JOYBALLMOTION JOYBUTTONDOWN JOYBUTTONUP JOYHATMOTION
+				if event.type == pygame.JOYBUTTONDOWN:
+					print("Joystick button pressed.")
+					for i in range( self.num_buttons ):
+						if(self.joystick.get_button(i) and not self.button_status[i]):
+							self.button_status[i] = True
+							print "Button "+str(i+1)+" pressed."
+							if(i == 4):
+								self.shape.sizeDown()
+							elif(i == 5):
+								self.shape.sizeUp()
+							elif(i == 6):
+								self.shape.lessSides()
+							elif(i == 7):
+								self.shape.moreSides()
+							elif(i == 8):
+								self.shape.reset()
+							elif(i == 9):	# button 10 triggers program exit
+								print "Quitting program."
+								pygame.quit()
+								sys.exit()
 							
-			if event.type == pygame.JOYBUTTONUP:
-				print("Joystick button released.")
-				for i in range( self.num_buttons ):
-					if(not self.joystick.get_button(i) and self.button_status[i]):
-						self.button_status[i] = False
-						print "Button "+str(i+1)+" released."
+				if event.type == pygame.JOYBUTTONUP:
+					print("Joystick button released.")
+					for i in range( self.num_buttons ):
+						if(not self.joystick.get_button(i) and self.button_status[i]):
+							self.button_status[i] = False
+							print "Button "+str(i+1)+" released."
+			# end of : input_mode == INPUT_JOYSTICK
 
+			if(self.input_mode == INPUT_KEYBOARD):
+				if event.type == KEYDOWN:
+					# Find which key was pressed
+					#if event.key == K_s:
+					#elif event.key == K_w:
+					if event.key == K_DOWN:
+						self.shape.startMove(DIR_DOWN)
+					elif event.key == K_UP:
+						self.shape.startMove(DIR_UP)
+					elif event.key == K_RIGHT:
+						self.shape.startMove(DIR_RIGHT)
+					elif event.key == K_LEFT:
+						self.shape.startMove(DIR_LEFT)
+					elif event.key == K_ESCAPE:
+						pygame.quit()
+						sys.exit()
 			
-			if event.type == KEYDOWN:
-				# Find which key was pressed
-				#if event.key == K_s:
-				#elif event.key == K_w:
-				if event.key == K_DOWN:
-					self.shape.startMove(DIR_DOWN)
-				elif event.key == K_UP:
-					self.shape.startMove(DIR_UP)
-				elif event.key == K_RIGHT:
-					self.shape.startMove(DIR_RIGHT)
-				elif event.key == K_LEFT:
-					self.shape.startMove(DIR_LEFT)
-				elif event.key == K_ESCAPE:
-					pygame.quit()
-					sys.exit()
 			
-			
-			if event.type == KEYUP:
-				if event.key == K_DOWN:
-					self.shape.stopMove(DIR_DOWN)
-				elif event.key == K_UP:
-					self.shape.stopMove(DIR_UP)
-				elif event.key == K_RIGHT:
-					self.shape.stopMove(DIR_RIGHT)
-				elif event.key == K_LEFT:
-					self.shape.stopMove(DIR_LEFT)
-				#if event.key == K_s or event.key == K_w:
-				#	self.player1Bat.stopMove()
-				#elif event.key == K_DOWN or event.key == K_UP:
-				#	self.player2Bat.stopMove()
+				if event.type == KEYUP:
+					if event.key == K_DOWN:
+						self.shape.stopMove(DIR_DOWN)
+					elif event.key == K_UP:
+						self.shape.stopMove(DIR_UP)
+					elif event.key == K_RIGHT:
+						self.shape.stopMove(DIR_RIGHT)
+					elif event.key == K_LEFT:
+						self.shape.stopMove(DIR_LEFT)
+					#if event.key == K_s or event.key == K_w:
+					#	self.player1Bat.stopMove()
+					#elif event.key == K_DOWN or event.key == K_UP:
+					#	self.player2Bat.stopMove()
+			# end of (INPUT_KEYBOARD)
 		# end for (events)
 		
 		# movement should be smooth, so not tied to event triggers
-		fbAxis = round(self.joystick.get_axis(0), 3)
-		if(abs(fbAxis) > JOYSTICK_NOISE_LEVEL):
-			print "fbAxis is: "+str(fbAxis)
-			self.shape.move(0, fbAxis * self.shape.linearSpeed)
+		if(self.input_mode == INPUT_JOYSTICK):
+			fbAxis = round(self.joystick.get_axis(0), 3)
+			if(abs(fbAxis) > JOYSTICK_NOISE_LEVEL):
+				#print "DEBUG: fbAxis is: "+str(fbAxis)
+				self.shape.move(0, fbAxis * self.shape.linearSpeed)
 		
-		lrAxis = round(self.joystick.get_axis(1), 3)
-		if(abs(lrAxis) > JOYSTICK_NOISE_LEVEL):
-			print "lrAxis is: "+str(lrAxis)
-			self.shape.move(lrAxis * self.shape.linearSpeed, 0)
+			lrAxis = round(self.joystick.get_axis(1), 3)
+			if(abs(lrAxis) > JOYSTICK_NOISE_LEVEL):
+				#print "DEBUG: lrAxis is: "+str(lrAxis)
+				self.shape.move(lrAxis * self.shape.linearSpeed, 0)
 
 			
 if __name__ == '__main__':
