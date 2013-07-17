@@ -3,7 +3,6 @@
 import pygame # Provides what we need to make a game
 import sys # Gives us the sys.exit function to close our program
 import random # Can generate random positions for the pong ball
-import pygame.mixer	# sounds!
 
 from pygame.locals import *
 from pygame import *
@@ -12,18 +11,12 @@ from shape import Shape
 from shape import *
 from map import Map
 import colors
+from pacsounds import Pacsounds
 
 INPUT_KEYBOARD = 'kb'
 INPUT_JOYSTICK = 'joy'
 JOYSTICK_NOISE_LEVEL = 0.1
 
-NUM_SOUND_CHANNELS = 1
-SOUNDS = {
-	'3robobeat' : 'sounds/132394__blackie666__robofart.wav',
-	'3roboditzfade' : 'sounds/135377__blackie666__nomnomnom.wav'
-}
-sound_data = {}	# hash of shortname (above) to Sound data
-sound_channels = []
 
 print "DEBUG: loaded libraries"
 
@@ -38,22 +31,7 @@ class Pacworld:
 		# Initialize pygame
 		pygame.init()
 		
-		# initialize the sound mixer
-		#pygame.mixer.init(frequency=22050, size=-16, channels=2, buffer=4096)
-		pygame.mixer.init(48000, -16, 1, 1024)
-		pygame.mixer.set_num_channels(NUM_SOUND_CHANNELS)
-		print("DEBUG: Initializing "+str(NUM_SOUND_CHANNELS)+" sound channels...")
-		global sound_channels
-		for i in range(NUM_SOUND_CHANNELS):
-			print("DEBUG: Initializing sound channel "+str(i+1))
-			sound_channels.append(pygame.mixer.Channel(i))
-		
-		for sound_name in SOUNDS.keys():
-			sound_data[sound_name] = pygame.mixer.Sound(SOUNDS[sound_name])
-			print "DEBUG: loaded sound '{0}' from {1}: {2} sec".format(sound_name, SOUNDS[sound_name], sound_data[sound_name].get_length())
-		
-		print "DEBUG: sound_channels.len = {0}".format(len(sound_channels))
-		sound_channels[0].play(sound_data['3robobeat'])
+		self.sound = Pacsounds()
 		
 		# Create a clock to manage time
 		self.clock = pygame.time.Clock()
@@ -91,6 +69,11 @@ class Pacworld:
 		self.shape = Shape(self.displaySize, 3)
 		self.shape.bg = self.map
 		self.sprites = sprite.Group(self.shape)
+		self.shape.sound = self.sound
+		
+		# play a "startup" sound
+		self.sound.play('3robobeat')
+	
 
 	def run(self):
 		# Runs the game loop
@@ -134,7 +117,9 @@ class Pacworld:
 						if(self.joystick.get_button(i) and not self.button_status[i]):
 							self.button_status[i] = True
 							print "Button "+str(i+1)+" pressed."
-							if(i == 4):
+							if(i == 0):
+								self.shape.startBurst()
+							elif(i == 4):
 								self.shape.sizeDown()
 							elif(i == 5):
 								self.shape.sizeUp()
@@ -162,7 +147,9 @@ class Pacworld:
 					# Find which key was pressed
 					#if event.key == K_s:
 					#elif event.key == K_w:
-					if event.key == K_DOWN:
+					if event.key == K_SPACE:
+						self.shape.startBurst()
+					elif event.key == K_DOWN:
 						self.shape.startMove(DIR_DOWN)
 					elif event.key == K_UP:
 						self.shape.startMove(DIR_UP)

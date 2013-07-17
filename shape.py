@@ -5,6 +5,7 @@ import math	# sin,cos,pi
 from pygame.locals import *
 from pygame import *
 
+import pacsounds
 import colors
 
 MAX_SIDES = 10
@@ -15,6 +16,8 @@ DIR_DOWN = 'd'
 DIR_LEFT = 'l'
 DIR_RIGHT = 'r'
 DIRECTIONS = [DIR_UP, DIR_DOWN, DIR_LEFT, DIR_RIGHT]
+
+BURST_EFFECT_NUMFRAMES = 6
 
 # The class for Shapes
 class Shape(sprite.Sprite):
@@ -42,15 +45,21 @@ class Shape(sprite.Sprite):
 		# Work out a speed
 		self.setSpeed()
 
+		# initialize effects
+		self.in_burstEffect = False
+
 		# create the image for the shape
 		self.makeSprite()
-			
+		
 		# Reset the shape
 		self.reset()
+		
+		# placeholder variables for subsystems
+		self.sound = None
 	
 	def setColor(self):
 		self.color = colors.COLORWHEEL[self.colorIdx]
-		self.eye_color = self.color
+		self.eye_color = colors.YELLOW
 	
 	def colorUp(self):
 		print "DEBUG: Shape.colorUp()"
@@ -103,6 +112,18 @@ class Shape(sprite.Sprite):
 				#print "adding point at {0},{1}".format(x,y)
 				pointlist.append((x,y))
 			pygame.draw.polygon(self.image, self.color, pointlist, self.outlineWidth)
+
+		# draw any effects
+		if self.in_burstEffect:
+			width = 2
+			radius = int(self.side_length/2)
+			print "DEBUG: Shape.update(): frame={0}, numframe={1}, radius={2}".format(self.burstEffect_frame, self.burstEffect_numframes, radius)
+			burst_radius = int(float(self.burstEffect_frame) / float(self.burstEffect_numframes) * radius)
+			if width > burst_radius: width = burst_radius
+			gradpercent = float(self.burstEffect_frame) / float(self.burstEffect_numframes)
+			grad_color = [int(gradpercent*c) for c in colors.NEONBLUE]
+			print "in burstEffect: burst_radius = {0}, gradpercent = {1}, grad_color={2}".format(burst_radius, gradpercent, grad_color)
+			pygame.draw.circle(self.image, grad_color, (radius,radius), burst_radius, width)
 		
 		# draw the "eye" direction indicator
 		radius = self.outlineWidth + self.outlineWidth
@@ -166,7 +187,17 @@ class Shape(sprite.Sprite):
 
 		# set starting mapCenter for the top of the next update cycle
 		self.startMapCenter = list(self.mapCenter)
-		
+
+		# check for and update sprite animations
+		if self.in_burstEffect:
+			print "DEBUG: t={0}, lastUpdate={1}, frame={2}".format(t, self.burstEffect_last_update, self.burstEffect_frame)
+			if t - self.burstEffect_last_update > self.burstEffect_delay:
+				self.burstEffect_frame += 1
+				if self.burstEffect_frame >= self.burstEffect_numframes:
+					self.in_burstEffect = False	# end the effect, only go through it once
+				self.burstEffect_last_update = t
+			self.makeSprite()
+	
 
 	def draw(self, display):
 		imageCenter = list(self.mapCenter)
@@ -186,6 +217,22 @@ class Shape(sprite.Sprite):
 
 		#print "DEBUG: drawing image at {0}".format(imageCenter)
 		display.blit(self.image, imageCenter)
+	# end of Shape.draw()
+
+
+
+	def startBurst(self):
+		fps = 10
+		# initialize animation timer
+		self.in_burstEffect = True
+		#self.burstEffect_start = pygame.time.get_ticks()
+		self.burstEffect_delay = 1000 / fps
+		self.burstEffect_last_update = 0
+		self.burstEffect_frame = 0
+		self.burstEffect_numframes = BURST_EFFECT_NUMFRAMES
+		# play burst sound
+		self.sound.play('3roboditzfade')
+
 
 	def move(self, dx, dy):
 		# Move each axis separately. Note that this checks for collisions both times.
