@@ -2,19 +2,21 @@ import sys
 import pygame
 from pygame import *
 
+import wall
 from wall import Wall
 import colors
+import world
 
 # The class for the background
 class Map(sprite.Sprite):
 	
-	def __init__(self, displaySize):
+	def __init__(self, mapSize, displaySize, theworld):
 		# Initialize the sprite base class
 		super(Map, self).__init__()
 		
 		# Set our image to a new surface, the size of the World Map
 		self.displaySize = displaySize
-		self.mapSize = [4*x for x in displaySize]
+		self.mapSize = mapSize
 		#self.mapSize = list(displaySize)
 		print "DEBUG: Map.__init__(): mapSize is {0}".format(self.mapSize)
 		self.image = Surface(self.mapSize)
@@ -24,6 +26,147 @@ class Map(sprite.Sprite):
 		
 		self.walls = [] # List to hold the walls
 		
+		
+		#print "DEBUG: Map.__init__(): rendering world:\n{0}".format(theworld.to_s())
+		grid_cellheight = mapSize[1] / theworld.rows
+		grid_cellwidth = mapSize[0] / theworld.cols
+		print "DEBUG: Map.__init__(): cell size is {0} wide x {1} high".format(grid_cellwidth, grid_cellheight)
+		
+
+		# NEXT: render the world map from the 'world' class argument
+		
+		for worldObj in sorted(theworld.objects, key=lambda obj: world.RENDER_ORDER[obj['type']]):
+			print "DEBUG: rendering the next world object: {0}".format(worldObj)
+			if worldObj['type'] == world.TYPE_PATH:
+				left = worldObj['left'] * grid_cellwidth
+				top = worldObj['top'] * grid_cellheight
+				if worldObj['direction_h']:
+					right = (worldObj['left']+worldObj['length']) * grid_cellwidth
+					bottom = (worldObj['top']+worldObj['width']) * grid_cellheight
+				else:
+					right = (worldObj['left']+worldObj['width']) * grid_cellwidth
+					bottom = (worldObj['top']+worldObj['length']) * grid_cellheight
+				topLt = (left, top)
+				topRt = (right, top)
+				bottomLt = (left, bottom)
+				bottomRt = (right, bottom)
+				# draw a line down each side of the path
+				if worldObj['direction_h']:
+					print "DEBUG: path line1 from {0} to {1}".format(topLt, topRt)
+					pygame.draw.line(self.image, colors.GREEN, topLt, topRt, wall.WALL_LINE_WIDTH)
+					pygame.draw.line(self.image, colors.GREEN, bottomLt, bottomRt, wall.WALL_LINE_WIDTH)
+				else:
+					print "DEBUG: path line1 from {0} to {1}".format(topLt, bottomLt)
+					pygame.draw.line(self.image, colors.GREEN, topLt, bottomLt, wall.WALL_LINE_WIDTH)
+					pygame.draw.line(self.image, colors.GREEN, topRt, bottomRt, wall.WALL_LINE_WIDTH)
+				# note, these are NOT blocking walls
+				width = right - left
+				height = bottom - top
+				rect = (left, top, width, height)
+				pygame.draw.rect(self.image, (111,111,111), rect)
+				
+
+			elif worldObj['type'] == world.TYPE_INTERSECTION:
+				# draw a grey rectangle
+				left = worldObj['left'] * grid_cellwidth
+				top = worldObj['top'] * grid_cellheight
+				width = worldObj['width'] * grid_cellwidth
+				height = worldObj['height'] * grid_cellheight
+				#right = (worldObj['left']+worldObj['width']) * grid_cellwidth
+				#bottom = (worldObj['top']+worldObj['length']) * grid_cellheight
+				#topLt = (left, top)
+				#topRt = (right, top)
+				#bottomLt = (left, bottom)
+				#bottomRt = (right, bottom)
+				rect = (left, top, width, height)
+				print "DEBUG: intersection rect at {0}".format(rect)
+				pygame.draw.rect(self.image, (222,222,222), rect)
+
+			elif worldObj['type'] == world.TYPE_FIELD:
+				# draw a brown rectangle
+				left = worldObj['left'] * grid_cellwidth
+				top = worldObj['top'] * grid_cellheight
+				width = worldObj['width'] * grid_cellwidth
+				height = worldObj['height'] * grid_cellheight
+				rect = (left, top, width, height)
+				print "DEBUG: field rect at {0}".format(rect)
+				pygame.draw.rect(self.image, (160,82,45), rect)
+
+			elif worldObj['type'] == world.TYPE_ROOM:
+				# calculate corners & dimensions
+				left = worldObj['left'] * grid_cellwidth
+				top = worldObj['top'] * grid_cellheight
+				width = worldObj['width'] * grid_cellwidth
+				height = worldObj['height'] * grid_cellheight
+				right = left + width
+				bottom = top + height
+				# define interior & paint it
+				rect = (left, top, width, height)
+				print "DEBUG: field rect at {0}".format(rect)
+				pygame.draw.rect(self.image, colors.PINK, rect)
+				# draw 4 walls
+				roomWalls = {}	# dictionary of side to array of wallDefs (each wallDef is a tuple of 2 points, each one an (x,y) tuple)
+				# draw walls that have doors in them
+				#NOTE: assumes no more than one door per wall
+				for side,doorpos in worldObj['doors'].items():
+					#need to keep track of which sides have been processed, 
+					#add the defaults later for walls with no doors
+					doorx = doorpos[0]
+					doory = doorpos[1]
+					if side == 0:
+						doorLeft = doorx * grid_cellwidth
+						doorRight = (doorx+1) * grid_cellwidth
+						# add 2 walls, on either side of the door
+						roomWalls[side] = []
+						roomWalls[side].append([(left,top), (doorLeft,top)])
+						roomWalls[side].append([(doorRight,top), (right,top)])
+				
+					if side == 1:
+						doorTop = doory * grid_cellwidth
+						doorBottom = (doory+1) * grid_cellwidth
+						# add 2 walls, on either side of the door
+						roomWalls[side] = []
+						roomWalls[side].append([(right,top), (right,doorTop)])
+						roomWalls[side].append([(right,doorBottom), (right,bottom)])
+				
+					if side == 2:
+						doorLeft = doorx * grid_cellwidth
+						doorRight = (doorx+1) * grid_cellwidth
+						# add 2 walls, on either side of the door
+						roomWalls[side] = []
+						roomWalls[side].append([(left,bottom), (doorLeft,bottom)])
+						roomWalls[side].append([(doorRight,bottom), (right,bottom)])
+				
+					if side == 3:
+						doorTop = doory * grid_cellwidth
+						doorBottom = (doory+1) * grid_cellwidth
+						# add 2 walls, on either side of the door
+						roomWalls[side] = []
+						roomWalls[side].append([(left,top), (left,doorTop)])
+						roomWalls[side].append([(left,doorBottom), (left,bottom)])
+				# end of (creating walls w/ doors)
+					
+				# check all directions and add a default wall if none is defined
+				for side in world.SIDES:
+					if side not in roomWalls.keys() or len(roomWalls[side]) == 0:
+						roomWalls[side] = []
+						if side == 0: roomWalls[side].append([(left,top), (right,top)])
+						if side == 1: roomWalls[side].append([(right,top), (right, bottom)])
+						if side == 2: roomWalls[side].append([(right,bottom), (left,bottom)])
+						if side == 3: roomWalls[side].append([(left,bottom), (left,top)])
+
+				for walls in roomWalls.values():
+					for wallPoints in walls:
+						# create the wall def
+						newwall = Wall(self.mapSize, wallPoints[0], wallPoints[1])
+						# add to walls array
+						self.walls.append( newwall )
+						# draw on image
+						newwall.draw(self.image)
+				
+		print "DEBUG: Map.__init__(): rendered world:\n{0}".format(theworld.to_s())
+		
+
 		# draw a border, registering each line as a wall
 		topLt = (0, 0)
 		topRt = (self.mapSize[0], 0)
@@ -35,30 +178,11 @@ class Map(sprite.Sprite):
 			(botRt, botLt),
 			(botLt, topLt)
 		]
-		wallDefs += [
-			( (displaySize[0], displaySize[1]/2), (displaySize[0], displaySize[1]) ),
-			( (displaySize[0]*2, 0), (displaySize[0]*2, displaySize[1]/2) ),
-			( (displaySize[0]/2, displaySize[1]), (displaySize[0]*2, displaySize[1]) ),
-			( (displaySize[0]*2, displaySize[1]/2), (displaySize[0]*2, displaySize[1]) ),
-			( (displaySize[0], displaySize[1]*2), (displaySize[0], displaySize[1]*2) ),
-			( (displaySize[0], displaySize[1]*2.5), (displaySize[0]*2, displaySize[1]*2.5) ),
-			( (displaySize[0], displaySize[1]*3), (displaySize[0]*2, displaySize[1]*3) ),
-			( (displaySize[0]*2, displaySize[1]*2), (displaySize[0]*2, displaySize[1]*3) ),
-			]
-
-		# generate a new map
-		
-		#while
-		#wallDefs.append()
-		
-		# test map
 		for wallPoints in wallDefs:
-			# create the wall def
-			wall = Wall(self.mapSize, wallPoints[0], wallPoints[1])
-			# add to walls array
-			self.walls.append( wall )
-			# draw on image
-			wall.draw(self.image)
+			newwall = Wall(self.mapSize, wallPoints[0], wallPoints[1])	# create the wall def
+			self.walls.append( newwall )	# add to walls array
+			newwall.draw(self.image)	# draw on image
+
 		
 		# Create the sprite rectangle from the image
 		self.rect = self.image.get_rect()
@@ -91,7 +215,7 @@ class Map(sprite.Sprite):
 			offset_y = b.mapCenter[1]
 			# See if the two masks at the offset are overlapping.
 			if a.mask.overlap(b.mask, (offset_x, offset_y)):
-				print "DEBUG: Map.wallCollision(): collision detected with wall {0}!".format(wall)
+				#print "DEBUG: Map.wallCollision(): collision detected with wall {0}!".format(wall.rect)
 				#print "DEBUG: Map.wallCollision(): target top/bottom, left/right is: {0}, {1}; {2}, {3}".format(target.rect.top, target.rect.bottom, target.rect.left, target.rect.right)
 				#print "DEBUG: Map.wallCollision(): wall top/bottom, left/right is: {0}, {1}; {2}, {3}".format(wall.rect.top, wall.rect.bottom, wall.rect.left, wall.rect.right)
 				#print "DEBUG: Map.wallCollision(): offset x,y is: {0}, {1}".format(offset_x, offset_y)
@@ -114,7 +238,8 @@ if __name__ == '__main__':
 	window = display.set_mode(displaySize)
 		
 	# Create the background, passing through the display size
-	map = Map(displaySize)
+	mapSize = [4*x for x in displaySize]
+	map = Map(mapSize, displaySize)
 
 	# Draw the background
 	map.draw(window, (10,10))

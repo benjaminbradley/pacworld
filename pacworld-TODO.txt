@@ -1,9 +1,8 @@
 NEXT STEPS:
 
 - procedurally generated map based on a random seed
-	-- path length should scale up with grid size
+- add SIDE_N, SIDE_E, etc. and SIDES = [] constants for iterations
 - in Shape.update(), calculate current angle over the past 5 frames, not just the last 1 frame (need to expand startMapCenter to include more history)
-- recombine animated sprite code from earlier POC
 - art pieces
 - get a swirl from an art piece
 - swirling shapes inside

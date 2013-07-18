@@ -22,6 +22,18 @@ TYPE_PATH = 'path'
 TYPE_INTERSECTION = 'pathcross'
 TYPE_FIELD = 'field'
 TYPE_ROOM = 'room'
+RENDER_ORDER = {
+	TYPE_PATH : 1,
+	TYPE_INTERSECTION : 2,
+	TYPE_FIELD : 3,
+	TYPE_ROOM : 4,
+}
+
+SIDE_N = 0
+SIDE_E = 1
+SIDE_S = 2
+SIDE_W = 3
+SIDES = [SIDE_N, SIDE_E, SIDE_S, SIDE_W]
 
 # helper functions
 def get_random_value(sizes):
@@ -111,7 +123,7 @@ def makeIntersectionObject(path1, path2, position):
 def getsymbol(obj, pos):
 	#print "DEBUG: getsymbol({0}, {1})".format(obj, pos)
 	if obj['type'] == TYPE_ROOM:
-		if 'door' in obj.keys() and pos == obj['door']:
+		if 'doors' in obj.keys() and pos in obj['doors'].values():
 			return 'D'
 		elif pos[1] == obj['top']:
 			if pos[0] == obj['left']:
@@ -135,7 +147,7 @@ def getsymbol(obj, pos):
 	else:
 		return obj['symbol']
 
-	
+
 # The class to create a symbolic 'world', will be translated into a map
 class World():
 	
@@ -297,8 +309,7 @@ class World():
 			#print "DEBUG: World.__init__(): field size is {0} square".format(field_sidelength)
 			
 			# placement
-			#if field_sidelength > self.rows: field_sidelength = self.rows	# just in case
-			#if self.rows == field_sidelength: top = 0
+			if field_sidelength >= self.rows or field_sidelength >= self.cols: field_sidelength = min(self.rows, self.cols) -1	# just in case
 			#else: 
 			top = random.randint(0, self.rows-field_sidelength)
 			left = random.randint(0, self.cols-field_sidelength)
@@ -359,7 +370,8 @@ class World():
 				'left' : left,
 				'width' : room_width,
 				'height' : room_height,
-				'symbol' : ROOM_SYMBOL
+				'symbol' : ROOM_SYMBOL,
+				'doors' : {},	# dictionary of side(int) to (X,Y) tuple of ints
 			}
 			#print "DEBUG: World.__init__(): new room placed at {0},{1}".format(left,top)
 			#print "DEBUG: World.__init__(): new room: {0}".format(newRoom)
@@ -385,10 +397,12 @@ class World():
 				# pick a side to pick a random square from
 				# side: 0 = North, 1 = East, South, West
 				if newRoom['width'] == 1:
-					side = 1
+					if random.randint(0,1) == 0:	side = 1
+					else: side = 3
 					total_edge_squares = newRoom['height']
 				elif newRoom['height'] == 1:
-					side = 0
+					if random.randint(0,1) == 0:	side = 0
+					else: side = 2
 					total_edge_squares = newRoom['width']
 				else:
 					side = random.randint(0,3)
@@ -408,12 +422,12 @@ class World():
 					doorx = roomLeft
 					doory = random.randint(roomTop, roomBottom)
 				#TODO: prefer not to place doors on a corner
-				print "DEBUG: World.__init(): room:trying door at {0},{1}".format(doorx, doory)
+				#print "DEBUG: World.__init(): room:trying door at {0},{1}".format(doorx, doory)
 				
 				# only check each square once
 				index = str(doorx)+'x'+str(doory)
 				if index in squares_checked.keys():
-					print "DEBUG: already checked square {0}".format(index)
+					#print "DEBUG: already checked square {0}".format(index)
 					continue
 				else:
 					squares_checked[index] = True	# mark this square as checked
@@ -421,42 +435,52 @@ class World():
 						print "DEBUG: checked all possible room squares, none qualify... will need to place randomly."
 						# if a door is not placed by any other means, do so now by random selection:
 						#TODO
+						newRoom['doors'][0] = (roomLeft, roomTop)
 						door_placed = True
 				
 				# it should not be against the edge of the map
 				if doorx == 0 or doorx == self.cols-1 or doory == 0 or doory == self.rows-1:
-					print "DEBUG: door placed against map edge, aborting"
+					#print "DEBUG: door placed against map edge, aborting"
 					continue
 				
 				# VALIATION RULE: the door must be adjacent to a pathway or field
 				# get the adjacent square type
 				if side == 0:
-					adjacent_square = self.grid[roomTop-1][doorx]
+					adj_doorx = doorx
+					adj_doory = roomTop-1
 				elif side == 1:
-					adjacent_square = self.grid[doory][roomRight+1]
+					adj_doorx = roomRight+1
+					adj_doory = doory
 				elif side == 2:
-					adjacent_square = self.grid[roomBottom+1][doorx]
+					adj_doorx = doorx
+					adj_doory = roomBottom+1
 				elif side == 3:
-					adjacent_square = self.grid[doory][roomLeft-1]
+					adj_doorx = roomLeft-1
+					adj_doory = doory
+
+				adjacent_square = self.grid[adj_doory][adj_doorx]
 				
 				if adjacent_square == None:
-					print "DEBUG: adjacent square is undefined, disallowing door"
+					#print "DEBUG: adjacent square is undefined, disallowing door"
 					continue
 				if adjacent_square['type'] not in [TYPE_PATH, TYPE_FIELD, TYPE_INTERSECTION, TYPE_ROOM]:
 					# not a qualifying adjacentcy type
-					print "DEBUG: adjacent square is not allowed ({0})",format(adjacent_square['type'])
+					#print "DEBUG: adjacent square is not allowed ({0})",format(adjacent_square['type'])
 					continue
 				
-				#TODO(rendering): if a door is placed next to another room, that room will automatically get a door as well in the adjacent square
+				if adjacent_square['type'] == TYPE_ROOM:
+					# if a door is placed next to another room, that room will automatically get a door as well in the adjacent square
+					adj_doorside = (side + 2) % 4
+					adjacent_square['doors'][adj_doorside] = (adj_doorx, adj_doory)
 
 				#TODO: chance for a room to have 2 doors
 				
 				# update the grid with the door location
-				newRoom['door'] = (doorx, doory)
+				newRoom['doors'][side] = (doorx, doory)
 				door_placed = True
 
 			# DEBUG: show current map
-			print "DEBUG: World.__init__(): world grid is:\n{0}".format(self.to_s())
+			#print "DEBUG: World.__init__(): world grid is:\n{0}".format(self.to_s())
 		
 		
 

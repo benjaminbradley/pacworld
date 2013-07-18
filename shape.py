@@ -22,7 +22,7 @@ BURST_EFFECT_NUMFRAMES = 6
 # The class for Shapes
 class Shape(sprite.Sprite):
 	
-	def __init__(self, displaySize, num_sides = 3):
+	def __init__(self, displaySize, shape_size, num_sides = 3):
 		# Initialize the sprite base class
 		super(Shape, self).__init__()
 		
@@ -33,7 +33,7 @@ class Shape(sprite.Sprite):
 		self.setColor()
 		
 		# Get a radius value proportionate to the display size
-		self.side_length = self.displaySize[0] / 10
+		self.side_length = shape_size
 		self.num_sides = num_sides
 		self.outlineWidth = 4
 		self.angle = 0
@@ -166,7 +166,7 @@ class Shape(sprite.Sprite):
 		if self.startMapCenter != self.mapCenter:
 			dx = self.startMapCenter[0] - self.mapCenter[0]
 			dy = self.startMapCenter[1] - self.mapCenter[1]
-			print "DEBUG: self.startMapCenter={0}, mapCenter={1}, dx={2}, dy={3}".format(self.startMapCenter, self.mapCenter, dx, dy)
+			#print "DEBUG: Shape.update(): self.startMapCenter={0}, mapCenter={1}, dx={2}, dy={3}".format(self.startMapCenter, self.mapCenter, dx, dy)
 			GRAPHIC_BASE_ANGLE = 90
 			if(dx == 0):
 				if(dy > 0): self.setAngle(GRAPHIC_BASE_ANGLE)
@@ -180,7 +180,7 @@ class Shape(sprite.Sprite):
 				# 2*pi rad = 360 deg
 				deg = theta * 180 / math.pi
 				newDeg = int(deg+GRAPHIC_BASE_ANGLE)
-				print "DEBUG: self.theta={0}, deg={1}".format(theta, newDeg)
+				#print "DEBUG: Shape.update(): self.theta={0}, deg={1}".format(theta, newDeg)
 				if(dy < 0):
 					newDeg += 180
 				self.setAngle(newDeg)
@@ -190,7 +190,7 @@ class Shape(sprite.Sprite):
 
 		# check for and update sprite animations
 		if self.in_burstEffect:
-			print "DEBUG: t={0}, lastUpdate={1}, frame={2}".format(t, self.burstEffect_last_update, self.burstEffect_frame)
+			#print "DEBUG: Shape.update(): t={0}, lastUpdate={1}, frame={2}".format(t, self.burstEffect_last_update, self.burstEffect_frame)
 			if t - self.burstEffect_last_update > self.burstEffect_delay:
 				self.burstEffect_frame += 1
 				if self.burstEffect_frame >= self.burstEffect_numframes:
@@ -374,7 +374,7 @@ class ShapeTest:
 		# Create the window
 		self.display = display.set_mode(self.displaySize)
 		
-		self.shape = Shape(self.displaySize, 3)
+		self.shape = Shape(self.displaySize, self.displaySize[0] / 10, 3)
 		self.sprites = sprite.Group(self.shape)
 		
 	def run(self):

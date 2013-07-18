@@ -7,16 +7,19 @@ import random # Can generate random positions for the pong ball
 from pygame.locals import *
 from pygame import *
 
+#import colors
 from shape import Shape
 from shape import *
 from map import Map
-import colors
+import world
+from world import World
 from pacsounds import Pacsounds
 
 INPUT_KEYBOARD = 'kb'
 INPUT_JOYSTICK = 'joy'
 JOYSTICK_NOISE_LEVEL = 0.1
 
+MAX_RANDOM_SEED = 65535
 
 print "DEBUG: loaded libraries"
 
@@ -61,16 +64,35 @@ class Pacworld:
 		
 		# Create the window
 		self.display = display.set_mode(self.displaySize)
-			
-		# Create the background, passing through the display size
-		self.map = Map(self.displaySize)
+		
+		self.character_size = self.displaySize[0] / 10
+		
+		# if no random seed was given, make one up:
+		crazySeed = random.randint(0, MAX_RANDOM_SEED)
+		random.seed(crazySeed)
+		print "INFO: USING RANDOM SEED: {0}",format(crazySeed)
+		
+		SCALE_FACTOR = 3
+		mapSize = [SCALE_FACTOR*x for x in self.displaySize]
+		
+		gridSize = int(self.character_size * 1.5)
+		gridDisplaySize = (mapSize[0] / gridSize, mapSize[1] / gridSize)	# assumes square grid cells
+		print "gridDisplaySize is {0}".format(gridDisplaySize)
 
+		# Create the world, passing through the grid size
+		theworld = World(gridDisplaySize)
+		
+		# Create the world map, passing through the display size and world map
+		self.map = Map(mapSize, self.displaySize, theworld)
+		
 		# Create a single shape and add it to a sprite group
-		self.shape = Shape(self.displaySize, 3)
+		self.shape = Shape(self.displaySize, self.character_size, 3)
 		self.shape.bg = self.map
 		self.sprites = sprite.Group(self.shape)
 		self.shape.sound = self.sound
 		
+		print "INFO: USING RANDOM SEED: {0}".format(crazySeed)
+
 		# play a "startup" sound
 		self.sound.play('3robobeat')
 	
