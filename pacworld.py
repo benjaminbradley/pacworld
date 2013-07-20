@@ -68,7 +68,8 @@ class Pacworld:
 		self.character_size = self.displaySize[0] / 10
 		
 		# if no random seed was given, make one up:
-		crazySeed = random.randint(0, MAX_RANDOM_SEED)
+		#crazySeed = random.randint(0, MAX_RANDOM_SEED)
+		crazySeed = 39144
 		random.seed(crazySeed)
 		print "INFO: USING RANDOM SEED: {0}",format(crazySeed)
 		

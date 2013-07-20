@@ -1,7 +1,5 @@
 NEXT STEPS:
 
-- procedurally generated map based on a random seed
-- add SIDE_N, SIDE_E, etc. and SIDES = [] constants for iterations
 - in Shape.update(), calculate current angle over the past 5 frames, not just the last 1 frame (need to expand startMapCenter to include more history)
 - art pieces
 - get a swirl from an art piece

@@ -113,7 +113,8 @@ class Map(sprite.Sprite):
 					#add the defaults later for walls with no doors
 					doorx = doorpos[0]
 					doory = doorpos[1]
-					if side == 0:
+					print "DEBUG: Map... rendering ROOM [vert={0}..{1}, horiz={2}..{3}] with door at {4}".format(top,bottom,left,right,doorpos)
+					if side == world.SIDE_N:
 						doorLeft = doorx * grid_cellwidth
 						doorRight = (doorx+1) * grid_cellwidth
 						# add 2 walls, on either side of the door
@@ -121,15 +122,16 @@ class Map(sprite.Sprite):
 						roomWalls[side].append([(left,top), (doorLeft,top)])
 						roomWalls[side].append([(doorRight,top), (right,top)])
 				
-					if side == 1:
-						doorTop = doory * grid_cellwidth
-						doorBottom = (doory+1) * grid_cellwidth
+					if side == world.SIDE_E:
+						doorTop = doory * grid_cellheight
+						doorBottom = (doory+1) * grid_cellheight
+						print "DEBUG: Map... rendering ROOM door top/bottom is {0}/{1}".format(doorTop,doorBottom)
 						# add 2 walls, on either side of the door
 						roomWalls[side] = []
 						roomWalls[side].append([(right,top), (right,doorTop)])
 						roomWalls[side].append([(right,doorBottom), (right,bottom)])
 				
-					if side == 2:
+					if side == world.SIDE_S:
 						doorLeft = doorx * grid_cellwidth
 						doorRight = (doorx+1) * grid_cellwidth
 						# add 2 walls, on either side of the door
@@ -137,9 +139,9 @@ class Map(sprite.Sprite):
 						roomWalls[side].append([(left,bottom), (doorLeft,bottom)])
 						roomWalls[side].append([(doorRight,bottom), (right,bottom)])
 				
-					if side == 3:
-						doorTop = doory * grid_cellwidth
-						doorBottom = (doory+1) * grid_cellwidth
+					if side == world.SIDE_W:
+						doorTop = doory * grid_cellheight
+						doorBottom = (doory+1) * grid_cellheight
 						# add 2 walls, on either side of the door
 						roomWalls[side] = []
 						roomWalls[side].append([(left,top), (left,doorTop)])
@@ -150,10 +152,10 @@ class Map(sprite.Sprite):
 				for side in world.SIDES:
 					if side not in roomWalls.keys() or len(roomWalls[side]) == 0:
 						roomWalls[side] = []
-						if side == 0: roomWalls[side].append([(left,top), (right,top)])
-						if side == 1: roomWalls[side].append([(right,top), (right, bottom)])
-						if side == 2: roomWalls[side].append([(right,bottom), (left,bottom)])
-						if side == 3: roomWalls[side].append([(left,bottom), (left,top)])
+						if side == world.SIDE_N: roomWalls[side].append([(left,top), (right,top)])
+						if side == world.SIDE_E: roomWalls[side].append([(right,top), (right, bottom)])
+						if side == world.SIDE_S: roomWalls[side].append([(right,bottom), (left,bottom)])
+						if side == world.SIDE_W: roomWalls[side].append([(left,bottom), (left,top)])
 
 				for walls in roomWalls.values():
 					for wallPoints in walls:

@@ -397,15 +397,15 @@ class World():
 				# pick a side to pick a random square from
 				# side: 0 = North, 1 = East, South, West
 				if newRoom['width'] == 1:
-					if random.randint(0,1) == 0:	side = 1
-					else: side = 3
+					if random.randint(0,1) == 0:	side = SIDE_E
+					else: side = SIDE_W
 					total_edge_squares = newRoom['height']
 				elif newRoom['height'] == 1:
-					if random.randint(0,1) == 0:	side = 0
-					else: side = 2
+					if random.randint(0,1) == 0:	side = SIDE_N
+					else: side = SIDE_S
 					total_edge_squares = newRoom['width']
 				else:
-					side = random.randint(0,3)
+					side = random.randint(0,3)	#FIXME: one of the SIDES, at random
 					total_edge_squares = newRoom['width'] * 2 + newRoom['height'] * 2 - 4
 					print "DEBUG: World.__init(): total_edge_squares={0}".format(total_edge_squares)
 				# choose a random square on that side
@@ -435,7 +435,7 @@ class World():
 						print "DEBUG: checked all possible room squares, none qualify... will need to place randomly."
 						# if a door is not placed by any other means, do so now by random selection:
 						#TODO
-						newRoom['doors'][0] = (roomLeft, roomTop)
+						newRoom['doors'][SIDE_N] = (roomLeft, roomTop)
 						door_placed = True
 				
 				# it should not be against the edge of the map
@@ -470,7 +470,7 @@ class World():
 				
 				if adjacent_square['type'] == TYPE_ROOM:
 					# if a door is placed next to another room, that room will automatically get a door as well in the adjacent square
-					adj_doorside = (side + 2) % 4
+					adj_doorside = (side + 2) % 4	# NOTE: number of SIDES is fixed at 4
 					adjacent_square['doors'][adj_doorside] = (adj_doorx, adj_doory)
 
 				#TODO: chance for a room to have 2 doors

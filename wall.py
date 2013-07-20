@@ -27,7 +27,7 @@ class Wall(sprite.Sprite):
 		print "DEBUG: Wall.__init__(): creating new wall from {0} to {1}".format(point1, point2)
 		# draw the line on the surface
 		self.rect = pygame.draw.line(self.image, colors.BLUE, point1, point2, WALL_LINE_WIDTH)
-		print "DEBUG: Wall.__init__(): wall rect is {0}".format(self.rect)
+		#print "DEBUG: Wall.__init__(): wall rect is {0}".format(self.rect)
 		# grab a bitmask for collision detection
 		self.mask = pygame.mask.from_surface(self.image)
 		#print "DEBUG: wall mask is {0}".format(self.mask)
