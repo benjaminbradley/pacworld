@@ -231,7 +231,7 @@ class Shape(sprite.Sprite):
 		self.burstEffect_frame = 0
 		self.burstEffect_numframes = BURST_EFFECT_NUMFRAMES
 		# play burst sound
-		self.sound.play('3roboditzfade')
+		if self.sound != None: self.sound.play('3roboditzfade')
 
 
 	def move(self, dx, dy):
@@ -425,6 +425,8 @@ class ShapeTest:
 					self.shape.colorUp()
 				elif event.key == K_z:
 					self.shape.colorDn()
+				elif event.key == K_m:
+					self.shape.startBurst()
 
 			#if event.type == KEYUP:
 				#if event.key == K_s or event.key == K_w:

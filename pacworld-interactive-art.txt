@@ -70,8 +70,8 @@ example character: classic pacman
 
 input controls:
 - move character (f/b, l/r)
-- input : "ask" (characters) or "observe" (art)
-- output : "give" (characters) or "use" (art)
+- input : "ask" (characters) or "observe" (art)		sound: going-up inflection like a question
+- output : "give" (characters) or "use" (art)		sound: going-down like a sigh
 - activate/toggle? : activate current "quality"
 - next : move to next "quality"
 

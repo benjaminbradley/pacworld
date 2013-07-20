@@ -89,7 +89,7 @@ class Map(sprite.Sprite):
 				width = worldObj['width'] * grid_cellwidth
 				height = worldObj['height'] * grid_cellheight
 				rect = (left, top, width, height)
-				print "DEBUG: field rect at {0}".format(rect)
+				#print "DEBUG: field rect at {0}".format(rect)
 				pygame.draw.rect(self.image, (160,82,45), rect)
 
 			elif worldObj['type'] == world.TYPE_ROOM:
@@ -100,20 +100,28 @@ class Map(sprite.Sprite):
 				height = worldObj['height'] * grid_cellheight
 				right = left + width
 				bottom = top + height
+				print "DEBUG: Map... rendering ROOM {4} [vert={0}..{1}, horiz={2}..{3}]".format(top,bottom,left,right,worldObj['id'])
 				# define interior & paint it
 				rect = (left, top, width, height)
-				print "DEBUG: field rect at {0}".format(rect)
+				#print "DEBUG: room rect at {0}".format(rect)
 				pygame.draw.rect(self.image, colors.PINK, rect)
+				#DEBUG MODE: draw the objectId in the middle
+				font = pygame.font.Font(None, 20)
+				textBitmap = font.render(str(worldObj['id']), True, colors.BLACK)
+				self.image.blit(textBitmap, [left+(width/2), top+(height/2)])
+			    
 				# draw 4 walls
 				roomWalls = {}	# dictionary of side to array of wallDefs (each wallDef is a tuple of 2 points, each one an (x,y) tuple)
 				# draw walls that have doors in them
 				#NOTE: assumes no more than one door per wall
+				num_doors = len(worldObj['doors'].keys())
+				if num_doors > 1: print "DEBUG: Map...multiple doors! Room has {0} doors.".format(num_doors)
 				for side,doorpos in worldObj['doors'].items():
 					#need to keep track of which sides have been processed, 
 					#add the defaults later for walls with no doors
 					doorx = doorpos[0]
 					doory = doorpos[1]
-					print "DEBUG: Map... rendering ROOM [vert={0}..{1}, horiz={2}..{3}] with door at {4}".format(top,bottom,left,right,doorpos)
+					print "DEBUG: Map... rendering ROOM {0} has a door at {1} on side {2}".format(worldObj['id'],doorpos,side)
 					if side == world.SIDE_N:
 						doorLeft = doorx * grid_cellwidth
 						doorRight = (doorx+1) * grid_cellwidth
@@ -146,11 +154,12 @@ class Map(sprite.Sprite):
 						roomWalls[side] = []
 						roomWalls[side].append([(left,top), (left,doorTop)])
 						roomWalls[side].append([(left,doorBottom), (left,bottom)])
-				# end of (creating walls w/ doors)
+				# end of for each door (creating walls w/ doors)
 					
 				# check all directions and add a default wall if none is defined
 				for side in world.SIDES:
 					if side not in roomWalls.keys() or len(roomWalls[side]) == 0:
+						print "DEBUG: Map... drawing default wall for side {0}".format(side)
 						roomWalls[side] = []
 						if side == world.SIDE_N: roomWalls[side].append([(left,top), (right,top)])
 						if side == world.SIDE_E: roomWalls[side].append([(right,top), (right, bottom)])

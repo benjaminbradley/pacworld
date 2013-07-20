@@ -138,12 +138,12 @@ def getsymbol(obj, pos):
 			elif pos[0] == obj['left'] + obj['width'] - 1:	# right
 				return 'j'
 			else:
-				return '-'
+				return '_'
 		elif pos[0] == obj['left']:
 			return 'b'
 		elif pos[0] == obj['left'] + obj['width'] - 1:	# right
 			return 'd'
-		return '_'
+		return '.'
 	else:
 		return obj['symbol']
 
@@ -157,10 +157,9 @@ class World():
 		#	grid - a grid of strings, each string identifying the contents of each grid square
 		# output:
 		#	objects - an array of the objects existing in the world map, with their characteristics
-		# 
 		
 		# initialize world attributes
-		(self.rows, self.cols) = gridDisplaySize
+		(self.cols, self.rows) = gridDisplaySize
 		self.totalArea = self.rows * self.cols
 		# initialize data storage variables
 		self.grid = [[SYMBOL_CLEAR for x in xrange(self.cols)] for x in xrange(self.rows)]
@@ -216,7 +215,7 @@ class World():
 		#while(curTotalPaths < minTotalPaths):
 		#	print "DEBUG: World.__init__(): current total paths ({0}) not in range {1}..{2}".format(curTotalPaths, minTotalPaths, maxTotalPaths)
 		while(curTotalPathArea < minPathArea):
-			print "DEBUG: World.__init__(): current total path area ({0}, {1}%) hasn't met minimum path area ({2}, {3}%)".format(curTotalPathArea, int(100*curTotalPathArea/self.totalArea), int(self.totalArea*PATH_AREA_MIN/100), PATH_AREA_MIN)
+			#print "DEBUG: World.__init__(): current total path area ({0}, {1}%) hasn't met minimum path area ({2}, {3}%)".format(curTotalPathArea, int(100*curTotalPathArea/self.totalArea), int(self.totalArea*PATH_AREA_MIN/100), PATH_AREA_MIN)
 			
 			# create a new path & add to the world
 			
@@ -227,12 +226,12 @@ class World():
 			#		a maximum of 2 (or 3 with a separation clause?) pathways may be parallel to s
 			if numPaths_shortWays >= 2 and (pathDir_h != longdir_is_h):
 				#		the others must be parallel to o
-				print "DEBUG: World.__init__(): too many shortWays ({0}) paths, forcing longways".format(numPaths_shortWays)
+				#print "DEBUG: World.__init__(): too many shortWays ({0}) paths, forcing longways".format(numPaths_shortWays)
 				pathDir_h = longdir_is_h
 						
 			if(pathDir_h): pathName='horizontal'
 			else: pathName='vertical'
-			print "DEBUG: World.__init__(): pathway direction will be {0}".format(pathName)
+			#print "DEBUG: World.__init__(): pathway direction will be {0}".format(pathName)
 			
 			# path Width
 			path_width = get_random_value('small')
@@ -246,7 +245,7 @@ class World():
 			#while(path_len < minPath or maxPath < path_len):
 			#	path_len = get_random_value('small')
 			#path_len = get_random_value(['medium','large'])
-			print "DEBUG: World.__init__(): pathway size is {0} long by {1} wide".format(path_len, path_width)
+			#print "DEBUG: World.__init__(): pathway size is {0} long by {1} wide".format(path_len, path_width)
 			
 			
 			# placement
@@ -273,8 +272,10 @@ class World():
 			#print "DEBUG: World.__init__(): new path: {0}".format(newPath)
 
 			# check for obustructions, correct if possible
-			if(self.addObject(newPath)):
+			newid = self.addObject(newPath)
+			if(newid):
 				# place if successful
+				newPath['id'] = newid
 				self.objects.append(newPath)
 				#curTotalPaths += newPath['length']
 				curTotalPathArea += newPath['length'] * newPath['width']
@@ -326,7 +327,9 @@ class World():
 			#print "DEBUG: World.__init__(): new path: {0}".format(newPath)
 
 			# check for obustructions, correct if possible
-			if(self.addObject(newField)):
+			newid = self.addObject(newField)
+			if(newid):
+				newField['id'] = newid
 				# place if successful
 				self.objects.append(newField)
 				#curTotalPaths += newPath['length']
@@ -346,7 +349,7 @@ class World():
 		minRoomArea = int(self.totalArea*ROOM_AREA_MIN/100)
 		
 		while(curTotalRoomArea < minRoomArea):
-			print "DEBUG: World.__init__(): current total room area ({0}, {1}%) hasn't met minimum room area ({2}, {3}%)".format(curTotalRoomArea, int(100*curTotalRoomArea/self.totalArea), int(self.totalArea*ROOM_AREA_MIN/100), ROOM_AREA_MIN)
+			#print "DEBUG: World.__init__(): current total room area ({0}, {1}%) hasn't met minimum room area ({2}, {3}%)".format(curTotalRoomArea, int(100*curTotalRoomArea/self.totalArea), int(self.totalArea*ROOM_AREA_MIN/100), ROOM_AREA_MIN)
 			
 			# create a new room & add to the world
 			
@@ -356,7 +359,7 @@ class World():
 			room_width = get_random_value(['small', 'medium'])
 			room_height = get_random_value(['small', 'medium'])
 			
-			print "DEBUG: World.__init__(): room size is {0} high by {1} wide".format(room_height, room_width)
+			#print "DEBUG: World.__init__(): room size is {0} high by {1} wide".format(room_height, room_width)
 			
 			# placement
 			if room_width > self.rows: room_width = self.rows
@@ -378,10 +381,14 @@ class World():
 			
 			room_area = newRoom['height'] * newRoom['width']
 			# check for obustructions
-			if(self.addObject(newRoom)):
+			newid = self.addObject(newRoom)
+			if(newid):
 				# place if successful
+				newRoom['id'] = newid
 				self.objects.append(newRoom)
 				curTotalRoomArea += room_area
+			else:
+				continue
 			
 			# determine orientation (place door(s))
 			
@@ -391,7 +398,7 @@ class World():
 			roomRight = newRoom['left']+newRoom['width']-1
 			roomTop = newRoom['top']
 			roomBottom = newRoom['top']+newRoom['height']-1
-			print "DEBUG: World.__init(): room:top={0}, bottom={1}, left={2}, right={3}".format(roomTop, roomBottom, roomLeft, roomRight)
+			#print "DEBUG: World.__init__(): room:top={0}, bottom={1}, left={2}, right={3}".format(roomTop, roomBottom, roomLeft, roomRight)
 			squares_checked = {}	# hash of X,Y coordinates to boolean, dictionary
 			while not door_placed:
 				# pick a side to pick a random square from
@@ -407,7 +414,7 @@ class World():
 				else:
 					side = random.randint(0,3)	#FIXME: one of the SIDES, at random
 					total_edge_squares = newRoom['width'] * 2 + newRoom['height'] * 2 - 4
-					print "DEBUG: World.__init(): total_edge_squares={0}".format(total_edge_squares)
+					#print "DEBUG: World.__init(): total_edge_squares={0}".format(total_edge_squares)
 				# choose a random square on that side
 				if side == 0:
 					doorx = random.randint(roomLeft, roomRight)
@@ -469,9 +476,76 @@ class World():
 					continue
 				
 				if adjacent_square['type'] == TYPE_ROOM:
-					# if a door is placed next to another room, that room will automatically get a door as well in the adjacent square
+					print "DEBUG: Door for room {0} was placed next to an adjacent room {1}".format(newRoom['id'], adjacent_square['id'])
+					# if a door is placed next to another room, add a door to the other room, or coordinate with location of existing door
 					adj_doorside = (side + 2) % 4	# NOTE: number of SIDES is fixed at 4
-					adjacent_square['doors'][adj_doorside] = (adj_doorx, adj_doory)
+					if(adj_doorside in adjacent_square['doors'].keys()):
+						# can we make the doors line up? if so, do it
+						adjacent_doorpos = adjacent_square['doors'][adj_doorside]
+						adjLeft = adjacent_square['left']
+						adjRight = adjLeft + adjacent_square['width'] - 1
+						adjTop = adjacent_square['top']
+						adjBottom = adjTop + adjacent_square['height'] - 1
+
+						if(side in [SIDE_N, SIDE_S]):
+							my_wallrange = range(roomLeft, roomRight+1)
+							adj_wallrange = range(adjLeft, adjRight+1)
+						elif(side in [SIDE_E, SIDE_W]):
+							my_wallrange = range(roomTop, roomBottom+1)
+							adj_wallrange = range(adjTop, adjBottom+1)
+						overlap = set(my_wallrange) & set(adj_wallrange)
+
+						#TODONEXT
+						# scenario 1: IF the other door is next to one of my walls
+						#			THEN set my door position to match the existing door
+						if(side in [SIDE_N, SIDE_S] and adjacent_doorpos[0] in my_wallrange):
+							doorx = adjacent_doorpos[0]
+						elif(side in [SIDE_E, SIDE_W] and adjacent_doorpos[1] in my_wallrange):
+							doory = adjacent_doorpos[1]
+						
+						# scenario 2: IF my door is next to an adjacent wall
+						#			THEN set the adjacent room's door to match my door
+						elif(side in [SIDE_N, SIDE_S] and doorx in adj_wallrange):
+							oldy = adjacent_doorpos[1]
+							adjacent_square['doors'][adj_doorside] = (doorx, oldy)
+							# update parent data structures
+							self.grid[adj_doory][adj_doorx] = adjacent_square
+						elif(side in [SIDE_E, SIDE_W] and doory in adj_wallrange):
+							oldx = adjacent_doorpos[0]
+							adjacent_square['doors'][adj_doorside] = (oldx, doory)
+							# update parent data structures
+							self.grid[adj_doory][adj_doorx] = adjacent_square
+						
+						# scenario 3: IF there is 1 or more spaces that our walls overlap
+						#			THEN move both doors within this space
+						elif(len(overlap) > 0):
+							overlapmin = min(overlap)
+							overlapmax = max(overlap)
+							if(side in [SIDE_N, SIDE_S]):
+								newdoorx = random.randint(overlapmin,overlapmax)
+								adjacent_doorpos[0] = doorx = newdoorx
+								# update parent data structures
+								adjacent_square['doors'][adj_doorside] = adjacent_doorpos
+								self.grid[adj_doory][adj_doorx] = adjacent_square
+							elif(side in [SIDE_E, SIDE_W]):
+								newdoory = random.randint(overlapmin,overlapmax)
+								adjacent_doorpos[1] = doory = newdoory
+								# update parent data structures
+								adjacent_square['doors'][adj_doorside] = adjacent_doorpos
+								self.grid[adj_doory][adj_doorx] = adjacent_square
+						
+						else:	#	(door coordination is impossible...)
+							#TODO: add support for multiple doors in each wall, and add the matching door to the adjacent room
+							print "WARN: World... rendering room: adjacent room already has a door on side {0}".format(adj_doorside)
+						# end of (trying to coordinate door positions)
+						
+					else:
+						adjacent_square['doors'][adj_doorside] = (adj_doorx, adj_doory)
+						print "DEBUG: World... adding door to adjacent room at {0},{1} on side {2} -- adjacent ROOM {3}; my door is at {4},{5} on side {6} for ROOM {7}".format(adj_doorx, adj_doory, adj_doorside, adjacent_square['id'], doorx,doory,side, newRoom['id'])
+						print "DEBUG: World... adjacent room ID {0} now has {1} door(s): {2}".format(adjacent_square['id'], len(adjacent_square['doors'].keys()), adjacent_square['doors'])
+						# update parent data structures
+						self.grid[adj_doory][adj_doorx] = adjacent_square
+					# end of (adjacent square is a room)
 
 				#TODO: chance for a room to have 2 doors
 				
@@ -656,7 +730,7 @@ class World():
 		newObject['id'] = self.objectId_autoIncrement
 		print "DEBUG: '{0}' object added, new objId is: {1}".format(newObject['type'], newObject['id'])
 		#print "DEBUG: object added, new grid is: \n{0}".format(self.to_s())
-		return True	# success
+		return newObject['id']	# success
 
 	def to_s(self):
 		"""converts world grid to a string for display to console"""

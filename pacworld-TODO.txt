@@ -1,5 +1,7 @@
 NEXT STEPS:
 
+- IMMEDIATE NEXT TODO: convert map square types to classes (path, field, room). so that they can be modified (e.g. adding another door)
+- FIX: adjacent door placement rules attempts to place doors on room sides that already have doors. - find TODONEXT in world.py
 - in Shape.update(), calculate current angle over the past 5 frames, not just the last 1 frame (need to expand startMapCenter to include more history)
 - art pieces
 - get a swirl from an art piece
@@ -11,13 +13,3 @@ NEXT STEPS:
 - idle behavior for current character (plays itself)
 - switch between characters (for idle)
 - different art pieces
-
-
-DONE:
-- break testworldmap.py into classes & main code
-- ...everything else leading up to this...
-- world map with 
-
-- animated sprites
-- sound
-- graphics
