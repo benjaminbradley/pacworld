@@ -463,11 +463,29 @@ class World():
 				else:
 					squares_checked[index] = True	# mark this square as checked
 					if(len(squares_checked.keys()) == total_edge_squares):
-						print "DEBUG: checked all possible room squares for door placement, none qualify... will need to place door randomly."
+						print "DEBUG: checked all possible room squares for door placement, none qualify... will need to place door randomly for ROOM {0}.".format(newRoom.id)
 						# if a door is not placed by any other means, do so now by random selection:
-						#TODO
-						newRoom.doors[SIDE_N] = (roomLeft, roomTop)
+						# determine which sides are eligible
+						insides = []	# array of sides which are "inside" the world space
+						if roomTop > 0: insides.append(SIDE_N)
+						if roomBottom < self.rows: insides.append(SIDE_S)
+						if roomLeft > 0: insides.append(SIDE_E)
+						if roomRight < self.cols: insides.append(SIDE_W)
+						# pick a random side
+						doorside = insides[random.randint(0, len(insides)-1)]
+						# pick a random space on that side
+						if doorside in [SIDE_N,SIDE_S]:
+							doorx = random.randint(roomLeft, roomRight)
+							if doorside == SIDE_N: doory = roomTop
+							else: doory = roomBottom	# doorside == SIDE_S
+						else:	# doorside in [SIDE_E,SIDE_W]
+							doory = random.randint(roomTop, roomBottom)
+							if doorside == SIDE_E: doorx = roomRight
+							else: doorx = roomLeft	# doorside == SIDE_W
+						
+						newRoom.doors[doorside] = (roomLeft, roomTop)
 						door_placed = True
+						continue
 				
 				# it should not be against the edge of the map
 				if doorx == 0 or doorx == self.cols-1 or doory == 0 or doory == self.rows-1:
@@ -519,7 +537,6 @@ class World():
 							adj_wallrange = range(adjTop, adjBottom+1)
 						overlap = set(my_wallrange) & set(adj_wallrange)
 
-						#TODONEXT
 						# scenario 1: IF the other door is next to one of my walls
 						#			THEN set my door position to match the existing door
 						if(side in [SIDE_N, SIDE_S] and adjacent_doorpos[0] in my_wallrange):
@@ -563,7 +580,7 @@ class World():
 						print "DEBUG: World... adjacent room ID {0} now has {1} door(s): {2}".format(adjacent_square.id, len(adjacent_square.doors.keys()), adjacent_square.doors)
 					# end of (adjacent square is a room)
 
-				#TODO: chance for a room to have 2 doors
+				#?TODO: chance for a room to have 2 doors
 				
 				# update the grid with the door location
 				newRoom.doors[side] = (doorx, doory)
