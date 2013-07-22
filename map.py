@@ -35,23 +35,23 @@ class Map(sprite.Sprite):
 
 		# NEXT: render the world map from the 'world' class argument
 		
-		for worldObj in sorted(theworld.objects, key=lambda obj: world.RENDER_ORDER[obj['type']]):
+		for worldObj in sorted(theworld.objects, key=lambda obj: world.RENDER_ORDER[obj.type]):
 			print "DEBUG: rendering the next world object: {0}".format(worldObj)
-			if worldObj['type'] == world.TYPE_PATH:
-				left = worldObj['left'] * grid_cellwidth
-				top = worldObj['top'] * grid_cellheight
-				if worldObj['direction_h']:
-					right = (worldObj['left']+worldObj['length']) * grid_cellwidth
-					bottom = (worldObj['top']+worldObj['width']) * grid_cellheight
+			if worldObj.type == world.TYPE_PATH:
+				left = worldObj.left * grid_cellwidth
+				top = worldObj.top * grid_cellheight
+				if worldObj.direction_h:
+					right = (worldObj.left+worldObj.length) * grid_cellwidth
+					bottom = (worldObj.top+worldObj.width) * grid_cellheight
 				else:
-					right = (worldObj['left']+worldObj['width']) * grid_cellwidth
-					bottom = (worldObj['top']+worldObj['length']) * grid_cellheight
+					right = (worldObj.left+worldObj.width) * grid_cellwidth
+					bottom = (worldObj.top+worldObj.length) * grid_cellheight
 				topLt = (left, top)
 				topRt = (right, top)
 				bottomLt = (left, bottom)
 				bottomRt = (right, bottom)
 				# draw a line down each side of the path
-				if worldObj['direction_h']:
+				if worldObj.direction_h:
 					print "DEBUG: path line1 from {0} to {1}".format(topLt, topRt)
 					pygame.draw.line(self.image, colors.GREEN, topLt, topRt, wall.WALL_LINE_WIDTH)
 					pygame.draw.line(self.image, colors.GREEN, bottomLt, bottomRt, wall.WALL_LINE_WIDTH)
@@ -66,12 +66,12 @@ class Map(sprite.Sprite):
 				pygame.draw.rect(self.image, (111,111,111), rect)
 				
 
-			elif worldObj['type'] == world.TYPE_INTERSECTION:
+			elif worldObj.type == world.TYPE_INTERSECTION:
 				# draw a grey rectangle
-				left = worldObj['left'] * grid_cellwidth
-				top = worldObj['top'] * grid_cellheight
-				width = worldObj['width'] * grid_cellwidth
-				height = worldObj['height'] * grid_cellheight
+				left = worldObj.left * grid_cellwidth
+				top = worldObj.top * grid_cellheight
+				width = worldObj.width * grid_cellwidth
+				height = worldObj.height * grid_cellheight
 				#right = (worldObj['left']+worldObj['width']) * grid_cellwidth
 				#bottom = (worldObj['top']+worldObj['length']) * grid_cellheight
 				#topLt = (left, top)
@@ -82,46 +82,46 @@ class Map(sprite.Sprite):
 				print "DEBUG: intersection rect at {0}".format(rect)
 				pygame.draw.rect(self.image, (222,222,222), rect)
 
-			elif worldObj['type'] == world.TYPE_FIELD:
+			elif worldObj.type == world.TYPE_FIELD:
 				# draw a brown rectangle
-				left = worldObj['left'] * grid_cellwidth
-				top = worldObj['top'] * grid_cellheight
-				width = worldObj['width'] * grid_cellwidth
-				height = worldObj['height'] * grid_cellheight
+				left = worldObj.left * grid_cellwidth
+				top = worldObj.top * grid_cellheight
+				width = worldObj.width * grid_cellwidth
+				height = worldObj.height * grid_cellheight
 				rect = (left, top, width, height)
 				#print "DEBUG: field rect at {0}".format(rect)
 				pygame.draw.rect(self.image, (160,82,45), rect)
 
-			elif worldObj['type'] == world.TYPE_ROOM:
+			elif worldObj.type == world.TYPE_ROOM:
 				# calculate corners & dimensions
-				left = worldObj['left'] * grid_cellwidth
-				top = worldObj['top'] * grid_cellheight
-				width = worldObj['width'] * grid_cellwidth
-				height = worldObj['height'] * grid_cellheight
+				left = worldObj.left * grid_cellwidth
+				top = worldObj.top * grid_cellheight
+				width = worldObj.width * grid_cellwidth
+				height = worldObj.height * grid_cellheight
 				right = left + width
 				bottom = top + height
-				print "DEBUG: Map... rendering ROOM {4} [vert={0}..{1}, horiz={2}..{3}]".format(top,bottom,left,right,worldObj['id'])
+				print "DEBUG: Map... rendering ROOM {4} [vert={0}..{1}, horiz={2}..{3}]".format(top,bottom,left,right,worldObj.id)
 				# define interior & paint it
 				rect = (left, top, width, height)
 				#print "DEBUG: room rect at {0}".format(rect)
 				pygame.draw.rect(self.image, colors.PINK, rect)
 				#DEBUG MODE: draw the objectId in the middle
 				font = pygame.font.Font(None, 20)
-				textBitmap = font.render(str(worldObj['id']), True, colors.BLACK)
+				textBitmap = font.render(str(worldObj.id), True, colors.BLACK)
 				self.image.blit(textBitmap, [left+(width/2), top+(height/2)])
 			    
 				# draw 4 walls
 				roomWalls = {}	# dictionary of side to array of wallDefs (each wallDef is a tuple of 2 points, each one an (x,y) tuple)
 				# draw walls that have doors in them
 				#NOTE: assumes no more than one door per wall
-				num_doors = len(worldObj['doors'].keys())
+				num_doors = len(worldObj.doors.keys())
 				if num_doors > 1: print "DEBUG: Map...multiple doors! Room has {0} doors.".format(num_doors)
-				for side,doorpos in worldObj['doors'].items():
+				for side,doorpos in worldObj.doors.items():
 					#need to keep track of which sides have been processed, 
 					#add the defaults later for walls with no doors
 					doorx = doorpos[0]
 					doory = doorpos[1]
-					print "DEBUG: Map... rendering ROOM {0} has a door at {1} on side {2}".format(worldObj['id'],doorpos,side)
+					print "DEBUG: Map... rendering ROOM {0} has a door at {1} on side {2}".format(worldObj.id,doorpos,side)
 					if side == world.SIDE_N:
 						doorLeft = doorx * grid_cellwidth
 						doorRight = (doorx+1) * grid_cellwidth

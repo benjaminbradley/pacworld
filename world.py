@@ -101,51 +101,106 @@ def get_random_value(sizes):
 	return values[result_index]
 # END OF get_random_value()
 
-def makeIntersectionObject(path1, path2, position):
-	#FIXME: assumes that exactly one path is vertical and one path is horizontal
-	if path1['direction_h']:
-		hpath = path1
-		vpath = path2
-	else:
-		hpath = path2
-		vpath = path1
-	newObject = {
-		'type' : TYPE_INTERSECTION,
-		'top' : position[1],
-		'left' : position[0],
-		'symbol' : INTERSECTION_SYMBOL,
-		'hpath' : hpath,
-		'vpath' : vpath,
-	}
-	return newObject
 
 
 def getsymbol(obj, pos):
 	#print "DEBUG: getsymbol({0}, {1})".format(obj, pos)
-	if obj['type'] == TYPE_ROOM:
-		if 'doors' in obj.keys() and pos in obj['doors'].values():
+	if obj.type == TYPE_ROOM:
+		if pos in obj.doors.values():
 			return 'D'
-		elif pos[1] == obj['top']:
-			if pos[0] == obj['left']:
+		elif pos[1] == obj.top:
+			if pos[0] == obj.left:
 				return 'r'
-			elif pos[0] == obj['left'] + obj['width'] - 1:	# right
+			elif pos[0] == obj.right:
 				return '7'
 			else:
 				return '-'
-		elif pos[1] == obj['top'] + obj['height'] - 1:	# bottom
-			if pos[0] == obj['left']:
+		elif pos[1] == obj.bottom:
+			if pos[0] == obj.left:
 				return 'L'
-			elif pos[0] == obj['left'] + obj['width'] - 1:	# right
+			elif pos[0] == obj.right:
 				return 'j'
 			else:
 				return '_'
-		elif pos[0] == obj['left']:
+		elif pos[0] == obj.left:
 			return 'b'
-		elif pos[0] == obj['left'] + obj['width'] - 1:	# right
+		elif pos[0] == obj.right:
 			return 'd'
 		return '.'
 	else:
-		return obj['symbol']
+		return obj.symbol
+
+
+# class for a Room object
+class Room():
+	def __init__(self, left,top,width,height):
+		self.type = TYPE_ROOM
+		self.top = top
+		self.left = left
+		self.width = width
+		self.height = height
+		self.symbol = ROOM_SYMBOL,
+		self.doors = {}	# dictionary of side(int) to (X,Y) tuple of ints
+		self.id = None	# assigned when the room is successfully added to the map
+		
+		# calculated variables derived from attributes
+		self.area = self.height * self.width
+		self.right = self.left + self.width - 1
+		self.bottom = self.top + self.height - 1
+
+class Path():
+	def __init__(self, left, top, path_width, path_len, pathDir_h):
+		self.type = TYPE_PATH
+		self.top = top
+		self.left = left
+		self.direction_h = pathDir_h
+		self.width = path_width
+		self.length = path_len
+		self.id = None	# assigned when the room is successfully added to the map
+
+		# calculated variables derived from attributes
+		self.area = self.length * self.width
+		if self.direction_h:
+			self.symbol = HPATH_SYMBOL
+			self.right = self.left + self.length - 1
+			self.bottom = self.top + self.width - 1
+		else:
+			self.symbol = VPATH_SYMBOL
+			self.right = self.left + self.width - 1
+			#print "DEBUG: top={0}, length={1}".format(self.top, self.length)
+			self.bottom = self.top + self.length - 1
+
+class Intersection():
+	def __init__(self, path1, path2, position):
+		#FIXME: assumes that exactly one path is vertical and one path is horizontal
+		if path1.direction_h:
+			hpath = path1
+			vpath = path2
+		else:
+			hpath = path2
+			vpath = path1
+		self.type = TYPE_INTERSECTION
+		self.top = position[1]
+		self.left = position[0]
+		self.symbol = INTERSECTION_SYMBOL
+		self.hpath = hpath
+		self.vpath = vpath
+
+
+class Field():
+	def __init__(self, left,top,field_width,field_height):
+		self.type = TYPE_FIELD
+		self.top = top
+		self.left = left
+		self.width = field_width
+		self.height = field_height
+		self.symbol = FIELD_SYMBOL
+		self.id = None	# assigned when the room is successfully added to the map
+		
+		# calculated variables derived from attributes
+		self.area = self.height * self.width
+		self.right = self.left + self.width - 1
+		self.bottom = self.top + self.height - 1
 
 
 # The class to create a symbolic 'world', will be translated into a map
@@ -229,13 +284,11 @@ class World():
 				#print "DEBUG: World.__init__(): too many shortWays ({0}) paths, forcing longways".format(numPaths_shortWays)
 				pathDir_h = longdir_is_h
 						
-			if(pathDir_h): pathName='horizontal'
-			else: pathName='vertical'
+			#if(pathDir_h): pathName='horizontal'
+			#else: pathName='vertical'
 			#print "DEBUG: World.__init__(): pathway direction will be {0}".format(pathName)
 			
-			# path Width
 			path_width = get_random_value('small')
-			
 			# path length
 			#minPath = int(shortside)	#	minimum length o/2 (where o is the longest of h or w)
 			minPath = 4
@@ -246,7 +299,6 @@ class World():
 			#	path_len = get_random_value('small')
 			#path_len = get_random_value(['medium','large'])
 			#print "DEBUG: World.__init__(): pathway size is {0} long by {1} wide".format(path_len, path_width)
-			
 			
 			# placement
 			if(pathDir_h):	# horizontal placement
@@ -259,41 +311,31 @@ class World():
 				if self.rows == path_len: top = 0
 				else: top = random.randint(0, self.rows-path_len)
 				left = random.randint(0, self.cols-path_width)
-
-			newPath = {
-				'type' : TYPE_PATH,
-				'top' : top,
-				'left' : left,
-				'direction_h' : pathDir_h,
-				'width' : path_width,
-				'length' : path_len
-			}
+			
+			newPath = Path(left,top,path_width,path_len,pathDir_h)
 			#print "DEBUG: World.__init__(): new path placed at {0},{1}".format(left,top)
 			#print "DEBUG: World.__init__(): new path: {0}".format(newPath)
 
 			# check for obustructions, correct if possible
 			newid = self.addObject(newPath)
 			if(newid):
-				# place if successful
-				newPath['id'] = newid
-				self.objects.append(newPath)
 				#curTotalPaths += newPath['length']
-				curTotalPathArea += newPath['length'] * newPath['width']
+				curTotalPathArea += newPath.area
 				if pathDir_h == longdir_is_h:
 					numPaths_longWays += 1
 				else:
 					numPaths_shortWays += 1
 				#print "DEBUG: World.__init__(): {0} shortWays paths, {1} longways paths".format(numPaths_shortWays, numPaths_longWays)
-
-
 			# DEBUG: show current map
 			#print "DEBUG: World.__init__(): world grid is:\n{0}".format(self.to_s())
-			
-			#if(len(self.objects) > 5): exit()
+		# end of (generate pathways)
+		print "DEBUG: World.__init__(): final total path area is {0} ({1}%) from {2} paths. Goal is minimum {3}".format(curTotalPathArea, 100*curTotalPathArea/self.totalArea, numPaths_longWays+numPaths_shortWays, minPathArea)
+		
 
 		# step 2. generate fields
 		# basic implementation: randomly place fields
 		curTotalFieldArea = 0
+		numFields = 0
 		minFieldArea = int(self.totalArea*FIELD_AREA_MIN/100)
 
 		while(curTotalFieldArea < minFieldArea):
@@ -315,29 +357,22 @@ class World():
 			top = random.randint(0, self.rows-field_sidelength)
 			left = random.randint(0, self.cols-field_sidelength)
 
-			newField = {
-				'type' : TYPE_FIELD,
-				'top' : top,
-				'left' : left,
-				'width' : field_sidelength,
-				'height' : field_sidelength,
-				'symbol' : FIELD_SYMBOL
-			}
+			newField = Field(left,top,field_sidelength,field_sidelength)
 			#print "DEBUG: World.__init__(): new path placed at {0},{1}".format(left,top)
 			#print "DEBUG: World.__init__(): new path: {0}".format(newPath)
 
 			# check for obustructions, correct if possible
 			newid = self.addObject(newField)
 			if(newid):
-				newField['id'] = newid
-				# place if successful
-				self.objects.append(newField)
-				#curTotalPaths += newPath['length']
-				curTotalFieldArea += newField['width'] * newField['height']
+				curTotalFieldArea += newField.area
+				numFields += 1
 				#print "DEBUG: World.__init__(): {0} shortWays paths, {1} longways paths".format(numPaths_shortWays, numPaths_longWays)
 
 			# DEBUG: show current map
 			#print "DEBUG: World.__init__(): world grid is:\n{0}".format(self.to_s())
+		# end of (adding fields)
+		print "DEBUG: World.__init__(): final total field area is {0} ({1}%) from {2} fields. Goal is minimum {3}".format(curTotalFieldArea, 100*curTotalFieldArea/self.totalArea, numFields, minFieldArea)
+		
 		
 		#TODO:
 		#	if two or more pathways could be connected with a field, do it
@@ -349,7 +384,7 @@ class World():
 		minRoomArea = int(self.totalArea*ROOM_AREA_MIN/100)
 		
 		while(curTotalRoomArea < minRoomArea):
-			#print "DEBUG: World.__init__(): current total room area ({0}, {1}%) hasn't met minimum room area ({2}, {3}%)".format(curTotalRoomArea, int(100*curTotalRoomArea/self.totalArea), int(self.totalArea*ROOM_AREA_MIN/100), ROOM_AREA_MIN)
+			print "DEBUG: World.__init__(): current total room area ({0}, {1}%) hasn't met minimum room area ({2}, {3}%)".format(curTotalRoomArea, int(100*curTotalRoomArea/self.totalArea), int(self.totalArea*ROOM_AREA_MIN/100), ROOM_AREA_MIN)
 			
 			# create a new room & add to the world
 			
@@ -366,54 +401,43 @@ class World():
 			if self.rows == room_height: top = 0
 			else: top = random.randint(0, self.rows-room_height)
 			left = random.randint(0, self.cols-room_width)
-
-			newRoom = {
-				'type' : TYPE_ROOM,
-				'top' : top,
-				'left' : left,
-				'width' : room_width,
-				'height' : room_height,
-				'symbol' : ROOM_SYMBOL,
-				'doors' : {},	# dictionary of side(int) to (X,Y) tuple of ints
-			}
+			
+			newRoom = Room(left,top,room_width,room_height)
 			#print "DEBUG: World.__init__(): new room placed at {0},{1}".format(left,top)
 			#print "DEBUG: World.__init__(): new room: {0}".format(newRoom)
 			
-			room_area = newRoom['height'] * newRoom['width']
 			# check for obustructions
 			newid = self.addObject(newRoom)
 			if(newid):
-				# place if successful
-				newRoom['id'] = newid
-				self.objects.append(newRoom)
-				curTotalRoomArea += room_area
+				curTotalRoomArea += newRoom.area
 			else:
+				print "DEBUG: World.__init__(): room placement failed due to obstruction"
 				continue
 			
 			# determine orientation (place door(s))
 			
 			# a door is a square on the outside edge of the room which has adjacent a path or field (or intersection)
 			door_placed = False
-			roomLeft = newRoom['left']
-			roomRight = newRoom['left']+newRoom['width']-1
-			roomTop = newRoom['top']
-			roomBottom = newRoom['top']+newRoom['height']-1
+			roomLeft = newRoom.left
+			roomRight = newRoom.right
+			roomTop = newRoom.top
+			roomBottom = newRoom.bottom
 			#print "DEBUG: World.__init__(): room:top={0}, bottom={1}, left={2}, right={3}".format(roomTop, roomBottom, roomLeft, roomRight)
 			squares_checked = {}	# hash of X,Y coordinates to boolean, dictionary
 			while not door_placed:
 				# pick a side to pick a random square from
 				# side: 0 = North, 1 = East, South, West
-				if newRoom['width'] == 1:
+				if newRoom.width == 1:
 					if random.randint(0,1) == 0:	side = SIDE_E
 					else: side = SIDE_W
-					total_edge_squares = newRoom['height']
-				elif newRoom['height'] == 1:
+					total_edge_squares = newRoom.height
+				elif newRoom.height == 1:
 					if random.randint(0,1) == 0:	side = SIDE_N
 					else: side = SIDE_S
-					total_edge_squares = newRoom['width']
+					total_edge_squares = newRoom.width
 				else:
 					side = random.randint(0,3)	#FIXME: one of the SIDES, at random
-					total_edge_squares = newRoom['width'] * 2 + newRoom['height'] * 2 - 4
+					total_edge_squares = newRoom.width * 2 + newRoom.height * 2 - 4
 					#print "DEBUG: World.__init(): total_edge_squares={0}".format(total_edge_squares)
 				# choose a random square on that side
 				if side == 0:
@@ -439,10 +463,10 @@ class World():
 				else:
 					squares_checked[index] = True	# mark this square as checked
 					if(len(squares_checked.keys()) == total_edge_squares):
-						print "DEBUG: checked all possible room squares, none qualify... will need to place randomly."
+						print "DEBUG: checked all possible room squares for door placement, none qualify... will need to place door randomly."
 						# if a door is not placed by any other means, do so now by random selection:
 						#TODO
-						newRoom['doors'][SIDE_N] = (roomLeft, roomTop)
+						newRoom.doors[SIDE_N] = (roomLeft, roomTop)
 						door_placed = True
 				
 				# it should not be against the edge of the map
@@ -470,22 +494,22 @@ class World():
 				if adjacent_square == None:
 					#print "DEBUG: adjacent square is undefined, disallowing door"
 					continue
-				if adjacent_square['type'] not in [TYPE_PATH, TYPE_FIELD, TYPE_INTERSECTION, TYPE_ROOM]:
+				if adjacent_square.type not in [TYPE_PATH, TYPE_FIELD, TYPE_INTERSECTION, TYPE_ROOM]:
 					# not a qualifying adjacentcy type
 					#print "DEBUG: adjacent square is not allowed ({0})",format(adjacent_square['type'])
 					continue
 				
-				if adjacent_square['type'] == TYPE_ROOM:
-					print "DEBUG: Door for room {0} was placed next to an adjacent room {1}".format(newRoom['id'], adjacent_square['id'])
+				if adjacent_square.type == TYPE_ROOM:
+					print "DEBUG: Door for room {0} was placed next to an adjacent room {1}".format(newRoom.id, adjacent_square.id)
 					# if a door is placed next to another room, add a door to the other room, or coordinate with location of existing door
 					adj_doorside = (side + 2) % 4	# NOTE: number of SIDES is fixed at 4
-					if(adj_doorside in adjacent_square['doors'].keys()):
+					if(adj_doorside in adjacent_square.doors.keys()):
 						# can we make the doors line up? if so, do it
-						adjacent_doorpos = adjacent_square['doors'][adj_doorside]
-						adjLeft = adjacent_square['left']
-						adjRight = adjLeft + adjacent_square['width'] - 1
-						adjTop = adjacent_square['top']
-						adjBottom = adjTop + adjacent_square['height'] - 1
+						adjacent_doorpos = adjacent_square.doors[adj_doorside]
+						adjLeft = adjacent_square.left
+						adjRight = adjacent_square.right
+						adjTop = adjacent_square.top
+						adjBottom = adjacent_square.bottom
 
 						if(side in [SIDE_N, SIDE_S]):
 							my_wallrange = range(roomLeft, roomRight+1)
@@ -507,14 +531,10 @@ class World():
 						#			THEN set the adjacent room's door to match my door
 						elif(side in [SIDE_N, SIDE_S] and doorx in adj_wallrange):
 							oldy = adjacent_doorpos[1]
-							adjacent_square['doors'][adj_doorside] = (doorx, oldy)
-							# update parent data structures
-							self.grid[adj_doory][adj_doorx] = adjacent_square
+							adjacent_square.doors[adj_doorside] = (doorx, oldy)
 						elif(side in [SIDE_E, SIDE_W] and doory in adj_wallrange):
 							oldx = adjacent_doorpos[0]
-							adjacent_square['doors'][adj_doorside] = (oldx, doory)
-							# update parent data structures
-							self.grid[adj_doory][adj_doorx] = adjacent_square
+							adjacent_square.doors[adj_doorside] = (oldx, doory)
 						
 						# scenario 3: IF there is 1 or more spaces that our walls overlap
 						#			THEN move both doors within this space
@@ -525,14 +545,12 @@ class World():
 								newdoorx = random.randint(overlapmin,overlapmax)
 								adjacent_doorpos[0] = doorx = newdoorx
 								# update parent data structures
-								adjacent_square['doors'][adj_doorside] = adjacent_doorpos
-								self.grid[adj_doory][adj_doorx] = adjacent_square
+								adjacent_square.doors[adj_doorside] = adjacent_doorpos
 							elif(side in [SIDE_E, SIDE_W]):
 								newdoory = random.randint(overlapmin,overlapmax)
 								adjacent_doorpos[1] = doory = newdoory
 								# update parent data structures
-								adjacent_square['doors'][adj_doorside] = adjacent_doorpos
-								self.grid[adj_doory][adj_doorx] = adjacent_square
+								adjacent_square.doors[adj_doorside] = adjacent_doorpos
 						
 						else:	#	(door coordination is impossible...)
 							#TODO: add support for multiple doors in each wall, and add the matching door to the adjacent room
@@ -540,21 +558,19 @@ class World():
 						# end of (trying to coordinate door positions)
 						
 					else:
-						adjacent_square['doors'][adj_doorside] = (adj_doorx, adj_doory)
-						print "DEBUG: World... adding door to adjacent room at {0},{1} on side {2} -- adjacent ROOM {3}; my door is at {4},{5} on side {6} for ROOM {7}".format(adj_doorx, adj_doory, adj_doorside, adjacent_square['id'], doorx,doory,side, newRoom['id'])
-						print "DEBUG: World... adjacent room ID {0} now has {1} door(s): {2}".format(adjacent_square['id'], len(adjacent_square['doors'].keys()), adjacent_square['doors'])
-						# update parent data structures
-						self.grid[adj_doory][adj_doorx] = adjacent_square
+						adjacent_square.doors[adj_doorside] = (adj_doorx, adj_doory)
+						print "DEBUG: World... adding door to adjacent room at {0},{1} on side {2} -- adjacent ROOM {3}; my door is at {4},{5} on side {6} for ROOM {7}".format(adj_doorx, adj_doory, adj_doorside, adjacent_square.id, doorx,doory,side, newRoom.id)
+						print "DEBUG: World... adjacent room ID {0} now has {1} door(s): {2}".format(adjacent_square.id, len(adjacent_square.doors.keys()), adjacent_square.doors)
 					# end of (adjacent square is a room)
 
 				#TODO: chance for a room to have 2 doors
 				
 				# update the grid with the door location
-				newRoom['doors'][side] = (doorx, doory)
+				newRoom.doors[side] = (doorx, doory)
 				door_placed = True
 
 			# DEBUG: show current map
-			#print "DEBUG: World.__init__(): world grid is:\n{0}".format(self.to_s())
+			print "DEBUG: World.__init__(): world grid is:\n{0}".format(self.to_s())
 		
 		
 
@@ -562,26 +578,36 @@ class World():
 		#	- 4 or 5 randomly around the map? maybe skip this step? or it's used to identify inaccessible enclosed spaces?
 	
 	
+	def copyGrid(self):
+		# a deepcopy is too deep - we want to retain references to all the existing world objects (paths, rooms, etc)
+		# a shallow copy is not deep enough - it only copies the first level (i.e. rows)
+		# so we implement a manual shallow copy to ensure that all rows AND columns are copied, with references to the existing objects
+		newGrid = []
+		for r in range(self.rows):
+			newGrid.append(copy.copy(self.grid[r]))
+		return newGrid
+	
+	
 	def addObject(self, newObject):
 		# copy current grid
-		newGrid = copy.deepcopy(self.grid)
+		newGrid = self.copyGrid()
 		
-		if(newObject['type'] == TYPE_FIELD):
-			basex = newObject['left']
-			basey = newObject['top']
-			if(newObject['width'] <= 0):
+		if(newObject.type == TYPE_FIELD):
+			basex = newObject.left
+			basey = newObject.top
+			if(newObject.width <= 0):
 				print "ERROR: field width must be greater than 0!"
 				exit()
-			for w in range(newObject['width']):
+			for w in range(newObject.width):
 				posx = basex + w
-				for h in range(newObject['height']):
+				for h in range(newObject.height):
 					posy = basey + h
 				
 					# check for obstructions
 					if self.grid[posy][posx] != SYMBOL_CLEAR:
 						#print "WARN: field obstructed at {0},{1}".format(posx,posy)
 						obstruction = self.grid[posy][posx]
-						if obstruction['type'] in [TYPE_PATH, TYPE_INTERSECTION]:
+						if obstruction.type in [TYPE_PATH, TYPE_INTERSECTION]:
 							# field overwrites paths and intersections
 							newGrid[posy][posx] = newObject
 							continue
@@ -595,83 +621,83 @@ class World():
 						newGrid[posy][posx] = newObject
 			
 			
-		elif(newObject['type'] == TYPE_PATH):
-			x = newObject['left']
-			y = newObject['top']
-			if(newObject['length'] <= 0):
+		elif(newObject.type == TYPE_PATH):
+			x = newObject.left
+			y = newObject.top
+			if(newObject.length <= 0):
 				print "ERROR: path length must be greater than 0!"
 				exit()
 			#print "DEBUG: adding path, ranging i to {0}...".format(newObject['length'])
 			adjacent_paths = {}	# dictionary of object IDs (for easy uniquifying)
 			intersected_paths = {} # dictionary of object IDs (for easy uniquifying)
-			for i in range(newObject['length']):
+			for i in range(newObject.length):
 				# check for adjacencies
-				if newObject['direction_h']:
+				if newObject.direction_h:
 					adjx = x + i
 					adjy1 = y - 1
-					adjy2 = y + newObject['width']
-					if adjy1 >= 0 and self.grid[adjy1][adjx] != None and self.grid[adjy1][adjx]['type'] == TYPE_PATH:
+					adjy2 = y + newObject.width
+					if adjy1 >= 0 and self.grid[adjy1][adjx] != None and self.grid[adjy1][adjx].type == TYPE_PATH:
 						#print "WARN: adjacent path at {0},{1}".format(adjx,adjy1)
-						adjacent_paths[self.grid[adjy1][adjx]['id']] = True
-					elif adjy2 < self.rows and self.grid[adjy2][adjx] != None and self.grid[adjy2][adjx]['type'] == TYPE_PATH:
+						adjacent_paths[self.grid[adjy1][adjx].id] = True
+					elif adjy2 < self.rows and self.grid[adjy2][adjx] != None and self.grid[adjy2][adjx].type == TYPE_PATH:
 						#print "WARN: adjacent path at {0},{1}".format(adjx,adjy2)
-						adjacent_paths[self.grid[adjy2][adjx]['id']] = True
+						adjacent_paths[self.grid[adjy2][adjx].id] = True
 				else:
 					adjy = y + i
 					adjx1 = x - 1
-					adjx2 = x + newObject['width']
-					if adjx1 >= 0 and self.grid[adjy][adjx1] != None and self.grid[adjy][adjx1]['type'] == TYPE_PATH:
+					adjx2 = x + newObject.width
+					if adjx1 >= 0 and self.grid[adjy][adjx1] != None and self.grid[adjy][adjx1].type == TYPE_PATH:
 						#print "WARN: adjacent path at {0},{1}".format(adjx1,adjy)
-						adjacent_paths[self.grid[adjy][adjx1]['id']] = True
-					elif adjx2 < self.cols and self.grid[adjy][adjx2] != None and self.grid[adjy][adjx2]['type'] == TYPE_PATH:
+						adjacent_paths[self.grid[adjy][adjx1].id] = True
+					elif adjx2 < self.cols and self.grid[adjy][adjx2] != None and self.grid[adjy][adjx2].type == TYPE_PATH:
 						#print "WARN: adjacent path at {0},{1}".format(adjx2,adjy)
-						adjacent_paths[self.grid[adjy][adjx2]['id']] = True
+						adjacent_paths[self.grid[adjy][adjx2].id] = True
 				
 				#print "DEBUG: ranging j to {0}...".format(newObject['width'])
-				for j in range(newObject['width']):
-					if newObject['direction_h']:
+				for j in range(newObject.width):
+					if newObject.direction_h:
 						posx = x + i
 						posy = y + j
-						newObject['symbol'] = HPATH_SYMBOL
+						newObject.symbol = HPATH_SYMBOL
 					else:
 						posx = x + j
 						posy = y + i
-						newObject['symbol'] = VPATH_SYMBOL
+						newObject.symbol = VPATH_SYMBOL
 					# check for obstructions
 					if self.grid[posy][posx] != SYMBOL_CLEAR:
 						#print "WARN: path obstructed at {0},{1}".format(posx,posy)
 						obstruction = self.grid[posy][posx]
-						if obstruction['type'] == TYPE_INTERSECTION:
+						if obstruction.type == TYPE_INTERSECTION:
 							#print "DEBUG: obstruction is an intersection, ignored at {0},{1}".format(posx,posy)
 							# intersection is a freebie, unchanged, but does not block
 							continue
-						if obstruction['type'] in [TYPE_PATH]:
+						if obstruction.type in [TYPE_PATH]:
 							#	ok for large pathways to intersect in the middle
-							im_large =  (newObject['length'] >= LARGE_PATH_MIN)
-							its_large = (obstruction['length'] >= LARGE_PATH_MIN)
+							im_large =  (newObject.length >= LARGE_PATH_MIN)
+							its_large = (obstruction.length >= LARGE_PATH_MIN)
 							if im_large and its_large:
 								#print "DEBUG: testing intersection of 2 large paths"
 								# intersection should be at least INTERSECTION_MIN_OVERLAP=4 away from either end for both pathways
 								# NOTE: intersection point should be adjusted by path width
 								# check current path
 								if i < INTERSECTION_MIN_OVERLAP: return False
-								if i > newObject['length']-INTERSECTION_MIN_OVERLAP: return False
+								if i > newObject.length-INTERSECTION_MIN_OVERLAP: return False
 								# check other path
-								if newObject['direction_h']:	# new path is horizontal, obstruction is vertical
+								if newObject.direction_h:	# new path is horizontal, obstruction is vertical
 									# check 'top' end first
-									if posy < obstruction['top']+INTERSECTION_MIN_OVERLAP: return False
+									if posy < obstruction.top+INTERSECTION_MIN_OVERLAP: return False
 									# check bottom
-									if posy > obstruction['top']+obstruction['length']-INTERSECTION_MIN_OVERLAP: return False
+									if posy > obstruction.top+obstruction.length-INTERSECTION_MIN_OVERLAP: return False
 								else:	# new path NOT horizontal, so obstruction is horizontal
 									# check left
-									if posx < obstruction['left']+INTERSECTION_MIN_OVERLAP: return False
+									if posx < obstruction.left+INTERSECTION_MIN_OVERLAP: return False
 									# check right
-									if posx > obstruction['left']+obstruction['length']-INTERSECTION_MIN_OVERLAP: return False
+									if posx > obstruction.left+obstruction.length-INTERSECTION_MIN_OVERLAP: return False
 								
 								# all qualifiers passed for large-large intersection, make it so!
 								#print "DEBUG: intersection happening at {0},{1}".format(posx, posy)
-								newGrid[posy][posx] = makeIntersectionObject(newObject, obstruction, (posx, posy))
-								intersected_paths[obstruction['id']] = True
+								newGrid[posy][posx] = Intersection(newObject, obstruction, (posx, posy))
+								intersected_paths[obstruction.id] = True
 								continue
 							
 							
@@ -693,18 +719,18 @@ class World():
 				return False
 
 		
-		elif(newObject['type'] == TYPE_ROOM):
-			basex = newObject['left']
-			basey = newObject['top']
-			if(newObject['width'] <= 0):
+		elif(newObject.type == TYPE_ROOM):
+			basex = newObject.left
+			basey = newObject.top
+			if(newObject.width <= 0):
 				print "ERROR: room width must be greater than 0!"
 				exit()
-			if(newObject['height'] <= 0):
+			if(newObject.height <= 0):
 				print "ERROR: room height must be greater than 0!"
 				exit()
-			for w in range(newObject['width']):
+			for w in range(newObject.width):
 				posx = basex + w
-				for h in range(newObject['height']):
+				for h in range(newObject.height):
 					posy = basey + h
 					
 					# check for obstructions
@@ -721,16 +747,17 @@ class World():
 			# end for w in width
 			
 		else:
-			print "PROGRAM ERROR: Unknown type {0}".format(newObject['type'])
+			print "PROGRAM ERROR: Unknown type {0}".format(newObject.type)
 			exit()
 		
 		# if everything works out ok, save the new grid
 		self.grid = newGrid
 		self.objectId_autoIncrement += 1
-		newObject['id'] = self.objectId_autoIncrement
-		print "DEBUG: '{0}' object added, new objId is: {1}".format(newObject['type'], newObject['id'])
+		newObject.id = self.objectId_autoIncrement
+		print "DEBUG: '{0}' object added, new objId is: {1}".format(newObject.type, newObject.id)
 		#print "DEBUG: object added, new grid is: \n{0}".format(self.to_s())
-		return newObject['id']	# success
+		self.objects.append(newObject)
+		return newObject.id	# success
 
 	def to_s(self):
 		"""converts world grid to a string for display to console"""
