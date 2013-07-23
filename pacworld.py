@@ -29,7 +29,9 @@ class Pacworld:
 	def __init__(self):
 		
 		# Make the display size a member of the class
-		self.displaySize = (640, 480)
+		#self.displaySize = (640, 480)
+		self.displaySize = (800,600)
+		#self.displaySize = (1024, 768)
 		
 		# Initialize pygame
 		pygame.init()
@@ -68,10 +70,14 @@ class Pacworld:
 		self.character_size = self.displaySize[0] / 10
 		
 		# if no random seed was given, make one up:
-		#crazySeed = random.randint(0, MAX_RANDOM_SEED)
-		crazySeed = 58150
+		if(False):
+			crazySeed = random.randint(0, MAX_RANDOM_SEED)
+			print "INFO: USING RANDOM SEED: {0}",format(crazySeed)
+		else:
+			crazySeed = 57971
+			print "INFO: USING CHOSEN SEED: {0}",format(crazySeed)
+		
 		random.seed(crazySeed)
-		print "INFO: USING RANDOM SEED: {0}",format(crazySeed)
 		
 		SCALE_FACTOR = 3
 		mapSize = [SCALE_FACTOR*x for x in self.displaySize]

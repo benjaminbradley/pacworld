@@ -147,6 +147,16 @@ class Room():
 		self.area = self.height * self.width
 		self.right = self.left + self.width - 1
 		self.bottom = self.top + self.height - 1
+	def getInsides(self, cols, rows):
+		"""get an array of room sides which are "inside" the world space"""
+		if hasattr(self, 'insides'): return self.insides
+		self.insides = []
+		if self.top > 0: self.insides.append(SIDE_N)
+		if self.bottom < rows-1: self.insides.append(SIDE_S)
+		if self.left > 0: self.insides.append(SIDE_W)
+		if self.right < cols-1: self.insides.append(SIDE_E)
+		return self.insides
+		
 
 class Path():
 	def __init__(self, left, top, path_width, path_len, pathDir_h):
@@ -202,6 +212,97 @@ class Field():
 		self.right = self.left + self.width - 1
 		self.bottom = self.top + self.height - 1
 
+
+
+	
+def negotiateDoorPlacement(newRoom, adjacent_room, doorpos, doorside):
+	print "DEBUG: Door for room {0} was placed next to an adjacent ROOM {1}: {2}".format(newRoom.id, adjacent_room.id, adjacent_room)
+	# if a door is placed next to another room, add a door to the other room, or coordinate with location of existing door
+	adj_doorside = (doorside + 2) % 4	# NOTE: number of SIDES is fixed at 4
+	(doorx,doory) = doorpos
+	roomTop = newRoom.top
+	roomRight = newRoom.right
+	roomBottom = newRoom.bottom
+	roomLeft = newRoom.left
+	if doorside == 0:
+		adj_doorx = doorx
+		adj_doory = roomTop-1
+	elif doorside == 1:
+		adj_doorx = roomRight+1
+		adj_doory = doory
+	elif doorside == 2:
+		adj_doorx = doorx
+		adj_doory = roomBottom+1
+	elif doorside == 3:
+		adj_doorx = roomLeft-1
+		adj_doory = doory
+	
+	if(adj_doorside in adjacent_room.doors.keys()):
+		# can we make the doors line up? if so, do it
+		adjacent_doorpos = adjacent_room.doors[adj_doorside]
+		adjLeft = adjacent_room.left
+		adjRight = adjacent_room.right
+		adjTop = adjacent_room.top
+		adjBottom = adjacent_room.bottom
+
+		if(doorside in [SIDE_N, SIDE_S]):
+			my_wallrange = range(roomLeft, roomRight+1)
+			adj_wallrange = range(adjLeft, adjRight+1)
+		elif(doorside in [SIDE_E, SIDE_W]):
+			my_wallrange = range(roomTop, roomBottom+1)
+			adj_wallrange = range(adjTop, adjBottom+1)
+		overlap = set(my_wallrange) & set(adj_wallrange)
+
+		# scenario 1: IF the other door is next to one of my walls
+		#			THEN set my door position to match the existing door
+		if(doorside in [SIDE_N, SIDE_S] and adjacent_doorpos[0] in my_wallrange):
+			doorx = adjacent_doorpos[0]
+		elif(doorside in [SIDE_E, SIDE_W] and adjacent_doorpos[1] in my_wallrange):
+			doory = adjacent_doorpos[1]
+		
+		# scenario 2: IF my door is next to an adjacent wall
+		#			THEN set the adjacent room's door to match my door
+		elif(doorside in [SIDE_N, SIDE_S] and doorx in adj_wallrange):
+			oldy = adjacent_doorpos[1]
+			adjacent_room.doors[adj_doorside] = (doorx, oldy)
+		elif(doorside in [SIDE_E, SIDE_W] and doory in adj_wallrange):
+			oldx = adjacent_doorpos[0]
+			adjacent_room.doors[adj_doorside] = (oldx, doory)
+		
+		# scenario 3: IF there is 1 or more spaces that our walls overlap
+		#			THEN move both doors within this space
+		elif(len(overlap) > 0):
+			overlapmin = min(overlap)
+			overlapmax = max(overlap)
+			if(doorside in [SIDE_N, SIDE_S]):
+				newdoorx = random.randint(overlapmin,overlapmax)
+				adjacent_doorpos[0] = doorx = newdoorx
+				# update parent data structures
+				adjacent_room.doors[adj_doorside] = adjacent_doorpos
+			elif(doorside in [SIDE_E, SIDE_W]):
+				newdoory = random.randint(overlapmin,overlapmax)
+				adjacent_doorpos[1] = doory = newdoory
+				# update parent data structures
+				adjacent_room.doors[adj_doorside] = adjacent_doorpos
+		
+		else:	#	(door coordination is impossible...)
+			#TODO: add support for multiple doors in each wall, and add the matching door to the adjacent room
+			print "WARN: World... rendering room: adjacent room already has a door on side {0} & we could NOT coordinate them".format(adj_doorside)
+		# end of (trying to coordinate door positions)
+		
+		print "DEBUG: World... adding door to adjacent room at {0},{1} on side {2} -- adjacent ROOM {3}; my door is at {4},{5} on side {6} for ROOM {7}".format(adjacent_room.doors[adj_doorside][0], adjacent_room.doors[adj_doorside][1], adj_doorside, adjacent_room.id, doorx,doory,doorside, newRoom.id)
+		print "DEBUG: World... adjacent room ID {0} now has {1} door(s): {2}".format(adjacent_room.id, len(adjacent_room.doors.keys()), adjacent_room.doors)
+		
+	else:
+		adjacent_room.doors[adj_doorside] = (adj_doorx, adj_doory)
+		print "DEBUG: World... adding door to adjacent room at {0},{1} on side {2} -- adjacent ROOM {3}; my door is at {4},{5} on side {6} for ROOM {7}".format(adj_doorx, adj_doory, adj_doorside, adjacent_room.id, doorx,doory,doorside, newRoom.id)
+		print "DEBUG: World... adjacent room ID {0} now has {1} door(s): {2}".format(adjacent_room.id, len(adjacent_room.doors.keys()), adjacent_room.doors)
+	# end of (adjacent square is a room)
+
+	# update the grid with the door location
+	newRoom.doors[doorside] = (doorx, doory)
+	door_placed = True
+# end of negotiateDoorPlacement()
 
 # The class to create a symbolic 'world', will be translated into a map
 class World():
@@ -422,41 +523,41 @@ class World():
 			roomRight = newRoom.right
 			roomTop = newRoom.top
 			roomBottom = newRoom.bottom
-			#print "DEBUG: World.__init__(): room:top={0}, bottom={1}, left={2}, right={3}".format(roomTop, roomBottom, roomLeft, roomRight)
+			print "DEBUG: World.__init__(): room:top={0}, bottom={1}, left={2}, right={3}  ROOM {4}".format(roomTop, roomBottom, roomLeft, roomRight, newRoom.id)
 			squares_checked = {}	# hash of X,Y coordinates to boolean, dictionary
 			while not door_placed:
 				# pick a side to pick a random square from
 				# side: 0 = North, 1 = East, South, West
 				if newRoom.width == 1:
-					if random.randint(0,1) == 0:	side = SIDE_E
-					else: side = SIDE_W
+					if random.randint(0,1) == 0:	doorside = SIDE_E
+					else: doorside = SIDE_W
 					total_edge_squares = newRoom.height
 				elif newRoom.height == 1:
-					if random.randint(0,1) == 0:	side = SIDE_N
-					else: side = SIDE_S
+					if random.randint(0,1) == 0:	doorside = SIDE_N
+					else: doorside = SIDE_S
 					total_edge_squares = newRoom.width
 				else:
-					side = random.randint(0,3)	#FIXME: one of the SIDES, at random
-					total_edge_squares = newRoom.width * 2 + newRoom.height * 2 - 4
+					doorside = random.randint(0,3)	#FIXME: one of the SIDES, at random
+					total_edge_squares = newRoom.width * 2 + newRoom.height * 2
 					#print "DEBUG: World.__init(): total_edge_squares={0}".format(total_edge_squares)
 				# choose a random square on that side
-				if side == 0:
+				if doorside == 0:
 					doorx = random.randint(roomLeft, roomRight)
 					doory = roomTop
-				elif side == 1:
+				elif doorside == 1:
 					doorx = roomRight
 					doory = random.randint(roomTop, roomBottom)
-				elif side == 2:
+				elif doorside == 2:
 					doorx = random.randint(roomLeft, roomRight)
 					doory = roomBottom
-				elif side == 3:
+				elif doorside == 3:
 					doorx = roomLeft
 					doory = random.randint(roomTop, roomBottom)
 				#TODO: prefer not to place doors on a corner
 				#print "DEBUG: World.__init(): room:trying door at {0},{1}".format(doorx, doory)
 				
 				# only check each square once
-				index = str(doorx)+'x'+str(doory)
+				index = str(doorside)+':'+str(doorx)+'x'+str(doory)
 				if index in squares_checked.keys():
 					#print "DEBUG: already checked square {0}".format(index)
 					continue
@@ -465,13 +566,9 @@ class World():
 					if(len(squares_checked.keys()) == total_edge_squares):
 						print "DEBUG: checked all possible room squares for door placement, none qualify... will need to place door randomly for ROOM {0}.".format(newRoom.id)
 						# if a door is not placed by any other means, do so now by random selection:
-						# determine which sides are eligible
-						insides = []	# array of sides which are "inside" the world space
-						if roomTop > 0: insides.append(SIDE_N)
-						if roomBottom < self.rows: insides.append(SIDE_S)
-						if roomLeft > 0: insides.append(SIDE_E)
-						if roomRight < self.cols: insides.append(SIDE_W)
 						# pick a random side
+						#print "DEBUG placing door on random side within {0}".format(insides)
+						insides = newRoom.getInsides(self.cols, self.rows)
 						doorside = insides[random.randint(0, len(insides)-1)]
 						# pick a random space on that side
 						if doorside in [SIDE_N,SIDE_S]:
@@ -483,108 +580,106 @@ class World():
 							if doorside == SIDE_E: doorx = roomRight
 							else: doorx = roomLeft	# doorside == SIDE_W
 						
-						newRoom.doors[doorside] = (roomLeft, roomTop)
+						newRoom.doors[doorside] = (doorx, doory)
+						print "DEBUG: ROOM {0}: new door placed randomly at {1} on side {2}".format(newRoom.id, newRoom.doors[doorside], doorside)
 						door_placed = True
-						continue
-				
-				# it should not be against the edge of the map
-				if doorx == 0 or doorx == self.cols-1 or doory == 0 or doory == self.rows-1:
-					#print "DEBUG: door placed against map edge, aborting"
-					continue
+						# DON'T continue - we need to check for door in adjacent room
+					# end of (we've checked all squares, assign one randomly)
+					else:
+						# we're checking a random square for door placement
+						
+						# it should not be against the edge of the map
+						if doorx == 0 or doorx == self.cols-1 or doory == 0 or doory == self.rows-1:
+							#print "DEBUG: door placed against map edge, aborting"
+							continue
 				
 				# VALIATION RULE: the door must be adjacent to a pathway or field
+				
 				# get the adjacent square type
-				if side == 0:
+				if doorside == 0:
 					adj_doorx = doorx
 					adj_doory = roomTop-1
-				elif side == 1:
+				elif doorside == 1:
 					adj_doorx = roomRight+1
 					adj_doory = doory
-				elif side == 2:
+				elif doorside == 2:
 					adj_doorx = doorx
 					adj_doory = roomBottom+1
-				elif side == 3:
+				elif doorside == 3:
 					adj_doorx = roomLeft-1
 					adj_doory = doory
-
+				
+				print "DEBUG: ROOM {0} door placement: checking adjacent square at {1},{2}".format(newRoom.id, adj_doorx, adj_doory)
 				adjacent_square = self.grid[adj_doory][adj_doorx]
 				
 				if adjacent_square == None:
-					#print "DEBUG: adjacent square is undefined, disallowing door"
-					continue
+					if door_placed:
+						# we will allow a door next to undefined territory if there are no better options
+						print "DEBUG: allowing door next to nothing due to lack of better options"
+						continue
+					else:
+						print "DEBUG: adjacent square is undefined, disallowing door"
+						continue
+				
 				if adjacent_square.type not in [TYPE_PATH, TYPE_FIELD, TYPE_INTERSECTION, TYPE_ROOM]:
 					# not a qualifying adjacentcy type
-					#print "DEBUG: adjacent square is not allowed ({0})",format(adjacent_square['type'])
+					print "DEBUG: adjacent square is not allowed ({0})",format(adjacent_square.type)
+					if door_placed:
+						print "DEBUG: we've tried placing a door randomly, and it's no good. aborting"
 					continue
 				
 				if adjacent_square.type == TYPE_ROOM:
-					print "DEBUG: Door for room {0} was placed next to an adjacent room {1}".format(newRoom.id, adjacent_square.id)
-					# if a door is placed next to another room, add a door to the other room, or coordinate with location of existing door
-					adj_doorside = (side + 2) % 4	# NOTE: number of SIDES is fixed at 4
-					if(adj_doorside in adjacent_square.doors.keys()):
-						# can we make the doors line up? if so, do it
-						adjacent_doorpos = adjacent_square.doors[adj_doorside]
-						adjLeft = adjacent_square.left
-						adjRight = adjacent_square.right
-						adjTop = adjacent_square.top
-						adjBottom = adjacent_square.bottom
-
-						if(side in [SIDE_N, SIDE_S]):
-							my_wallrange = range(roomLeft, roomRight+1)
-							adj_wallrange = range(adjLeft, adjRight+1)
-						elif(side in [SIDE_E, SIDE_W]):
-							my_wallrange = range(roomTop, roomBottom+1)
-							adj_wallrange = range(adjTop, adjBottom+1)
-						overlap = set(my_wallrange) & set(adj_wallrange)
-
-						# scenario 1: IF the other door is next to one of my walls
-						#			THEN set my door position to match the existing door
-						if(side in [SIDE_N, SIDE_S] and adjacent_doorpos[0] in my_wallrange):
-							doorx = adjacent_doorpos[0]
-						elif(side in [SIDE_E, SIDE_W] and adjacent_doorpos[1] in my_wallrange):
-							doory = adjacent_doorpos[1]
-						
-						# scenario 2: IF my door is next to an adjacent wall
-						#			THEN set the adjacent room's door to match my door
-						elif(side in [SIDE_N, SIDE_S] and doorx in adj_wallrange):
-							oldy = adjacent_doorpos[1]
-							adjacent_square.doors[adj_doorside] = (doorx, oldy)
-						elif(side in [SIDE_E, SIDE_W] and doory in adj_wallrange):
-							oldx = adjacent_doorpos[0]
-							adjacent_square.doors[adj_doorside] = (oldx, doory)
-						
-						# scenario 3: IF there is 1 or more spaces that our walls overlap
-						#			THEN move both doors within this space
-						elif(len(overlap) > 0):
-							overlapmin = min(overlap)
-							overlapmax = max(overlap)
-							if(side in [SIDE_N, SIDE_S]):
-								newdoorx = random.randint(overlapmin,overlapmax)
-								adjacent_doorpos[0] = doorx = newdoorx
-								# update parent data structures
-								adjacent_square.doors[adj_doorside] = adjacent_doorpos
-							elif(side in [SIDE_E, SIDE_W]):
-								newdoory = random.randint(overlapmin,overlapmax)
-								adjacent_doorpos[1] = doory = newdoory
-								# update parent data structures
-								adjacent_square.doors[adj_doorside] = adjacent_doorpos
-						
-						else:	#	(door coordination is impossible...)
-							#TODO: add support for multiple doors in each wall, and add the matching door to the adjacent room
-							print "WARN: World... rendering room: adjacent room already has a door on side {0}".format(adj_doorside)
-						# end of (trying to coordinate door positions)
-						
-					else:
-						adjacent_square.doors[adj_doorside] = (adj_doorx, adj_doory)
-						print "DEBUG: World... adding door to adjacent room at {0},{1} on side {2} -- adjacent ROOM {3}; my door is at {4},{5} on side {6} for ROOM {7}".format(adj_doorx, adj_doory, adj_doorside, adjacent_square.id, doorx,doory,side, newRoom.id)
-						print "DEBUG: World... adjacent room ID {0} now has {1} door(s): {2}".format(adjacent_square.id, len(adjacent_square.doors.keys()), adjacent_square.doors)
-					# end of (adjacent square is a room)
-
-				#?TODO: chance for a room to have 2 doors
-				
-				# update the grid with the door location
-				newRoom.doors[side] = (doorx, doory)
-				door_placed = True
+					#CHECKADJDOOR (but this one is in reverse, newRoom = self, existing = adjacent)
+					#TODO: refactor
+					#FUNCTION: negotiateDoorPlacement(newRoom, adjacent_room, doorpos)
+					print "DEBUG: negotiating"
+					negotiateDoorPlacement(newRoom, adjacent_square, (doorx,doory), doorside)
+					#TODO: does this return a status? if so what happens with it?
+					
+				else:
+					print "DEBUG: placed door"
+					# update the grid with the door location
+					newRoom.doors[doorside] = (doorx, doory)
+					door_placed = True
+			# end of (while not door_placed)
+			
+			
+			# so, the door has been placed now.
+			# check to make sure we didn't cover over an existing door, and if we did, do the adjacent-door compatibility test
+			for side in list(set(SIDES) - set([doorside])):
+				#	check the other 3 sides (insides which are not the doorside)
+				if side not in newRoom.getInsides(self.cols, self.rows): continue
+				# 	check every adjacent square on that side
+				if side == SIDE_N:
+					adj_yrange = [roomTop - 1]
+					adj_xrange = range(roomLeft, roomRight+1)
+				elif side == SIDE_S:
+					adj_yrange = [roomBottom + 1]
+					adj_xrange = range(roomLeft, roomRight+1)
+				elif side == SIDE_E:
+					adj_yrange = range(roomTop, roomBottom)
+					adj_xrange = [roomRight + 1]
+				elif side == SIDE_W:
+					adj_yrange = range(roomTop, roomBottom)
+					adj_xrange = [roomLeft - 1]
+				#checked_rooms = {}	# dictionary of roomID to boolean
+				adj_doorside = (side + 2) % 4
+				for adj_doorx in adj_xrange:
+					for adj_doory in adj_yrange:
+						adj_doorpos = (adj_doorx, adj_doory)
+						print "DEBUG: checking adjacent square at {0} to prevent covering existing doors".format(adj_doorpos)
+						adjacent_square = self.grid[adj_doory][adj_doorx]
+						# if we're next to a room
+						if adjacent_square != None and adjacent_square.type == TYPE_ROOM:
+							## and we haven't checked this room before
+							#if adjacent_square.id in checked_rooms.keys(): continue
+							# check to see if there is a door in this square
+							if adj_doorside in adjacent_square.doors.keys() and adjacent_square.doors[adj_doorside] == adj_doorpos:
+								# if there is a door here
+								print "DEBUG: found an existing door in ROOM {0} at {1} on side {2}".format(adjacent_square.id, adj_doorpos, adj_doorside)
+								# check for door compatibility
+								negotiateDoorPlacement(adjacent_square, newRoom, adj_doorpos, adj_doorside)
+			
 
 			# DEBUG: show current map
 			print "DEBUG: World.__init__(): world grid is:\n{0}".format(self.to_s())

@@ -1,6 +1,5 @@
 NEXT STEPS:
 
-- troubleshoot door placement - still getting some rooms without doors or missing adjacent doors
 - in Shape.update(), calculate current angle over the past 5 frames, not just the last 1 frame (need to expand startMapCenter to include more history)
 - art pieces
 - get a swirl from an art piece
@@ -12,3 +11,6 @@ NEXT STEPS:
 - idle behavior for current character (plays itself)
 - switch between characters (for idle)
 - different art pieces
+
+ENHANCEMENTS:
+- allow multiple doors per room side
