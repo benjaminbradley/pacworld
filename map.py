@@ -28,8 +28,8 @@ class Map(sprite.Sprite):
 		
 		
 		#print "DEBUG: Map.__init__(): rendering world:\n{0}".format(theworld.to_s())
-		grid_cellheight = mapSize[1] / theworld.rows
-		grid_cellwidth = mapSize[0] / theworld.cols
+		self.grid_cellheight = grid_cellheight = mapSize[1] / theworld.rows
+		self.grid_cellwidth = grid_cellwidth = mapSize[0] / theworld.cols
 		print "DEBUG: Map.__init__(): cell size is {0} wide x {1} high".format(grid_cellwidth, grid_cellheight)
 		
 
