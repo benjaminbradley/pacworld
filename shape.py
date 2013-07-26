@@ -122,7 +122,7 @@ class Shape(sprite.Sprite):
 			if width > burst_radius: width = burst_radius
 			gradpercent = float(self.burstEffect_frame) / float(self.burstEffect_numframes)
 			grad_color = [int(gradpercent*c) for c in colors.NEONBLUE]
-			print "in burstEffect: burst_radius = {0}, gradpercent = {1}, grad_color={2}".format(burst_radius, gradpercent, grad_color)
+			print "DEBUG: Shape.update(): in burstEffect: burst_radius = {0}, gradpercent = {1}, grad_color={2}".format(burst_radius, gradpercent, grad_color)
 			pygame.draw.circle(self.image, grad_color, (radius,radius), burst_radius, width)
 		
 		# draw the "eye" direction indicator
