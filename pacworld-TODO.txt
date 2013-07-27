@@ -1,6 +1,4 @@
-NEXT STEPS:
-
-- in Shape.update(), calculate current angle over the past 5 frames, not just the last 1 frame (need to expand startMapCenter to include more history)
+NEXT STEPS for MVP:
 - art pieces
 - get a swirl from an art piece
 - swirling shapes inside
@@ -13,4 +11,5 @@ NEXT STEPS:
 - different art pieces
 
 ENHANCEMENTS:
+- in Shape.update(), calculate current angle over the past 5 frames, not just the last 1 frame (need to expand startMapCenter to include more history)
 - allow multiple doors per room side

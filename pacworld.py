@@ -62,24 +62,35 @@ class Pacworld:
 				self.button_status.append(self.joystick.get_button(i))
 		
 		# Set the window title
-		display.set_caption("Map Test")
+		display.set_caption("WORKING NAME: Pacworld")
 		
 		# Create the window
 		self.display = display.set_mode(self.displaySize)
+		font = pygame.font.Font(None, 30)
+		textBitmap = font.render("Generating world...", True, colors.WHITE)
+		#textRect = textBitmap.get_rect().width
+		#print "DEBUG: textRect is: {0}".format(textRect)
+		textWidth = textBitmap.get_rect().width
+		self.display.blit(textBitmap, [self.displaySize[0]/2 - textWidth/2, self.displaySize[1]/2])
+		display.update()
+		
 		
 		self.character_size = self.displaySize[0] / 10
 		
 		# if no random seed was given, make one up:
-		if(False):
+		if(True):
 			crazySeed = random.randint(0, MAX_RANDOM_SEED)
 			print "INFO: USING RANDOM SEED: {0}",format(crazySeed)
 		else:
-			crazySeed = 57971
+			# cool seeds: 24669 
+			crazySeed = 24669
 			print "INFO: USING CHOSEN SEED: {0}",format(crazySeed)
 		
+		SCALE_FACTOR = 2
+
+
 		random.seed(crazySeed)
-		
-		SCALE_FACTOR = 3
+
 		mapSize = [SCALE_FACTOR*x for x in self.displaySize]
 		
 		gridSize = int(self.character_size * 1.5)
@@ -91,12 +102,14 @@ class Pacworld:
 		
 		# Create the world map, passing through the display size and world map
 		self.map = Map(mapSize, self.displaySize, theworld)
+		self.art = theworld.addArt(self.map)	# FIXME: FOR DEBUG ONLY
 		
 		# Create a single shape and add it to a sprite group
-		self.shape = Shape(self.displaySize, self.character_size, 3)
-		self.shape.bg = self.map
-		self.sprites = sprite.Group(self.shape)
+		self.shape = Shape(self.displaySize, self.map, self.character_size, 3)
+		self.sprites = sprite.Group(self.shape, *self.art)
+		#self.sprites = sprite.Group(self.shape)
 		self.shape.sound = self.sound
+		#self.shape.mapCenter = [int(5.5*self.map.grid_cellwidth-self.shape.side_length/2), int(5.5*self.map.grid_cellheight-self.shape.side_length/2)]
 		
 		print "INFO: USING RANDOM SEED: {0}".format(crazySeed)
 
@@ -119,10 +132,26 @@ class Pacworld:
 			
 			# Update and draw the sprites
 			self.sprites.update(pygame.time.get_ticks())
+			#print "DEBUG: drawing shape via sprite group. shape rect is: {0}".format(self.shape.rect)
+			# draw the shape by itself onto tho display. it's always there.
 			self.shape.draw(self.display)
+			# NOTE: we only want to show the art that is currently onscreen, and it needs to be shifted to its correct position
+			windowRect = self.map.getWindowRect(self.shape.mapCenter)
+			windowRight = windowRect.left + windowRect.width
+			windowBottom = windowRect.top + windowRect.height
+			for artpiece in self.art:
+				# if artpiece is on the screen, we will draw it
+				artLeft = artpiece.left * self.map.grid_cellwidth
+				artRight = artLeft + artpiece.width * self.map.grid_cellwidth
+				artTop = artpiece.top * self.map.grid_cellheight
+				artBottom = artTop + artpiece.height * self.map.grid_cellheight
+				if artLeft > windowRight: continue
+				if artRight < windowRect.left: continue
+				if artBottom < windowRect.top: continue
+				if artTop > windowBottom: continue
+				#print "DEBUG: drawing art at {0}".format(artpiece.rect)
+				artpiece.draw(self.display, windowRect)
 			
-			# Check for collisions
-			#
 			
 			# Update the full display surface to the screen
 			display.update()
@@ -148,6 +177,7 @@ class Pacworld:
 							print "Button "+str(i+1)+" pressed."
 							if(i == 0):
 								self.shape.startBurst()
+								self.art[0].startBurst()	# FIXME: FOR DEBUG ONLY
 							elif(i == 4):
 								self.shape.sizeDown()
 							elif(i == 5):
@@ -178,6 +208,7 @@ class Pacworld:
 					#elif event.key == K_w:
 					if event.key == K_SPACE:
 						self.shape.startBurst()
+						self.art[0].startBurst()	# FIXME: FOR DEBUG ONLY
 					elif event.key == K_DOWN:
 						self.shape.startMove(DIR_DOWN)
 					elif event.key == K_UP:

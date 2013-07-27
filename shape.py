@@ -22,9 +22,11 @@ BURST_EFFECT_NUMFRAMES = 6
 # The class for Shapes
 class Shape(sprite.Sprite):
 	
-	def __init__(self, displaySize, shape_size, num_sides = 3):
+	def __init__(self, displaySize, themap, shape_size, num_sides = 3):
 		# Initialize the sprite base class
 		super(Shape, self).__init__()
+		
+		self.map = themap
 		
 		# Get the display size for working out collisions later
 		self.displaySize = displaySize
@@ -48,10 +50,7 @@ class Shape(sprite.Sprite):
 		# initialize effects
 		self.in_burstEffect = False
 
-		# create the image for the shape
-		self.makeSprite()
-		
-		# Reset the shape
+		# Reset the shape & create the first image
 		self.reset()
 		
 		# placeholder variables for subsystems
@@ -135,9 +134,17 @@ class Shape(sprite.Sprite):
 		if(self.angle != 0):
 			self.image = pygame.transform.rotate(self.image, self.angle)
 
-		
+		# get position of old rect
+		oldx = None
+		if hasattr(self, 'rect'):
+			oldx = self.rect.left
+			oldy = self.rect.top
 		# Create the sprites rectangle from the image
 		self.rect = self.image.get_rect()
+		# restore position of rect
+		if oldx != None:
+			self.rect.top = oldy
+			self.rect.left = oldx
 		
 		# create a mask for the sprite (for collision detection)
 		self.mask = pygame.mask.from_surface(self.image)
@@ -146,9 +153,11 @@ class Shape(sprite.Sprite):
 		# Start the shape directly in the centre of the screen
 		self.mapCenter = [self.displaySize[0] / 2, self.displaySize[1] / 2]
 		self.startMapCenter = self.mapCenter
+		self.imageCenter = list(self.mapCenter)
 		# reset other attributes as well
 		self.angle = 0
 		self.makeSprite()
+		self.updatePosition()
 
 	def update(self, t):
 		# check for on-going movement (for kb input)
@@ -199,24 +208,29 @@ class Shape(sprite.Sprite):
 			self.makeSprite()
 	
 
+	def updatePosition(self):
+		self.imageCenter = list(self.mapCenter)
+		if self.mapCenter[0] < self.displaySize[0]/2:
+			self.imageCenter[0] = self.mapCenter[0]
+		elif self.mapCenter[0] > self.map.mapSize[0]-self.displaySize[0]/2:
+			self.imageCenter[0] = self.displaySize[0] - (self.map.mapSize[0]-self.mapCenter[0])
+		else: 
+			self.imageCenter[0] = self.displaySize[0]/2
+
+		if self.mapCenter[1] < self.displaySize[1]/2:
+			self.imageCenter[1] = self.mapCenter[1]
+		elif self.mapCenter[1] > self.map.mapSize[1]-self.displaySize[1]/2:
+			self.imageCenter[1] = self.displaySize[1] - (self.map.mapSize[1]-self.mapCenter[1])
+		else: 
+			self.imageCenter[1] = self.displaySize[1]/2
+		
+		self.rect.top = self.imageCenter[1]
+		self.rect.left = self.imageCenter[0]
+		#print "DEBUG: Shape.updatePosition(): rect is: {0}".format(self.rect)
+
 	def draw(self, display):
-		imageCenter = list(self.mapCenter)
-		if self.mapCenter[0] < self.bg.displaySize[0]/2:
-			imageCenter[0] = self.mapCenter[0]
-		elif self.mapCenter[0] > self.bg.mapSize[0]-self.bg.displaySize[0]/2:
-			imageCenter[0] = self.bg.displaySize[0] - (self.bg.mapSize[0]-self.mapCenter[0])
-		else: 
-			imageCenter[0] = self.bg.displaySize[0]/2
-
-		if self.mapCenter[1] < self.bg.displaySize[1]/2:
-			imageCenter[1] = self.mapCenter[1]
-		elif self.mapCenter[1] > self.bg.mapSize[1]-self.bg.displaySize[1]/2:
-			imageCenter[1] = self.bg.displaySize[1] - (self.bg.mapSize[1]-self.mapCenter[1])
-		else: 
-			imageCenter[1] = self.bg.displaySize[1]/2
-
-		#print "DEBUG: drawing image at {0}".format(imageCenter)
-		display.blit(self.image, imageCenter)
+		#print "DEBUG: drawing image at {0}".format(self.imageCenter)
+		display.blit(self.image, self.imageCenter)
 	# end of Shape.draw()
 
 
@@ -249,8 +263,10 @@ class Shape(sprite.Sprite):
 		self.mapCenter[0] += int(dx)
 		self.mapCenter[1] += int(dy)
 		# if there's a collision, un-do the move
-		if self.bg.wallCollision(self):
+		if self.map.wallCollision(self):
 			self.mapCenter = startpos
+		else:
+			self.updatePosition()
 	
 	def moveUp(self):
 		"""docstring for moveUp"""
@@ -322,7 +338,7 @@ class Shape(sprite.Sprite):
 		self.makeSprite()
 		
 		# if there's a collision, un-do the rotation
-		if hasattr(self, 'bg') and self.bg.wallCollision(self):
+		if hasattr(self, 'bg') and self.map.wallCollision(self):
 			self.angle = startAngle
 			self.makeSprite()
 			return False
@@ -361,7 +377,7 @@ class ShapeTest:
 
 		# Make the display size a member of the class
 		self.displaySize = (640, 480)
-
+		
 		# Initialize pygame
 		pygame.init()
 
@@ -374,7 +390,7 @@ class ShapeTest:
 		# Create the window
 		self.display = display.set_mode(self.displaySize)
 		
-		self.shape = Shape(self.displaySize, self.displaySize[0] / 10, 3)
+		self.shape = Shape(self.displaySize, None, self.displaySize[0] / 10, 3)
 		self.sprites = sprite.Group(self.shape)
 		
 	def run(self):

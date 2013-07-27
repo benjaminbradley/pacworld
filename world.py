@@ -1,12 +1,15 @@
 import random
 import copy
 
+from art import Art
+
 # map symbols
 HPATH_SYMBOL = '='
 VPATH_SYMBOL = '|'
 INTERSECTION_SYMBOL = '+'
 FIELD_SYMBOL = '/'
 ROOM_SYMBOL = 'O'
+ART_SYMBOL = '&'
 PATH_SYMBOLS = [HPATH_SYMBOL, VPATH_SYMBOL]
 SYMBOL_BACKGROUND = ' '
 SYMBOL_CLEAR = None
@@ -22,11 +25,13 @@ TYPE_PATH = 'path'
 TYPE_INTERSECTION = 'pathcross'
 TYPE_FIELD = 'field'
 TYPE_ROOM = 'room'
+TYPE_ART = 'art'
 RENDER_ORDER = {
 	TYPE_PATH : 1,
 	TYPE_INTERSECTION : 2,
 	TYPE_FIELD : 3,
 	TYPE_ROOM : 4,
+	TYPE_ART : 5,
 }
 
 SIDE_N = 0
@@ -688,7 +693,27 @@ class World():
 
 		# step 4. place rocks
 		#	- 4 or 5 randomly around the map? maybe skip this step? or it's used to identify inaccessible enclosed spaces?
+	# end of World.__init__()
 	
+	
+	def addArt(self, themap):
+		"""adds random art to the world"""
+		# how much art to generate
+		minTotalArts = 1
+		curTotalArts = 0
+		while curTotalArts < minTotalArts:
+		# until enough art generated
+			# create new art
+			newArt = Art(themap, 2, 2)
+			
+			# add art to the list of objects
+			if(self.addObject(newArt)):
+				curTotalArts += 1
+				#print "DEBUG: World.__init__(): {0} arts".format(curTotalArts)
+		# now there's enough art in the world
+		return [newArt]
+		
+	# end of World.addArt()
 	
 	def copyGrid(self):
 		# a deepcopy is too deep - we want to retain references to all the existing world objects (paths, rooms, etc)
@@ -698,7 +723,7 @@ class World():
 		for r in range(self.rows):
 			newGrid.append(copy.copy(self.grid[r]))
 		return newGrid
-	
+	# end of World.copyGrid()
 	
 	def addObject(self, newObject):
 		# copy current grid
@@ -733,6 +758,9 @@ class World():
 						newGrid[posy][posx] = newObject
 			
 			
+		elif(newObject.type == TYPE_ART):
+			newGrid[newObject.top][newObject.left] = newObject
+
 		elif(newObject.type == TYPE_PATH):
 			x = newObject.left
 			y = newObject.top
@@ -859,7 +887,7 @@ class World():
 			# end for w in width
 			
 		else:
-			print "PROGRAM ERROR: Unknown type {0}".format(newObject.type)
+			print "PROGRAM ERROR: World.addObject(): Unknown type {0}".format(newObject.type)
 			exit()
 		
 		# if everything works out ok, save the new grid
@@ -870,6 +898,7 @@ class World():
 		#print "DEBUG: object added, new grid is: \n{0}".format(self.to_s())
 		self.objects.append(newObject)
 		return newObject.id	# success
+	# end of World.addObject()
 
 	def to_s(self):
 		"""converts world grid to a string for display to console"""
