@@ -2,7 +2,7 @@
 
 import pygame # Provides what we need to make a game
 import sys # Gives us the sys.exit function to close our program
-import random # Can generate random positions for the pong ball
+import random
 
 from pygame.locals import *
 from pygame import *
@@ -86,7 +86,7 @@ class Pacworld:
 			crazySeed = 24669
 			print "INFO: USING CHOSEN SEED: {0}",format(crazySeed)
 		
-		SCALE_FACTOR = 2
+		SCALE_FACTOR = 3
 
 
 		random.seed(crazySeed)
@@ -109,6 +109,7 @@ class Pacworld:
 		self.sprites = sprite.Group(self.shape, *self.art)
 		#self.sprites = sprite.Group(self.shape)
 		self.shape.sound = self.sound
+		self.map.shape = self.shape
 		#self.shape.mapCenter = [int(5.5*self.map.grid_cellwidth-self.shape.side_length/2), int(5.5*self.map.grid_cellheight-self.shape.side_length/2)]
 		
 		print "INFO: USING RANDOM SEED: {0}".format(crazySeed)
@@ -137,18 +138,9 @@ class Pacworld:
 			self.shape.draw(self.display)
 			# NOTE: we only want to show the art that is currently onscreen, and it needs to be shifted to its correct position
 			windowRect = self.map.getWindowRect(self.shape.mapCenter)
-			windowRight = windowRect.left + windowRect.width
-			windowBottom = windowRect.top + windowRect.height
 			for artpiece in self.art:
 				# if artpiece is on the screen, we will draw it
-				artLeft = artpiece.left * self.map.grid_cellwidth
-				artRight = artLeft + artpiece.width * self.map.grid_cellwidth
-				artTop = artpiece.top * self.map.grid_cellheight
-				artBottom = artTop + artpiece.height * self.map.grid_cellheight
-				if artLeft > windowRight: continue
-				if artRight < windowRect.left: continue
-				if artBottom < windowRect.top: continue
-				if artTop > windowBottom: continue
+				if not artpiece.onScreen(windowRect): continue
 				#print "DEBUG: drawing art at {0}".format(artpiece.rect)
 				artpiece.draw(self.display, windowRect)
 			
@@ -177,7 +169,6 @@ class Pacworld:
 							print "Button "+str(i+1)+" pressed."
 							if(i == 0):
 								self.shape.startBurst()
-								self.art[0].startBurst()	# FIXME: FOR DEBUG ONLY
 							elif(i == 4):
 								self.shape.sizeDown()
 							elif(i == 5):
@@ -208,7 +199,6 @@ class Pacworld:
 					#elif event.key == K_w:
 					if event.key == K_SPACE:
 						self.shape.startBurst()
-						self.art[0].startBurst()	# FIXME: FOR DEBUG ONLY
 					elif event.key == K_DOWN:
 						self.shape.startMove(DIR_DOWN)
 					elif event.key == K_UP:

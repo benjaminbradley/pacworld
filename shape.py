@@ -1,3 +1,4 @@
+import random
 import pygame # Provides what we need to make a game
 import sys # Gives us the sys.exit function to close our program
 import math	# sin,cos,pi
@@ -7,6 +8,8 @@ from pygame import *
 
 import pacsounds
 import colors
+import effect
+from effect import Effect
 
 MAX_SIDES = 10
 SIZE_MINIMUM = 5
@@ -48,7 +51,7 @@ class Shape(sprite.Sprite):
 		self.setSpeed()
 
 		# initialize effects
-		self.in_burstEffect = False
+		self.effects = {}	# dictionary of Effect.EFFECT_TYPE to Effect class
 
 		# Reset the shape & create the first image
 		self.reset()
@@ -113,16 +116,8 @@ class Shape(sprite.Sprite):
 			pygame.draw.polygon(self.image, self.color, pointlist, self.outlineWidth)
 
 		# draw any effects
-		if self.in_burstEffect:
-			width = 2
-			radius = int(self.side_length/2)
-			print "DEBUG: Shape.update(): frame={0}, numframe={1}, radius={2}".format(self.burstEffect_frame, self.burstEffect_numframes, radius)
-			burst_radius = int(float(self.burstEffect_frame) / float(self.burstEffect_numframes) * radius)
-			if width > burst_radius: width = burst_radius
-			gradpercent = float(self.burstEffect_frame) / float(self.burstEffect_numframes)
-			grad_color = [int(gradpercent*c) for c in colors.NEONBLUE]
-			print "DEBUG: Shape.update(): in burstEffect: burst_radius = {0}, gradpercent = {1}, grad_color={2}".format(burst_radius, gradpercent, grad_color)
-			pygame.draw.circle(self.image, grad_color, (radius,radius), burst_radius, width)
+		for effect in self.effects.values():
+			effect.draw(self.image)
 		
 		# draw the "eye" direction indicator
 		radius = self.outlineWidth + self.outlineWidth
@@ -151,7 +146,10 @@ class Shape(sprite.Sprite):
 	
 	def reset(self):
 		# Start the shape directly in the centre of the screen
-		self.mapCenter = [self.displaySize[0] / 2, self.displaySize[1] / 2]
+		# put us in a random square to start
+		starty = self.map.grid_cellheight * random.randint(0, self.map.world.rows-1)
+		startx = self.map.grid_cellwidth * random.randint(0, self.map.world.cols-1)
+		self.mapCenter = [startx, starty]
 		self.startMapCenter = self.mapCenter
 		self.imageCenter = list(self.mapCenter)
 		# reset other attributes as well
@@ -198,13 +196,9 @@ class Shape(sprite.Sprite):
 		self.startMapCenter = list(self.mapCenter)
 
 		# check for and update sprite animations
-		if self.in_burstEffect:
-			#print "DEBUG: Shape.update(): t={0}, lastUpdate={1}, frame={2}".format(t, self.burstEffect_last_update, self.burstEffect_frame)
-			if t - self.burstEffect_last_update > self.burstEffect_delay:
-				self.burstEffect_frame += 1
-				if self.burstEffect_frame >= self.burstEffect_numframes:
-					self.in_burstEffect = False	# end the effect, only go through it once
-				self.burstEffect_last_update = t
+		if effect.BURST_EFFECT in self.effects.keys():
+			if not self.effects[effect.BURST_EFFECT].update(t):
+				del self.effects[effect.BURST_EFFECT]	# FIXME: is more explicit garbage collection needed here?
 			self.makeSprite()
 	
 
@@ -236,16 +230,8 @@ class Shape(sprite.Sprite):
 
 
 	def startBurst(self):
-		fps = 10
-		# initialize animation timer
-		self.in_burstEffect = True
-		#self.burstEffect_start = pygame.time.get_ticks()
-		self.burstEffect_delay = 1000 / fps
-		self.burstEffect_last_update = 0
-		self.burstEffect_frame = 0
-		self.burstEffect_numframes = BURST_EFFECT_NUMFRAMES
-		# play burst sound
-		if self.sound != None: self.sound.play('3roboditzfade')
+		self.effects[effect.BURST_EFFECT] = Effect(effect.BURST_EFFECT)
+		self.makeSprite()
 
 
 	def move(self, dx, dy):

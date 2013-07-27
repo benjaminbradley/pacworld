@@ -7,7 +7,13 @@ SOUNDS = {
 }
 
 # The class for the sound system
-class Pacsounds():
+class Pacsounds(object):
+	_instance = None
+	def __new__(cls, *args, **kwargs):
+		if not cls._instance:
+			cls._instance = super(Pacsounds, cls).__new__(cls, *args, **kwargs)
+		return cls._instance
+	
 	
 	def __init__(self):
 		# initialize the sound mixer
@@ -29,6 +35,8 @@ class Pacsounds():
 		
 		print "DEBUG: sound_channels.len = {0}".format(len(self.sound_channels))
 	
-	def play(self, soundName):
+	def play(self, soundName, volume = 1.0):
 		if self.sound_data[soundName] != None:
+			print "DEBUG: Pacsounds.play(): playing sound '{0}' at {1}% volume".format(soundName, volume*100)
+			self.sound_channels[0].set_volume(volume)
 			self.sound_channels[0].play(self.sound_data[soundName])

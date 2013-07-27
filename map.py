@@ -26,6 +26,7 @@ class Map(sprite.Sprite):
 		
 		self.walls = [] # List to hold the walls
 		
+		self.world = theworld
 		
 		#print "DEBUG: Map.__init__(): rendering world:\n{0}".format(theworld.to_s())
 		self.grid_cellheight = grid_cellheight = mapSize[1] / theworld.rows

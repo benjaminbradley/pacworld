@@ -42,6 +42,10 @@ class Art(sprite.Sprite):
 		#self.rect.top = (self.top - 0.5 )* self.map.grid_cellheight
 		#self.rect.left = (self.left - 0.5) * self.map.grid_cellwidth
 		
+		# aspects particular to this type of art
+		self.burstFrequency = 3000	# pull this from somewhere ?
+		self.lastBurst = 0
+		
 		
 	def makeSprite(self):
 		# Create an image for the sprite
@@ -67,10 +71,21 @@ class Art(sprite.Sprite):
 		self.mask = pygame.mask.from_surface(self.image)
 	
 	def startBurst(self):
-		self.effects[effect.BURST_EFFECT] = Effect(effect.BURST_EFFECT)
+		windowRect = self.map.getWindowRect(self.map.shape.mapCenter)
+		if self.onScreen(windowRect): soundvolume = 1.0
+		elif self.nearScreen(windowRect): soundvolume = 0.3
+		else: soundvolume = 0
+		self.effects[effect.BURST_EFFECT] = Effect(effect.BURST_EFFECT, soundvolume)
 		self.makeSprite()
 	
 	def update(self, t):
+		#print "DEBUG: Art.update({0})".format(t)
+		# check for periodic effects to start
+		if self.lastBurst + self.burstFrequency < t:
+			self.lastBurst = t
+			self.startBurst()
+		
+		# check for current effects to continue
 		if effect.BURST_EFFECT in self.effects.keys():
 			if self.effects[effect.BURST_EFFECT].update(t):
 				self.makeSprite()
@@ -85,7 +100,38 @@ class Art(sprite.Sprite):
 		display.blit(self.image, screenpos)
 	# end of Art.draw()
 	
-	# todo: draw the art piece on the map
-	# todo: animate it
+	def onScreen(self, windowRect):
+		windowRight = windowRect.left + windowRect.width
+		windowBottom = windowRect.top + windowRect.height
+		# if artpiece is on the screen, we will draw it
+		artLeft = self.left * self.map.grid_cellwidth
+		artRight = artLeft + self.width * self.map.grid_cellwidth
+		artTop = self.top * self.map.grid_cellheight
+		artBottom = artTop + self.height * self.map.grid_cellheight
+		if artLeft > windowRight: return False
+		if artRight < windowRect.left: return False
+		if artBottom < windowRect.top: return False
+		if artTop > windowBottom: return False
+		return True	# art IS on the screen
+		
+	def nearScreen(self, windowRect):
+		"""This function assumes that onScreen has already failed.
+		This function checks to see if the art is on a screen adjacent to this one"""
+		adjWindowLeft = windowRect.left - windowRect.width
+		adjWindowRight = windowRect.left + windowRect.width * 2
+		adjWindowTop = windowRect.top - windowRect.height
+		adjWindowBottom = windowRect.top + windowRect.height * 2
+		# if artpiece is within this extended window, return true
+		artLeft = self.left * self.map.grid_cellwidth
+		artRight = artLeft + self.width * self.map.grid_cellwidth
+		artTop = self.top * self.map.grid_cellheight
+		artBottom = artTop + self.height * self.map.grid_cellheight
+		if artLeft < adjWindowLeft: return False
+		if artTop < adjWindowTop: return False
+		if artRight > adjWindowRight: return False
+		if artBottom > adjWindowBottom: return False
+		return True	# art IS near the screen
+	
+
 	# idea: the "effects" are the abilities passed from the art piece to the shape.
 	
