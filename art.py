@@ -1,10 +1,20 @@
+import sys
 import pygame
 from pygame import *
 
+sys.path.append('art')
+from DrawSpiral import DrawSpiral
+
+import math
 import world
 import colors
 import effect
 from effect import Effect
+
+
+STYLE_DEFAULT = 0
+STYLE_SPIRAL = 1
+STYLES = [STYLE_DEFAULT, STYLE_SPIRAL]
 
 #example art: a fractal tree which grows and withers
 #example art: a spiral which rotates
@@ -29,6 +39,15 @@ class Art(sprite.Sprite):
 		self.effects = {}	# dictionary of Effect.EFFECT_TYPE to Effect class
 		self.angle = 0
 		self.color = colors.PINK2
+		#self.style = random.randint(0, len(STYLES))
+		self.style = STYLE_SPIRAL	# testing
+		
+		if self.style == STYLE_SPIRAL:
+			self.spiral_minRad = 3
+			self.spiral_maxRad = self.spiral_curRad = int(float(self.side_length) / 2)
+			self.spiral_curRot = math.pi
+			self.spiral_startAngle = 0.0
+			self.spiral_radStep = 2.0
 
 		# make & capture the initial image for the art
 		self.makeSprite()
@@ -52,10 +71,18 @@ class Art(sprite.Sprite):
 		self.image = Surface((self.side_length, self.side_length))
 		self.image.fill(colors.BLACK)
 		self.image.set_colorkey(colors.BLACK, RLEACCEL)	# set the background to transparent
-		radius = int(float(self.side_length) / 2)
-		pygame.draw.circle(self.image, colors.BLACK, (radius,radius), radius+4)
-		pygame.draw.circle(self.image, colors.WHITE, (radius,radius), radius+2)
-		pygame.draw.circle(self.image, self.color, (radius,radius), radius, 2)
+		
+		# draw the base sprite, in it's current state
+		if self.style == STYLE_DEFAULT:
+			radius = int(float(self.side_length) / 2)
+			pygame.draw.circle(self.image, colors.BLACK, (radius,radius), radius+4)
+			pygame.draw.circle(self.image, colors.WHITE, (radius,radius), radius+2)
+			pygame.draw.circle(self.image, self.color, (radius,radius), radius, 2)
+		elif self.style == STYLE_SPIRAL:
+			#DrawSpiral(self.image, [radius,radius], radius = curRad, rotation = curRot, numSpokes = 5, clockwise = True, startAngle = startAngle)
+			DrawSpiral(self.image, [self.spiral_maxRad,self.spiral_maxRad], self.spiral_curRad, self.spiral_curRot, 3, True, self.spiral_startAngle)
+		    
+		
 		
 		for effect in self.effects.values():
 			effect.draw(self.image)
@@ -70,6 +97,7 @@ class Art(sprite.Sprite):
 		# create a mask for the sprite (for collision detection)
 		self.mask = pygame.mask.from_surface(self.image)
 	
+	
 	def startBurst(self):
 		windowRect = self.map.getWindowRect(self.map.shape.mapCenter)
 		if self.onScreen(windowRect): soundvolume = 1.0
@@ -79,6 +107,16 @@ class Art(sprite.Sprite):
 		self.makeSprite()
 	
 	def update(self, t):
+		remakeSprite = False
+		# animate base sprite
+		if self.style == STYLE_SPIRAL:
+			self.spiral_curRad += self.spiral_radStep
+			if self.spiral_curRad <= self.spiral_minRad or self.spiral_curRad >= self.spiral_maxRad: self.spiral_radStep = -self.spiral_radStep
+			self.spiral_curRot += 0.1
+			self.spiral_startAngle -= 0.05
+			remakeSprite = True
+			
+		
 		#print "DEBUG: Art.update({0})".format(t)
 		# check for periodic effects to start
 		if self.lastBurst + self.burstFrequency < t:
@@ -88,10 +126,12 @@ class Art(sprite.Sprite):
 		# check for current effects to continue
 		if effect.BURST_EFFECT in self.effects.keys():
 			if self.effects[effect.BURST_EFFECT].update(t):
-				self.makeSprite()
+				remakeSprite = True
 			else:
 				del self.effects[effect.BURST_EFFECT]	# FIXME: is more explicit garbage collection needed here?
-				self.makeSprite()
+				remakeSprite = True
+		
+		if remakeSprite: self.makeSprite()
 	
 	def draw(self, display, windowRect):
 		#TODO: adjust blit dest by mapCenter
@@ -134,4 +174,3 @@ class Art(sprite.Sprite):
 	
 
 	# idea: the "effects" are the abilities passed from the art piece to the shape.
-	

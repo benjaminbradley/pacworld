@@ -490,7 +490,7 @@ class World():
 		minRoomArea = int(self.totalArea*ROOM_AREA_MIN/100)
 		
 		while(curTotalRoomArea < minRoomArea):
-			print "DEBUG: World.__init__(): current total room area ({0}, {1}%) hasn't met minimum room area ({2}, {3}%)".format(curTotalRoomArea, int(100*curTotalRoomArea/self.totalArea), int(self.totalArea*ROOM_AREA_MIN/100), ROOM_AREA_MIN)
+			#print "DEBUG: World.__init__(): current total room area ({0}, {1}%) hasn't met minimum room area ({2}, {3}%)".format(curTotalRoomArea, int(100*curTotalRoomArea/self.totalArea), int(self.totalArea*ROOM_AREA_MIN/100), ROOM_AREA_MIN)
 			
 			# create a new room & add to the world
 			
@@ -517,7 +517,7 @@ class World():
 			if(newid):
 				curTotalRoomArea += newRoom.area
 			else:
-				print "DEBUG: World.__init__(): room placement failed due to obstruction"
+				#print "DEBUG: World.__init__(): room placement failed due to obstruction"
 				continue
 			
 			# determine orientation (place door(s))
