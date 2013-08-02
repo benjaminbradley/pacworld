@@ -6,13 +6,20 @@ SOUNDS = {
 	'3roboditzfade' : 'sounds/135377__blackie666__nomnomnom.wav'
 }
 
+pacsounds_instance = None
+def getPacsound():
+	global pacsounds_instance
+	if not pacsounds_instance:
+		pacsounds_instance = Pacsounds()
+	return pacsounds_instance
+
 # The class for the sound system
 class Pacsounds(object):
-	_instance = None
-	def __new__(cls, *args, **kwargs):
-		if not cls._instance:
-			cls._instance = super(Pacsounds, cls).__new__(cls, *args, **kwargs)
-		return cls._instance
+	#_instance = None
+	#def __new__(cls, *args, **kwargs):
+	#	if not cls._instance:
+	#		cls._instance = super(Pacsounds, cls).__new__(cls, *args, **kwargs)
+	#	return cls._instance
 	
 	
 	def __init__(self):

@@ -1,7 +1,7 @@
 import pygame
 
 
-from pacsounds import Pacsounds
+from pacsounds import Pacsounds,getPacsound
 import colors
 
 
@@ -18,7 +18,7 @@ class Effect():
 		self.type = type
 		
 		# initialize subsystems
-		self.sound = Pacsounds()
+		self.sound = getPacsound()
 		
 		fps = 10
 		

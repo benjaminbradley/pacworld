@@ -13,7 +13,7 @@ from shape import *
 from map import Map
 import world
 from world import World
-from pacsounds import Pacsounds
+from pacsounds import Pacsounds,getPacsound
 
 INPUT_KEYBOARD = 'kb'
 INPUT_JOYSTICK = 'joy'
@@ -36,7 +36,7 @@ class Pacworld:
 		# Initialize pygame
 		pygame.init()
 		
-		self.sound = Pacsounds()
+		self.sound = getPacsound()
 		
 		# Create a clock to manage time
 		self.clock = pygame.time.Clock()
