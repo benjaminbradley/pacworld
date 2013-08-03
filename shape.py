@@ -2,11 +2,11 @@ import random
 import pygame # Provides what we need to make a game
 import sys # Gives us the sys.exit function to close our program
 import math	# sin,cos,pi
+import logging
 
 from pygame.locals import *
 from pygame import *
 
-import pacsounds
 import colors
 import effect
 from effect import Effect
@@ -64,7 +64,7 @@ class Shape(sprite.Sprite):
 		self.eye_color = colors.YELLOW
 	
 	def colorUp(self):
-		print "DEBUG: Shape.colorUp()"
+		logging.debug("Shape.colorUp()")
 		self.colorIdx += 1
 		if(self.colorIdx >= len(colors.COLORWHEEL)):
 			self.colorIdx = 0
@@ -72,7 +72,7 @@ class Shape(sprite.Sprite):
 		self.makeSprite()
 
 	def colorDn(self):
-		print "DEBUG: Shape.colorDn()"
+		logging.debug("Shape.colorDn()")
 		self.colorIdx -= 1
 		if(self.colorIdx < 0):
 			self.colorIdx = len(colors.COLORWHEEL)-1
@@ -83,7 +83,7 @@ class Shape(sprite.Sprite):
 		''' sets the shape's speed based on its size '''
 		self.linearSpeed = int(self.side_length / 8)
 		self.rotationSpeed = self.linearSpeed
-		print "DEBUG: linearSpeed is now {0}".format(self.linearSpeed)
+		logging.debug("linearSpeed is now {0}".format(self.linearSpeed))
 	
 	def makeSprite(self):
 		# Create an image for the sprite
@@ -170,17 +170,18 @@ class Shape(sprite.Sprite):
 			self.moveRight()
 		
 		# check movement during this update cycle and update angle appropriately
+		newAngle = None
 		if self.startMapCenter != self.mapCenter:
 			dx = self.startMapCenter[0] - self.mapCenter[0]
 			dy = self.startMapCenter[1] - self.mapCenter[1]
 			#print "DEBUG: Shape.update(): self.startMapCenter={0}, mapCenter={1}, dx={2}, dy={3}".format(self.startMapCenter, self.mapCenter, dx, dy)
 			GRAPHIC_BASE_ANGLE = 90
 			if(dx == 0):
-				if(dy > 0): self.setAngle(GRAPHIC_BASE_ANGLE)
-				else: self.setAngle(180+GRAPHIC_BASE_ANGLE)
+				if(dy > 0): newAngle = GRAPHIC_BASE_ANGLE
+				else: newAngle = 180+GRAPHIC_BASE_ANGLE
 			elif(dy == 0):
-				if(dx > 0): self.setAngle(90+GRAPHIC_BASE_ANGLE)
-				else: self.setAngle(270+GRAPHIC_BASE_ANGLE)
+				if(dx > 0): newAngle = 90+GRAPHIC_BASE_ANGLE
+				else: newAngle = 270+GRAPHIC_BASE_ANGLE
 			else:
 				# Tangent: tan(theta) = Opposite / Adjacent
 				theta = math.atan(float(dy)/float(dx))
@@ -190,10 +191,14 @@ class Shape(sprite.Sprite):
 				#print "DEBUG: Shape.update(): self.theta={0}, deg={1}".format(theta, newDeg)
 				if(dy < 0):
 					newDeg += 180
-				self.setAngle(newDeg)
-
+				newAngle = newDeg
+		
 		# set starting mapCenter for the top of the next update cycle
 		self.startMapCenter = list(self.mapCenter)
+		
+		if newAngle != None:
+			self.setAngle(newAngle)	# should happen after the object position is updated for movement so that collision detection test is accurate
+
 
 		# check for and update sprite animations
 		if effect.BURST_EFFECT in self.effects.keys():
@@ -294,21 +299,21 @@ class Shape(sprite.Sprite):
 		self.move(dx * -self.linearSpeed, dy * -self.linearSpeed)
 
 	def sizeUp(self):
-		print "DEBUG: Shape.sizeUp(): old size="+str(self.side_length)
+		logging.debug("old size="+str(self.side_length))
 		self.side_length *= 1.1
 		if self.side_length > SIZE_MAXIMUM:
 			self.side_length = SIZE_MAXIMUM
 		self.setSpeed()
-		print "DEBUG: Shape.sizeUp(): new size="+str(self.side_length)
+		logging.debug("new size="+str(self.side_length))
 		self.makeSprite()
 
 	def sizeDown(self):
-		print "DEBUG: Shape.sizeDown(): old size="+str(self.side_length)
+		logging.debug ("old size="+str(self.side_length))
 		self.side_length *= 0.9
 		if(self.side_length < SIZE_MINIMUM):
 			self.side_length = SIZE_MINIMUM
 		self.setSpeed()
-		print "DEBUG: Shape.sizeDown(): new size="+str(self.side_length)
+		logging.debug ("new size="+str(self.side_length))
 		self.makeSprite()
 	
 	def setAngle(self, angle):
@@ -320,15 +325,17 @@ class Shape(sprite.Sprite):
 		if(self.angle < 0): self.angle = 360 + self.angle
 		if(self.angle >= 360): self.angle = 360 - self.angle
 		#print "DEBUG: angle is now {0}".format(self.angle)
-		# re-create the sprite in the new position
-		self.makeSprite()
 		
 		# if there's a collision, un-do the rotation
-		if hasattr(self, 'bg') and self.map.wallCollision(self):
+		#if hasattr(self, 'map') and self.map.wallCollision(self):
+		if self.map.wallCollision(self):
 			self.angle = startAngle
-			self.makeSprite()
+			logging.debug ("rotation cancelled due to collision. angle left at {0}".format(self.angle))
 			return False
 		else:
+			# re-create the sprite in the new position
+			logging.debug ("new angle: {0}".format(self.angle))
+			self.makeSprite()
 			return True
 		
 		
@@ -346,13 +353,13 @@ class Shape(sprite.Sprite):
 	def lessSides(self):
 		self.num_sides -= 1
 		if(self.num_sides == 0): self.num_sides = 1
-		print "DEBUG: Shape.lessSides(): num_sides is now {0}".format(self.num_sides)
+		logging.debug ("num_sides is now {0}".format(self.num_sides))
 		self.makeSprite()
 	
 	def moreSides(self):
 		self.num_sides += 1
 		if(self.num_sides > MAX_SIDES+1): self.num_sides = MAX_SIDES+1
-		print "DEBUG: Shape.moreSides(): num_sides is now {0}".format(self.num_sides)
+		logging.debug ("num_sides is now {0}".format(self.num_sides))
 		self.makeSprite()
 
 
