@@ -1,6 +1,8 @@
 import sys
+import random
 import pygame
 from pygame import *
+import logging
 
 sys.path.append('art')
 from DrawSpiral import DrawSpiral
@@ -15,6 +17,8 @@ from effect import Effect
 STYLE_DEFAULT = 0
 STYLE_SPIRAL = 1
 STYLES = [STYLE_DEFAULT, STYLE_SPIRAL]
+
+BURST_FREQUENCY = 3000
 
 #example art: a fractal tree which grows and withers
 #example art: a spiral which rotates
@@ -41,6 +45,8 @@ class Art(sprite.Sprite):
 		self.color = colors.PINK2
 		#self.style = random.randint(0, len(STYLES))
 		self.style = STYLE_SPIRAL	# testing
+		self.jitter = pygame.time.get_ticks() + random.randint(0, BURST_FREQUENCY)
+		#print "DEBUG: Art.__init__(): jitter={0}".format(self.jitter)
 		
 		if self.style == STYLE_SPIRAL:
 			self.spiral_minRad = 3
@@ -62,7 +68,7 @@ class Art(sprite.Sprite):
 		#self.rect.left = (self.left - 0.5) * self.map.grid_cellwidth
 		
 		# aspects particular to this type of art
-		self.burstFrequency = 3000	# pull this from somewhere ?
+		self.burstFrequency = BURST_FREQUENCY	# pull this from somewhere ?
 		self.lastBurst = 0
 		
 		
@@ -119,8 +125,11 @@ class Art(sprite.Sprite):
 		
 		#print "DEBUG: Art.update({0})".format(t)
 		# check for periodic effects to start
-		if self.lastBurst + self.burstFrequency < t:
+		#if self.lastBurst + self.burstFrequency < t and self.jitter > t: logging.debug("burst delayed by jitter (%d < %d)", t, self.jitter)
+
+		if self.lastBurst + self.burstFrequency < t and self.jitter < t:
 			self.lastBurst = t
+			#logging.debug ("Art.update(): triggering burst for art #{0} starting at {1}".format(self.id, t))
 			self.startBurst()
 		
 		# check for current effects to continue
