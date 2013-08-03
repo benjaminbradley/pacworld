@@ -1,6 +1,8 @@
 import pygame.mixer	# sounds!
+from pygame import *	# for pygame.time.get_ticks()
+import logging
 
-NUM_SOUND_CHANNELS = 1
+NUM_SOUND_CHANNELS = 16
 SOUNDS = {
 	'3robobeat' : 'sounds/132394__blackie666__robofart.wav',
 	'3roboditzfade' : 'sounds/135377__blackie666__nomnomnom.wav'
@@ -27,23 +29,38 @@ class Pacsounds(object):
 		#pygame.mixer.init(frequency=22050, size=-16, channels=2, buffer=4096)
 		pygame.mixer.init(48000, -16, 1, 1024)
 		pygame.mixer.set_num_channels(NUM_SOUND_CHANNELS)
-		print("DEBUG: Initializing "+str(NUM_SOUND_CHANNELS)+" sound channels...")
+		logging.debug("Initializing "+str(NUM_SOUND_CHANNELS)+" sound channels...")
 		self.sound_channels = []
 		for i in range(NUM_SOUND_CHANNELS):
-			print("DEBUG: Initializing sound channel "+str(i+1))
+			logging.debug("Initializing sound channel "+str(i+1))
 			self.sound_channels.append(pygame.mixer.Channel(i))
 		
 		# load sounds
 		self.sound_data = {}	# hash of shortname (above) to Sound data
+		self.last_play = {}		# hash of shortname to last_play (in clock ticks)
 		
 		for sound_name in SOUNDS.keys():
 			self.sound_data[sound_name] = pygame.mixer.Sound(SOUNDS[sound_name])
-			print "DEBUG: loaded sound '{0}' from {1}: {2} sec".format(sound_name, SOUNDS[sound_name], self.sound_data[sound_name].get_length())
+			logging.debug("loaded sound '{0}' from {1}: {2} sec".format(sound_name, SOUNDS[sound_name], self.sound_data[sound_name].get_length()))
 		
-		print "DEBUG: sound_channels.len = {0}".format(len(self.sound_channels))
+		logging.debug("sound_channels.len = {0}".format(len(self.sound_channels)))
 	
 	def play(self, soundName, volume = 1.0):
-		if self.sound_data[soundName] != None:
-			print "DEBUG: Pacsounds.play(): playing sound '{0}' at {1}% volume".format(soundName, volume*100)
-			self.sound_channels[0].set_volume(volume)
-			self.sound_channels[0].play(self.sound_data[soundName])
+		if self.sound_data[soundName] != None and volume > 0:
+			# check for recent plays of the same sound
+			cur_time = pygame.time.get_ticks()
+			if soundName in self.last_play.keys():
+				last_time = self.last_play[soundName]
+				if(cur_time < last_time + 50):
+					#logging.debug("sound %s has been played too recently, skipping", soundName)
+					return	# minimum threshhold for repeated sounds
+			
+			channel = pygame.mixer.find_channel()
+			if channel == None:
+				logging.warning("no free channels (out of {0})".format(NUM_SOUND_CHANNELS))
+			else:
+				logging.debug("playing sound '{0}' at {1}% volume on channel {2}".format(soundName, volume*100, channel))
+				channel.set_volume(volume)
+				channel.play(self.sound_data[soundName])
+				self.last_play[soundName] = cur_time
+				
