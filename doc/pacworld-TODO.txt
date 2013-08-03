@@ -1,6 +1,3 @@
-BUG FIXES:
-- player occasionally gets stuck in a wall (collision detection not preventing movement?)
-
 NEXT STEPS for MVP:
 - get a swirl from an art piece
 - swirling shapes inside the characters

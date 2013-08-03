@@ -209,6 +209,8 @@ class Pacworld:
 						self.shape.startMove(DIR_RIGHT)
 					elif event.key == K_LEFT:
 						self.shape.startMove(DIR_LEFT)
+					elif event.key == K_t:
+						self.shape.reset()
 					elif event.key == K_ESCAPE:
 						pygame.quit()
 						sys.exit()

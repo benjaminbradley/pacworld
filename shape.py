@@ -145,10 +145,10 @@ class Shape(sprite.Sprite):
 		self.mask = pygame.mask.from_surface(self.image)
 	
 	def reset(self):
-		# Start the shape directly in the centre of the screen
 		# put us in a random square to start
 		starty = self.map.grid_cellheight * random.randint(0, self.map.world.rows-1)
 		startx = self.map.grid_cellwidth * random.randint(0, self.map.world.cols-1)
+		# Start the shape directly in the centre of the screen
 		self.mapCenter = [startx, starty]
 		self.startMapCenter = self.mapCenter
 		self.imageCenter = list(self.mapCenter)
@@ -250,13 +250,15 @@ class Shape(sprite.Sprite):
 		# save initial positions
 		startpos = list(self.mapCenter)
 		# Move the rect
-		#print "DEBUG: Shape.move_single_axis({0}, {1})".format(dx, dy)
+		#logging.debug("Shape.move_single_axis({0}, {1})".format(dx, dy))
 		self.mapCenter[0] += int(dx)
 		self.mapCenter[1] += int(dy)
 		# if there's a collision, un-do the move
 		if self.map.wallCollision(self):
+			#logging.debug("move aborted due to collision")
 			self.mapCenter = startpos
 		else:
+			#logging.debug("shape moved to %s from %s", self.mapCenter, startpos)
 			self.updatePosition()
 	
 	def moveUp(self):
@@ -317,7 +319,6 @@ class Shape(sprite.Sprite):
 		self.makeSprite()
 	
 	def setAngle(self, angle):
-		"""docstring for setAngle"""
 		startAngle = self.angle
 		# update the angle
 		self.angle = angle
@@ -328,13 +329,16 @@ class Shape(sprite.Sprite):
 		
 		# if there's a collision, un-do the rotation
 		#if hasattr(self, 'map') and self.map.wallCollision(self):
+		# remake the sprite for the collision test
+		self.makeSprite()
 		if self.map.wallCollision(self):
+			#logging.debug ("rotation cancelled due to collision. angle left at {0}".format(self.angle))
 			self.angle = startAngle
-			logging.debug ("rotation cancelled due to collision. angle left at {0}".format(self.angle))
+			self.makeSprite()
 			return False
 		else:
 			# re-create the sprite in the new position
-			logging.debug ("new angle: {0}".format(self.angle))
+			#logging.debug ("new angle: {0}".format(self.angle))
 			self.makeSprite()
 			return True
 		
