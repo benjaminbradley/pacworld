@@ -1,6 +1,7 @@
 import sys
 import pygame
 from pygame import *
+import logging
 
 import wall
 from wall import Wall
@@ -18,7 +19,7 @@ class Map(sprite.Sprite):
 		self.displaySize = displaySize
 		self.mapSize = mapSize
 		#self.mapSize = list(displaySize)
-		print "DEBUG: Map.__init__(): mapSize is {0}".format(self.mapSize)
+		logging.debug ("mapSize is {0}".format(self.mapSize))
 		self.image = Surface(self.mapSize)
 		
 		# Fill the image with a green colour (specified as R,G,B)
@@ -31,13 +32,13 @@ class Map(sprite.Sprite):
 		#print "DEBUG: Map.__init__(): rendering world:\n{0}".format(theworld.to_s())
 		self.grid_cellheight = grid_cellheight = mapSize[1] / theworld.rows
 		self.grid_cellwidth = grid_cellwidth = mapSize[0] / theworld.cols
-		print "DEBUG: Map.__init__(): cell size is {0} wide x {1} high".format(grid_cellwidth, grid_cellheight)
+		logging.debug ("cell size is {0} wide x {1} high".format(grid_cellwidth, grid_cellheight))
 		
 
 		# NEXT: render the world map from the 'world' class argument
 		
 		for worldObj in sorted(theworld.objects, key=lambda obj: world.RENDER_ORDER[obj.type]):
-			print "DEBUG: rendering the next world object: {0}".format(worldObj)
+			logging.debug ("rendering the next world object: {0}".format(worldObj))
 			if worldObj.type == world.TYPE_PATH:
 				left = worldObj.left * grid_cellwidth
 				top = worldObj.top * grid_cellheight
@@ -53,11 +54,11 @@ class Map(sprite.Sprite):
 				bottomRt = (right, bottom)
 				# draw a line down each side of the path
 				if worldObj.direction_h:
-					print "DEBUG: path line1 from {0} to {1}".format(topLt, topRt)
+					logging.debug ("path line1 from {0} to {1}".format(topLt, topRt))
 					pygame.draw.line(self.image, colors.GREEN, topLt, topRt, wall.WALL_LINE_WIDTH)
 					pygame.draw.line(self.image, colors.GREEN, bottomLt, bottomRt, wall.WALL_LINE_WIDTH)
 				else:
-					print "DEBUG: path line1 from {0} to {1}".format(topLt, bottomLt)
+					logging.debug ("path line1 from {0} to {1}".format(topLt, bottomLt))
 					pygame.draw.line(self.image, colors.GREEN, topLt, bottomLt, wall.WALL_LINE_WIDTH)
 					pygame.draw.line(self.image, colors.GREEN, topRt, bottomRt, wall.WALL_LINE_WIDTH)
 				# note, these are NOT blocking walls
@@ -84,7 +85,7 @@ class Map(sprite.Sprite):
 				#bottomLt = (left, bottom)
 				#bottomRt = (right, bottom)
 				rect = (left, top, width, height)
-				print "DEBUG: intersection rect at {0}".format(rect)
+				logging.debug ("intersection rect at {0}".format(rect))
 				pygame.draw.rect(self.image, (222,222,222), rect)
 
 			elif worldObj.type == world.TYPE_FIELD:
@@ -105,7 +106,7 @@ class Map(sprite.Sprite):
 				height = worldObj.height * grid_cellheight
 				right = left + width
 				bottom = top + height
-				print "DEBUG: Map... rendering ROOM {4} [vert={0}..{1}, horiz={2}..{3}]".format(top,bottom,left,right,worldObj.id)
+				logging.debug ("rendering ROOM {4} [vert={0}..{1}, horiz={2}..{3}]".format(top,bottom,left,right,worldObj.id))
 				# define interior & paint it
 				rect = (left, top, width, height)
 				#print "DEBUG: room rect at {0}".format(rect)
@@ -120,13 +121,13 @@ class Map(sprite.Sprite):
 				# draw walls that have doors in them
 				#NOTE: assumes no more than one door per wall
 				num_doors = len(worldObj.doors.keys())
-				if num_doors > 1: print "DEBUG: Map...multiple doors! Room has {0} doors.".format(num_doors)
+				if num_doors > 1: logging.debug ("multiple doors! Room has {0} doors.".format(num_doors))
 				for side,doorpos in worldObj.doors.items():
 					#need to keep track of which sides have been processed, 
 					#add the defaults later for walls with no doors
 					doorx = doorpos[0]
 					doory = doorpos[1]
-					print "DEBUG: Map... rendering ROOM {0} has a door at {1} on side {2}".format(worldObj.id,doorpos,side)
+					logging.debug ("rendering ROOM {0} has a door at {1} on side {2}".format(worldObj.id,doorpos,side))
 					if side == world.SIDE_N:
 						doorLeft = doorx * grid_cellwidth
 						doorRight = (doorx+1) * grid_cellwidth
@@ -138,7 +139,7 @@ class Map(sprite.Sprite):
 					if side == world.SIDE_E:
 						doorTop = doory * grid_cellheight
 						doorBottom = (doory+1) * grid_cellheight
-						print "DEBUG: Map... rendering ROOM door top/bottom is {0}/{1}".format(doorTop,doorBottom)
+						logging.debug ("rendering ROOM door top/bottom is {0}/{1}".format(doorTop,doorBottom))
 						# add 2 walls, on either side of the door
 						roomWalls[side] = []
 						roomWalls[side].append([(right,top), (right,doorTop)])
@@ -164,7 +165,7 @@ class Map(sprite.Sprite):
 				# check all directions and add a default wall if none is defined
 				for side in world.SIDES:
 					if side not in roomWalls.keys() or len(roomWalls[side]) == 0:
-						print "DEBUG: Map... drawing default wall for side {0}".format(side)
+						logging.debug ("drawing default wall for side {0}".format(side))
 						roomWalls[side] = []
 						if side == world.SIDE_N: roomWalls[side].append([(left,top), (right,top)])
 						if side == world.SIDE_E: roomWalls[side].append([(right,top), (right, bottom)])
@@ -180,7 +181,7 @@ class Map(sprite.Sprite):
 						# draw on image
 						newwall.draw(self.image)
 				
-		print "DEBUG: Map.__init__(): rendered world:\n{0}".format(theworld.to_s())
+		logging.debug ("rendered world:\n{0}".format(theworld.to_s()))
 		
 
 		# draw a border, registering each line as a wall
