@@ -1,5 +1,6 @@
 import random
 import copy
+import logging
 
 from art import Art
 
@@ -95,7 +96,7 @@ def get_random_value(sizes):
 		used_weights += weights[i]
 	
 	if result_index == None:
-		print "ERROR: no results! total_weights = {0}, used_weights={1}, weighted_result={2}".format(total_weights, used_weights, weighted_result)
+		logging.error ("no results! total_weights = {0}, used_weights={1}, weighted_result={2}".format(total_weights, used_weights, weighted_result))
 		return 0
 		
 	#print "DEBUG: get_random_value(): result_index={0}, values array={1}".format(result_index, values)
@@ -221,7 +222,7 @@ class Field():
 
 	
 def negotiateDoorPlacement(newRoom, adjacent_room, doorpos, doorside):
-	print "DEBUG: Door for room {0} was placed next to an adjacent ROOM {1}: {2}".format(newRoom.id, adjacent_room.id, adjacent_room)
+	#logging.debug ("Door for room {0} was placed next to an adjacent ROOM {1}: {2}".format(newRoom.id, adjacent_room.id, adjacent_room))
 	# if a door is placed next to another room, add a door to the other room, or coordinate with location of existing door
 	adj_doorside = (doorside + 2) % 4	# NOTE: number of SIDES is fixed at 4
 	(doorx,doory) = doorpos
@@ -292,16 +293,16 @@ def negotiateDoorPlacement(newRoom, adjacent_room, doorpos, doorside):
 		
 		else:	#	(door coordination is impossible...)
 			#TODO: add support for multiple doors in each wall, and add the matching door to the adjacent room
-			print "WARN: World... rendering room: adjacent room already has a door on side {0} & we could NOT coordinate them".format(adj_doorside)
+			logging.warning ("rendering room: adjacent room already has a door on side {0} & we could NOT coordinate them".format(adj_doorside))
 		# end of (trying to coordinate door positions)
 		
-		print "DEBUG: World... adding door to adjacent room at {0},{1} on side {2} -- adjacent ROOM {3}; my door is at {4},{5} on side {6} for ROOM {7}".format(adjacent_room.doors[adj_doorside][0], adjacent_room.doors[adj_doorside][1], adj_doorside, adjacent_room.id, doorx,doory,doorside, newRoom.id)
-		print "DEBUG: World... adjacent room ID {0} now has {1} door(s): {2}".format(adjacent_room.id, len(adjacent_room.doors.keys()), adjacent_room.doors)
+		#print "DEBUG: World... adding door to adjacent room at {0},{1} on side {2} -- adjacent ROOM {3}; my door is at {4},{5} on side {6} for ROOM {7}".format(adjacent_room.doors[adj_doorside][0], adjacent_room.doors[adj_doorside][1], adj_doorside, adjacent_room.id, doorx,doory,doorside, newRoom.id)
+		#print "DEBUG: World... adjacent room ID {0} now has {1} door(s): {2}".format(adjacent_room.id, len(adjacent_room.doors.keys()), adjacent_room.doors)
 		
 	else:
 		adjacent_room.doors[adj_doorside] = (adj_doorx, adj_doory)
-		print "DEBUG: World... adding door to adjacent room at {0},{1} on side {2} -- adjacent ROOM {3}; my door is at {4},{5} on side {6} for ROOM {7}".format(adj_doorx, adj_doory, adj_doorside, adjacent_room.id, doorx,doory,doorside, newRoom.id)
-		print "DEBUG: World... adjacent room ID {0} now has {1} door(s): {2}".format(adjacent_room.id, len(adjacent_room.doors.keys()), adjacent_room.doors)
+		#print "DEBUG: World... adding door to adjacent room at {0},{1} on side {2} -- adjacent ROOM {3}; my door is at {4},{5} on side {6} for ROOM {7}".format(adj_doorx, adj_doory, adj_doorside, adjacent_room.id, doorx,doory,doorside, newRoom.id)
+		#print "DEBUG: World... adjacent room ID {0} now has {1} door(s): {2}".format(adjacent_room.id, len(adjacent_room.doors.keys()), adjacent_room.doors)
 	# end of (adjacent square is a room)
 
 	# update the grid with the door location
@@ -435,7 +436,7 @@ class World():
 			# DEBUG: show current map
 			#print "DEBUG: World.__init__(): world grid is:\n{0}".format(self.to_s())
 		# end of (generate pathways)
-		print "DEBUG: World.__init__(): final total path area is {0} ({1}%) from {2} paths. Goal is minimum {3}".format(curTotalPathArea, 100*curTotalPathArea/self.totalArea, numPaths_longWays+numPaths_shortWays, minPathArea)
+		logging.debug ("final total path area is {0} ({1}%) from {2} paths. Goal is minimum {3}".format(curTotalPathArea, 100*curTotalPathArea/self.totalArea, numPaths_longWays+numPaths_shortWays, minPathArea))
 		
 
 		# step 2. generate fields
@@ -477,7 +478,7 @@ class World():
 			# DEBUG: show current map
 			#print "DEBUG: World.__init__(): world grid is:\n{0}".format(self.to_s())
 		# end of (adding fields)
-		print "DEBUG: World.__init__(): final total field area is {0} ({1}%) from {2} fields. Goal is minimum {3}".format(curTotalFieldArea, 100*curTotalFieldArea/self.totalArea, numFields, minFieldArea)
+		logging.debug ("final total field area is {0} ({1}%) from {2} fields. Goal is minimum {3}".format(curTotalFieldArea, 100*curTotalFieldArea/self.totalArea, numFields, minFieldArea))
 		
 		
 		#TODO:
@@ -528,7 +529,7 @@ class World():
 			roomRight = newRoom.right
 			roomTop = newRoom.top
 			roomBottom = newRoom.bottom
-			print "DEBUG: World.__init__(): room:top={0}, bottom={1}, left={2}, right={3}  ROOM {4}".format(roomTop, roomBottom, roomLeft, roomRight, newRoom.id)
+			logging.debug ("room:top={0}, bottom={1}, left={2}, right={3}  ROOM {4}".format(roomTop, roomBottom, roomLeft, roomRight, newRoom.id))
 			squares_checked = {}	# hash of X,Y coordinates to boolean, dictionary
 			while not door_placed:
 				# pick a side to pick a random square from
@@ -569,7 +570,7 @@ class World():
 				else:
 					squares_checked[index] = True	# mark this square as checked
 					if(len(squares_checked.keys()) == total_edge_squares):
-						print "DEBUG: checked all possible room squares for door placement, none qualify... will need to place door randomly for ROOM {0}.".format(newRoom.id)
+						#logging.debug ("checked all possible room squares for door placement, none qualify... will need to place door randomly for ROOM {0}.".format(newRoom.id))
 						# if a door is not placed by any other means, do so now by random selection:
 						# pick a random side
 						#print "DEBUG placing door on random side within {0}".format(insides)
@@ -586,7 +587,7 @@ class World():
 							else: doorx = roomLeft	# doorside == SIDE_W
 						
 						newRoom.doors[doorside] = (doorx, doory)
-						print "DEBUG: ROOM {0}: new door placed randomly at {1} on side {2}".format(newRoom.id, newRoom.doors[doorside], doorside)
+						#print "DEBUG: ROOM {0}: new door placed randomly at {1} on side {2}".format(newRoom.id, newRoom.doors[doorside], doorside)
 						door_placed = True
 						# DON'T continue - we need to check for door in adjacent room
 					# end of (we've checked all squares, assign one randomly)
@@ -614,35 +615,33 @@ class World():
 					adj_doorx = roomLeft-1
 					adj_doory = doory
 				
-				print "DEBUG: ROOM {0} door placement: checking adjacent square at {1},{2}".format(newRoom.id, adj_doorx, adj_doory)
+				#print "DEBUG: ROOM {0} door placement: checking adjacent square at {1},{2}".format(newRoom.id, adj_doorx, adj_doory)
 				adjacent_square = self.grid[adj_doory][adj_doorx]
 				
 				if adjacent_square == None:
 					if door_placed:
 						# we will allow a door next to undefined territory if there are no better options
-						print "DEBUG: allowing door next to nothing due to lack of better options"
+						#print "DEBUG: allowing door next to nothing due to lack of better options"
 						continue
 					else:
-						print "DEBUG: adjacent square is undefined, disallowing door"
+						#print "DEBUG: adjacent square is undefined, disallowing door"
 						continue
 				
 				if adjacent_square.type not in [TYPE_PATH, TYPE_FIELD, TYPE_INTERSECTION, TYPE_ROOM]:
 					# not a qualifying adjacentcy type
-					print "DEBUG: adjacent square is not allowed ({0})",format(adjacent_square.type)
+					#print "DEBUG: adjacent square is not allowed ({0})",format(adjacent_square.type)
 					if door_placed:
-						print "DEBUG: we've tried placing a door randomly, and it's no good. aborting"
-					continue
-				
+						#print "DEBUG: we've tried placing a door randomly, and it's no good. aborting"
+						continue
+					
 				if adjacent_square.type == TYPE_ROOM:
 					#CHECKADJDOOR (but this one is in reverse, newRoom = self, existing = adjacent)
 					#TODO: refactor
 					#FUNCTION: negotiateDoorPlacement(newRoom, adjacent_room, doorpos)
-					print "DEBUG: negotiating"
 					negotiateDoorPlacement(newRoom, adjacent_square, (doorx,doory), doorside)
 					#TODO: does this return a status? if so what happens with it?
 					
 				else:
-					print "DEBUG: placed door"
 					# update the grid with the door location
 					newRoom.doors[doorside] = (doorx, doory)
 					door_placed = True
@@ -672,7 +671,7 @@ class World():
 				for adj_doorx in adj_xrange:
 					for adj_doory in adj_yrange:
 						adj_doorpos = (adj_doorx, adj_doory)
-						print "DEBUG: checking adjacent square at {0} to prevent covering existing doors".format(adj_doorpos)
+						#print "DEBUG: checking adjacent square at {0} to prevent covering existing doors".format(adj_doorpos)
 						adjacent_square = self.grid[adj_doory][adj_doorx]
 						# if we're next to a room
 						if adjacent_square != None and adjacent_square.type == TYPE_ROOM:
@@ -681,13 +680,13 @@ class World():
 							# check to see if there is a door in this square
 							if adj_doorside in adjacent_square.doors.keys() and adjacent_square.doors[adj_doorside] == adj_doorpos:
 								# if there is a door here
-								print "DEBUG: found an existing door in ROOM {0} at {1} on side {2}".format(adjacent_square.id, adj_doorpos, adj_doorside)
+								#print "DEBUG: found an existing door in ROOM {0} at {1} on side {2}".format(adjacent_square.id, adj_doorpos, adj_doorside)
 								# check for door compatibility
 								negotiateDoorPlacement(adjacent_square, newRoom, adj_doorpos, adj_doorside)
 			
 
 			# DEBUG: show current map
-			print "DEBUG: World.__init__(): world grid is:\n{0}".format(self.to_s())
+			#logging.debug ("World.__init__(): world grid is:\n{0}".format(self.to_s()))
 		
 		
 
@@ -699,19 +698,23 @@ class World():
 	def addArt(self, themap):
 		"""adds random art to the world"""
 		# how much art to generate
-		minTotalArts = 1
+		minTotalArts = 10
 		curTotalArts = 0
+		arts = []
 		while curTotalArts < minTotalArts:
 		# until enough art generated
 			# create new art
-			newArt = Art(themap, 2, 2)
+			artx = random.randint(0, self.cols-1)
+			arty = random.randint(0, self.rows-1)
+			newArt = Art(themap, artx, arty)
 			
 			# add art to the list of objects
 			if(self.addObject(newArt)):
 				curTotalArts += 1
-				#print "DEBUG: World.__init__(): {0} arts".format(curTotalArts)
+				arts.append(newArt)
+				logging.debug ("art #{0} added to the map at {1}".format(curTotalArts, (artx,arty)))
 		# now there's enough art in the world
-		return [newArt]
+		return arts
 		
 	# end of World.addArt()
 	
@@ -733,7 +736,7 @@ class World():
 			basex = newObject.left
 			basey = newObject.top
 			if(newObject.width <= 0):
-				print "ERROR: field width must be greater than 0!"
+				logging.error ("field width must be greater than 0!")
 				exit()
 			for w in range(newObject.width):
 				posx = basex + w
@@ -759,13 +762,18 @@ class World():
 			
 			
 		elif(newObject.type == TYPE_ART):
+			curSquare = newGrid[newObject.top][newObject.left]
+			if curSquare != None and curSquare.type == TYPE_ART:	return False	# won't place overlapping art
+			
+			# otherwise:
+			#TODO:? add new art regardless of what is already on the map
 			newGrid[newObject.top][newObject.left] = newObject
 
 		elif(newObject.type == TYPE_PATH):
 			x = newObject.left
 			y = newObject.top
 			if(newObject.length <= 0):
-				print "ERROR: path length must be greater than 0!"
+				logging.error ("path length must be greater than 0!")
 				exit()
 			#print "DEBUG: adding path, ranging i to {0}...".format(newObject['length'])
 			adjacent_paths = {}	# dictionary of object IDs (for easy uniquifying)
@@ -855,7 +863,7 @@ class World():
 
 			# check cumulative obstructions
 			if len(adjacent_paths) > 0 and len(adjacent_paths) != len(intersected_paths):
-				print "DEBUG: more adjacent paths ({0}) than intersections ({1}), throwing out".format(len(adjacent_paths), len(intersected_paths))
+				#print "DEBUG: more adjacent paths ({0}) than intersections ({1}), throwing out".format(len(adjacent_paths), len(intersected_paths))
 				return False
 
 		
@@ -863,10 +871,10 @@ class World():
 			basex = newObject.left
 			basey = newObject.top
 			if(newObject.width <= 0):
-				print "ERROR: room width must be greater than 0!"
+				logging.error ("room width must be greater than 0!")
 				exit()
 			if(newObject.height <= 0):
-				print "ERROR: room height must be greater than 0!"
+				logging.error ("room height must be greater than 0!")
 				exit()
 			for w in range(newObject.width):
 				posx = basex + w
@@ -887,14 +895,14 @@ class World():
 			# end for w in width
 			
 		else:
-			print "PROGRAM ERROR: World.addObject(): Unknown type {0}".format(newObject.type)
+			logging.critical ("Unknown type {0}".format(newObject.type))
 			exit()
 		
 		# if everything works out ok, save the new grid
 		self.grid = newGrid
 		self.objectId_autoIncrement += 1
 		newObject.id = self.objectId_autoIncrement
-		print "DEBUG: '{0}' object added, new objId is: {1}".format(newObject.type, newObject.id)
+		logging.debug ("'{0}' object added, new objId is: {1}".format(newObject.type, newObject.id))
 		#print "DEBUG: object added, new grid is: \n{0}".format(self.to_s())
 		self.objects.append(newObject)
 		return newObject.id	# success
