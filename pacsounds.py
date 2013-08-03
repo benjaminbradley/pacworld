@@ -57,9 +57,9 @@ class Pacsounds(object):
 			
 			channel = pygame.mixer.find_channel()
 			if channel == None:
-				logging.warning("no free channels (out of {0})".format(NUM_SOUND_CHANNELS))
+				logging.warning("no free channels (out of {0}), can't play '{1}'".format(NUM_SOUND_CHANNELS, soundName))
 			else:
-				logging.debug("playing sound '{0}' at {1}% volume on channel {2}".format(soundName, volume*100, channel))
+				#logging.debug("playing sound '{0}' at {1}% volume on channel {2}".format(soundName, volume*100, channel))
 				channel.set_volume(volume)
 				channel.play(self.sound_data[soundName])
 				self.last_play[soundName] = cur_time
