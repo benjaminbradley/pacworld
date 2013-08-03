@@ -110,11 +110,11 @@ class Map(sprite.Sprite):
 				# define interior & paint it
 				rect = (left, top, width, height)
 				#print "DEBUG: room rect at {0}".format(rect)
-				pygame.draw.rect(self.image, colors.PINK, rect)
+				#pygame.draw.rect(self.image, colors.PINK, rect)
 				#DEBUG MODE: draw the objectId in the middle
-				font = pygame.font.Font(None, 20)
-				textBitmap = font.render(str(worldObj.id), True, colors.BLACK)
-				self.image.blit(textBitmap, [left+(width/2), top+(height/2)])
+				#font = pygame.font.Font(None, 20)
+				#textBitmap = font.render(str(worldObj.id), True, colors.BLACK)
+				#self.image.blit(textBitmap, [left+(width/2), top+(height/2)])
 			    
 				# draw 4 walls
 				roomWalls = {}	# dictionary of side to array of wallDefs (each wallDef is a tuple of 2 points, each one an (x,y) tuple)

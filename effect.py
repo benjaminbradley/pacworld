@@ -41,7 +41,7 @@ class Effect():
 			lineWidth = 2
 			if burst_radius < lineWidth: lineWidth = burst_radius
 			gradpercent = float(self.burstEffect_frame) / float(self.burstEffect_numframes)
-			grad_color = [int(gradpercent*c) for c in colors.NEONBLUE]
+			grad_color = [int(gradpercent*c) for c in colors.WHITE]
 			#print "DEBUG: Effect.draw() in burstEffect: burst_radius = {0}, gradpercent = {1}, grad_color={2}".format(burst_radius, gradpercent, grad_color)
 			pygame.draw.circle(image, grad_color, (final_radius,final_radius), burst_radius, lineWidth)
 	
