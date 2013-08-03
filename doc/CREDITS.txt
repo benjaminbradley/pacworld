@@ -1,0 +1,8 @@
+In this day and age, no project is born from a vacuum.
+I would like to thank the following people for their contributions (unknown in most cases) to this project:
+
+Sound effects:
+http://www.freesound.org/people/Blackie666/
+
+Art:
+David Barker http://www.pygame.org/project-DrawSpiral()+function-1649-.html
