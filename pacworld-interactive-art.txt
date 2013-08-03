@@ -1,10 +1,3 @@
-related idealet: {
-	Interactive Art Protocol
-	each user has a profile
-	sample cases:
-}
------------------------------------------------------------------
-
 digital interactive art piece
 working name: pacworld
 
@@ -14,18 +7,16 @@ features:
 - visitors can interact with the art
 
 
-
 entities:
 - characters
 - environmental features
-
 
 
 main screen:
 - black background
 - one or more characters appear on screen, represented as line drawing shapes.
 - characters travel around the screen and interact with their environment and each other.
-- environmental features may restrict or cause character movement, or 
+- environmental features may restrict or cause character movement
 
 
 character
