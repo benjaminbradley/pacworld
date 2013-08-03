@@ -1,5 +1,7 @@
+BUG FIXES:
+- player occasionally gets stuck in a wall (collision detection not preventing movement?)
+
 NEXT STEPS for MVP:
-- make a couple of interesting looking art pieces (not just a circle)
 - get a swirl from an art piece
 - swirling shapes inside the characters
 - activate a swirl
@@ -9,13 +11,11 @@ NEXT STEPS for MVP:
 - idle behavior for current character (plays itself)
 - switch between characters (for idle)
 
-BUG FIXES:
-- player occasionally gets stuck in a wall (collision detection not preventing movement?)
 
 ENHANCEMENTS:
 - in Shape.update(), calculate current angle over the past 5 frames, not just the last 1 frame (need to expand startMapCenter to include more history)
 - allow multiple doors per room side
-- more different art pieces
+- make more interesting different looking art pieces
 
 LOWER LEVEL BUG FIXES:
 - art drifts during player movement (laggy drawing?)
