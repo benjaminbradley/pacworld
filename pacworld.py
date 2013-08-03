@@ -3,6 +3,7 @@
 import pygame # Provides what we need to make a game
 import sys # Gives us the sys.exit function to close our program
 import random
+import logging
 
 from pygame.locals import *
 from pygame import *
@@ -21,12 +22,13 @@ JOYSTICK_NOISE_LEVEL = 0.1
 
 MAX_RANDOM_SEED = 65535
 
-print "DEBUG: loaded libraries"
 
 # Our main game class
 class Pacworld:
 	
 	def __init__(self):
+		logging.basicConfig(format='%(asctime)-15s:%(levelname)s:%(filename)s#%(funcName)s(): %(message)s', level=logging.DEBUG)	# filename='myapp.log'
+		logging.debug("Initializing Pacworld()...")
 		
 		# Make the display size a member of the class
 		#self.displaySize = (640, 480)
@@ -48,7 +50,7 @@ class Pacworld:
 		joystick_count = pygame.joystick.get_count()
 		self.input_mode = None
 		if joystick_count == 0:
-			print "WARN: no joysticks found, using keyboard for input"
+			logging.warning("no joysticks found, using keyboard for input")
 			self.input_mode = INPUT_KEYBOARD
 		else:
 			self.input_mode = INPUT_JOYSTICK
@@ -80,11 +82,11 @@ class Pacworld:
 		# if no random seed was given, make one up:
 		if(True):
 			crazySeed = random.randint(0, MAX_RANDOM_SEED)
-			print "INFO: USING RANDOM SEED: {0}",format(crazySeed)
+			logging.info("USING RANDOM SEED: {0}",format(crazySeed))
 		else:
 			# cool seeds: 24669 
 			crazySeed = 24669
-			print "INFO: USING CHOSEN SEED: {0}",format(crazySeed)
+			logging.info("USING CHOSEN SEED: {0}",format(crazySeed))
 		
 		SCALE_FACTOR = 3
 
@@ -95,14 +97,14 @@ class Pacworld:
 		
 		gridSize = int(self.character_size * 1.5)
 		gridDisplaySize = (mapSize[0] / gridSize, mapSize[1] / gridSize)	# assumes square grid cells
-		print "gridDisplaySize is {0}".format(gridDisplaySize)
+		logging.debug("gridDisplaySize is {0}".format(gridDisplaySize))
 
 		# Create the world, passing through the grid size
 		theworld = World(gridDisplaySize)
 		
 		# Create the world map, passing through the display size and world map
 		self.map = Map(mapSize, self.displaySize, theworld)
-		self.art = theworld.addArt(self.map)	# FIXME: FOR DEBUG ONLY
+		self.art = theworld.addArt(self.map)
 		
 		# Create a single shape and add it to a sprite group
 		self.shape = Shape(self.displaySize, self.map, self.character_size, 3)
@@ -112,7 +114,7 @@ class Pacworld:
 		self.map.shape = self.shape
 		#self.shape.mapCenter = [int(5.5*self.map.grid_cellwidth-self.shape.side_length/2), int(5.5*self.map.grid_cellheight-self.shape.side_length/2)]
 		
-		print "INFO: USING RANDOM SEED: {0}".format(crazySeed)
+		logging.info("USING RANDOM SEED: {0}".format(crazySeed))
 
 		# play a "startup" sound
 		self.sound.play('3robobeat')
@@ -162,11 +164,11 @@ class Pacworld:
 			if(self.input_mode == INPUT_JOYSTICK):
 				# Possible joystick actions: JOYAXISMOTION JOYBALLMOTION JOYBUTTONDOWN JOYBUTTONUP JOYHATMOTION
 				if event.type == pygame.JOYBUTTONDOWN:
-					print("Joystick button pressed.")
+					logging.debug("Joystick button pressed.")
 					for i in range( self.num_buttons ):
 						if(self.joystick.get_button(i) and not self.button_status[i]):
 							self.button_status[i] = True
-							print "Button "+str(i+1)+" pressed."
+							logging.debug("Button "+str(i+1)+" pressed.")
 							if(i == 0):
 								self.shape.startBurst()
 							elif(i == 4):
@@ -180,16 +182,16 @@ class Pacworld:
 							elif(i == 8):
 								self.shape.reset()
 							elif(i == 9):	# button 10 triggers program exit
-								print "Quitting program."
+								logging.debug("Quitting program.")
 								pygame.quit()
 								sys.exit()
 							
 				if event.type == pygame.JOYBUTTONUP:
-					print("Joystick button released.")
+					logging.debug("Joystick button released.")
 					for i in range( self.num_buttons ):
 						if(not self.joystick.get_button(i) and self.button_status[i]):
 							self.button_status[i] = False
-							print "Button "+str(i+1)+" released."
+							logging.debug("Button "+str(i+1)+" released.")
 			# end of : input_mode == INPUT_JOYSTICK
 
 			if(self.input_mode == INPUT_KEYBOARD):
