@@ -1,10 +1,17 @@
+CURRENT TASK: get a swirl from an art piece
+TODO:
+- get transfer animation to move outside of art image rect (maybe apply to map instead of art? - add draw check to see if it's onscreen)
+- structure to store swirls for each character
+- add a new swirl to the char from touching the art
+
 NEXT STEPS for MVP:
-- get a swirl from an art piece
-- swirling shapes inside the characters
+- swirling shapes inside the characters - draw them
 - activate a swirl
+- add new types of swirls
+- move between swirls left/right
 - other characters
-- get a swirl from another character
-- give a swirl to another character
+- get a swirl from another character "ask"
+- give a swirl to another character "give"
 - idle behavior for current character (plays itself)
 - switch between characters (for idle)
 
