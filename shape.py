@@ -7,6 +7,7 @@ import logging
 from pygame.locals import *
 from pygame import *
 
+import pacglobal
 from pacsounds import Pacsounds,getPacsound
 import colors
 import effect
@@ -23,6 +24,7 @@ DIR_RIGHT = 'r'
 DIRECTIONS = [DIR_UP, DIR_DOWN, DIR_LEFT, DIR_RIGHT]
 
 BURST_EFFECT_NUMFRAMES = 6
+ART_TOUCH_JITTER = 15	# time in game frames that re-touching the same art piece will not trigger a re-touch effect
 
 # The class for Shapes
 class Shape(sprite.Sprite):
@@ -58,6 +60,10 @@ class Shape(sprite.Sprite):
 
 		# Reset the shape & create the first image
 		self.reset()
+		
+		# experience variables
+		self.last_touched_art = {}	# hash of art.id to ticks
+		self.last_moved_frame = 0	# frame of last character movement
 		
 		# initialize subsystems
 		self.sound = getPacsound()
@@ -239,7 +245,7 @@ class Shape(sprite.Sprite):
 
 
 	def startBurst(self):
-		self.effects[effect.BURST_EFFECT] = Effect(effect.BURST_EFFECT)
+		self.effects[effect.BURST_EFFECT] = Effect(effect.BURST_EFFECT, 1)
 		self.makeSprite()
 
 	def tryAsk(self):
@@ -264,8 +270,24 @@ class Shape(sprite.Sprite):
 	
 
 	def touchArt(self, art):
-		logging.debug("shape #{0} is touching art #{1}".format(self.id, art.id))
-		#TODO
+		#logging.debug("shape #{0} is touching art #{1}".format(self.id, art.id))
+		frames = pacglobal.get_frames()
+		# check the last time we touched this art
+		if art.id in self.last_touched_art.keys():
+			last_touched = self.last_touched_art[art.id]
+			self.last_touched_art[art.id] = frames
+			#logging.debug("art was touched at {0}, now={1}, last move at {2}".format(last_touched, frames, self.last_moved_frame))
+			if self.last_moved_frame == last_touched:
+				#logging.debug("still mid-touch")
+				return False
+			if last_touched <= frames - 1 and last_touched + ART_TOUCH_JITTER > frames: 
+				logging.debug("art was touched too recentely - at {0}".format(last_touched))
+				return False
+		else:
+			self.last_touched_art[art.id] = frames
+		# trigger the art-touch event!
+		logging.debug("shape #{0} is touching art #{1} - triggering event!".format(self.id, art.id))
+		art.startEffect(effect.TRANSFER_EFFECT, self)
 
 
 	def move(self, dx, dy):
@@ -278,6 +300,7 @@ class Shape(sprite.Sprite):
 		if movedx or movedy:
 			# check for other map effects that happen based on movement
 			self.map.checkTriggers(self)
+		self.last_moved_frame = pacglobal.get_frames()
 
 	def move_single_axis(self, dx, dy):
 		# save initial positions

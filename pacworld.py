@@ -8,6 +8,7 @@ import logging
 from pygame.locals import *
 from pygame import *
 
+import pacglobal
 #import colors
 from shape import Shape
 from shape import *
@@ -151,6 +152,9 @@ class Pacworld:
 			
 			# Limit the game to 30 frames per second
 			self.clock.tick(30)
+			
+			# advance frame counter
+			pacglobal.nextframe()
 			
 	def handleEvents(self):
 		

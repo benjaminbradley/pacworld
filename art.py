@@ -112,6 +112,12 @@ class Art(sprite.Sprite):
 		self.effects[effect.BURST_EFFECT] = Effect(effect.BURST_EFFECT, soundvolume)
 		self.makeSprite()
 	
+	def startEffect(self, effect_type, target):
+		# initialize effect variables
+		logging.debug("starting new effect, type: {0}".format(effect_type))
+		self.effects[effect_type] = Effect(effect_type, target)
+		self.makeSprite()
+	
 	def update(self, t):
 		remakeSprite = False
 		# animate base sprite
@@ -133,11 +139,11 @@ class Art(sprite.Sprite):
 			self.startBurst()
 		
 		# check for current effects to continue
-		if effect.BURST_EFFECT in self.effects.keys():
-			if self.effects[effect.BURST_EFFECT].update(t):
+		for effect_type in self.effects.keys():
+			if self.effects[effect_type].update(t):
 				remakeSprite = True
 			else:
-				del self.effects[effect.BURST_EFFECT]	# FIXME: is more explicit garbage collection needed here?
+				del self.effects[effect_type]	# FIXME: is more explicit garbage collection needed here?
 				remakeSprite = True
 		
 		if remakeSprite: self.makeSprite()
