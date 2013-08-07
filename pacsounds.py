@@ -4,8 +4,12 @@ import logging
 
 NUM_SOUND_CHANNELS = 16
 SOUNDS = {
-	'3robobeat' : 'sounds/132394__blackie666__robofart.wav',
-	'3roboditzfade' : 'sounds/135377__blackie666__nomnomnom.wav'
+	'3robobeat' : 'sounds/132394__blackie666__robofart.wav',		# digital ba-dum-bump (sort of) - used for startup
+	'get' : 'sounds/111689__blackie666__equip.wav',					# "get a swirl" (from an art piece)
+	'ask' : 'sounds/111693__blackie666__load.wav',					# "ask" (another character)
+	'give' : 'sounds/118687__blackie666__fx3.wav',					# "give" (to another character)
+	#  ("activate" a swirl) -> the sound for that effect
+	'3roboditzfade' : 'sounds/135377__blackie666__nomnomnom.wav',	# burst sound
 }
 
 pacsounds_instance = None

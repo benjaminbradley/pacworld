@@ -27,6 +27,7 @@ TYPE_INTERSECTION = 'pathcross'
 TYPE_FIELD = 'field'
 TYPE_ROOM = 'room'
 TYPE_ART = 'art'
+TYPE_CHARACTER = 'char'	# NOTE: NOT in RENDER_ORDER, not rendered on world map
 RENDER_ORDER = {
 	TYPE_PATH : 1,
 	TYPE_INTERSECTION : 2,
@@ -34,6 +35,7 @@ RENDER_ORDER = {
 	TYPE_ROOM : 4,
 	TYPE_ART : 5,
 }
+WORLD_OBJ_TYPES = RENDER_ORDER.keys()
 
 SIDE_N = 0
 SIDE_E = 1
@@ -714,6 +716,7 @@ class World():
 				arts.append(newArt)
 				logging.debug ("art #{0} added to the map at {1}".format(curTotalArts, (artx,arty)))
 		# now there's enough art in the world
+		themap.arts = arts
 		return arts
 		
 	# end of World.addArt()
@@ -729,181 +732,186 @@ class World():
 	# end of World.copyGrid()
 	
 	def addObject(self, newObject):
-		# copy current grid
-		newGrid = self.copyGrid()
+		# if this is an object that gets placed on the world
+		if(newObject.type in WORLD_OBJ_TYPES):
+			# copy current grid
+			newGrid = self.copyGrid()
 		
-		if(newObject.type == TYPE_FIELD):
-			basex = newObject.left
-			basey = newObject.top
-			if(newObject.width <= 0):
-				logging.error ("field width must be greater than 0!")
-				exit()
-			for w in range(newObject.width):
-				posx = basex + w
-				for h in range(newObject.height):
-					posy = basey + h
+			if(newObject.type == TYPE_FIELD):
+				basex = newObject.left
+				basey = newObject.top
+				if(newObject.width <= 0):
+					logging.error ("field width must be greater than 0!")
+					exit()
+				for w in range(newObject.width):
+					posx = basex + w
+					for h in range(newObject.height):
+						posy = basey + h
 				
-					# check for obstructions
-					if self.grid[posy][posx] != SYMBOL_CLEAR:
-						#print "WARN: field obstructed at {0},{1}".format(posx,posy)
-						obstruction = self.grid[posy][posx]
-						if obstruction.type in [TYPE_PATH, TYPE_INTERSECTION]:
-							# field overwrites paths and intersections
-							newGrid[posy][posx] = newObject
-							continue
-							
-						# otherwise, obstruction kills the road
-						return False
-					else:
-						# no obstructions, continue:
-						
-						#print "DEBUG: added new symbol at {0},{1}".format(posx,posy)
-						newGrid[posy][posx] = newObject
-			
-			
-		elif(newObject.type == TYPE_ART):
-			curSquare = newGrid[newObject.top][newObject.left]
-			if curSquare != None and curSquare.type == TYPE_ART:	return False	# won't place overlapping art
-			
-			# otherwise:
-			#TODO:? add new art regardless of what is already on the map
-			newGrid[newObject.top][newObject.left] = newObject
-
-		elif(newObject.type == TYPE_PATH):
-			x = newObject.left
-			y = newObject.top
-			if(newObject.length <= 0):
-				logging.error ("path length must be greater than 0!")
-				exit()
-			#print "DEBUG: adding path, ranging i to {0}...".format(newObject['length'])
-			adjacent_paths = {}	# dictionary of object IDs (for easy uniquifying)
-			intersected_paths = {} # dictionary of object IDs (for easy uniquifying)
-			for i in range(newObject.length):
-				# check for adjacencies
-				if newObject.direction_h:
-					adjx = x + i
-					adjy1 = y - 1
-					adjy2 = y + newObject.width
-					if adjy1 >= 0 and self.grid[adjy1][adjx] != None and self.grid[adjy1][adjx].type == TYPE_PATH:
-						#print "WARN: adjacent path at {0},{1}".format(adjx,adjy1)
-						adjacent_paths[self.grid[adjy1][adjx].id] = True
-					elif adjy2 < self.rows and self.grid[adjy2][adjx] != None and self.grid[adjy2][adjx].type == TYPE_PATH:
-						#print "WARN: adjacent path at {0},{1}".format(adjx,adjy2)
-						adjacent_paths[self.grid[adjy2][adjx].id] = True
-				else:
-					adjy = y + i
-					adjx1 = x - 1
-					adjx2 = x + newObject.width
-					if adjx1 >= 0 and self.grid[adjy][adjx1] != None and self.grid[adjy][adjx1].type == TYPE_PATH:
-						#print "WARN: adjacent path at {0},{1}".format(adjx1,adjy)
-						adjacent_paths[self.grid[adjy][adjx1].id] = True
-					elif adjx2 < self.cols and self.grid[adjy][adjx2] != None and self.grid[adjy][adjx2].type == TYPE_PATH:
-						#print "WARN: adjacent path at {0},{1}".format(adjx2,adjy)
-						adjacent_paths[self.grid[adjy][adjx2].id] = True
-				
-				#print "DEBUG: ranging j to {0}...".format(newObject['width'])
-				for j in range(newObject.width):
-					if newObject.direction_h:
-						posx = x + i
-						posy = y + j
-						newObject.symbol = HPATH_SYMBOL
-					else:
-						posx = x + j
-						posy = y + i
-						newObject.symbol = VPATH_SYMBOL
-					# check for obstructions
-					if self.grid[posy][posx] != SYMBOL_CLEAR:
-						#print "WARN: path obstructed at {0},{1}".format(posx,posy)
-						obstruction = self.grid[posy][posx]
-						if obstruction.type == TYPE_INTERSECTION:
-							#print "DEBUG: obstruction is an intersection, ignored at {0},{1}".format(posx,posy)
-							# intersection is a freebie, unchanged, but does not block
-							continue
-						if obstruction.type in [TYPE_PATH]:
-							#	ok for large pathways to intersect in the middle
-							im_large =  (newObject.length >= LARGE_PATH_MIN)
-							its_large = (obstruction.length >= LARGE_PATH_MIN)
-							if im_large and its_large:
-								#print "DEBUG: testing intersection of 2 large paths"
-								# intersection should be at least INTERSECTION_MIN_OVERLAP=4 away from either end for both pathways
-								# NOTE: intersection point should be adjusted by path width
-								# check current path
-								if i < INTERSECTION_MIN_OVERLAP: return False
-								if i > newObject.length-INTERSECTION_MIN_OVERLAP: return False
-								# check other path
-								if newObject.direction_h:	# new path is horizontal, obstruction is vertical
-									# check 'top' end first
-									if posy < obstruction.top+INTERSECTION_MIN_OVERLAP: return False
-									# check bottom
-									if posy > obstruction.top+obstruction.length-INTERSECTION_MIN_OVERLAP: return False
-								else:	# new path NOT horizontal, so obstruction is horizontal
-									# check left
-									if posx < obstruction.left+INTERSECTION_MIN_OVERLAP: return False
-									# check right
-									if posx > obstruction.left+obstruction.length-INTERSECTION_MIN_OVERLAP: return False
-								
-								# all qualifiers passed for large-large intersection, make it so!
-								#print "DEBUG: intersection happening at {0},{1}".format(posx, posy)
-								newGrid[posy][posx] = Intersection(newObject, obstruction, (posx, posy))
-								intersected_paths[obstruction.id] = True
+						# check for obstructions
+						if self.grid[posy][posx] != SYMBOL_CLEAR:
+							#print "WARN: field obstructed at {0},{1}".format(posx,posy)
+							obstruction = self.grid[posy][posx]
+							if obstruction.type in [TYPE_PATH, TYPE_INTERSECTION]:
+								# field overwrites paths and intersections
+								newGrid[posy][posx] = newObject
 								continue
 							
-							
-							# medium pathways should only touch at corners at their ends
-							#TODO
-							
-						# otherwise, obstruction kills the road
-						return False
-					else:
-						# no obstructions, continue:
+							# otherwise, obstruction kills the road
+							return False
+						else:
+							# no obstructions, continue:
 						
-						#print "DEBUG: added new symbol at {0},{1}".format(posx,posy)
-						newGrid[posy][posx] = newObject
-					
-
-			# check cumulative obstructions
-			if len(adjacent_paths) > 0 and len(adjacent_paths) != len(intersected_paths):
-				#print "DEBUG: more adjacent paths ({0}) than intersections ({1}), throwing out".format(len(adjacent_paths), len(intersected_paths))
-				return False
-
-		
-		elif(newObject.type == TYPE_ROOM):
-			basex = newObject.left
-			basey = newObject.top
-			if(newObject.width <= 0):
-				logging.error ("room width must be greater than 0!")
-				exit()
-			if(newObject.height <= 0):
-				logging.error ("room height must be greater than 0!")
-				exit()
-			for w in range(newObject.width):
-				posx = basex + w
-				for h in range(newObject.height):
-					posy = basey + h
-					
-					# check for obstructions
-					if self.grid[posy][posx] != SYMBOL_CLEAR:
-						# all obstructions kill a room
-						return False
-						
-					else:
-						# no obstructions, continue:
-						
-						#print "DEBUG: added new symbol at {0},{1}".format(posx,posy)
-						newGrid[posy][posx] = newObject
-				# end for h in height
-			# end for w in width
+							#print "DEBUG: added new symbol at {0},{1}".format(posx,posy)
+							newGrid[posy][posx] = newObject
 			
-		else:
-			logging.critical ("Unknown type {0}".format(newObject.type))
-			exit()
+			
+			elif(newObject.type == TYPE_ART):
+				curSquare = newGrid[newObject.top][newObject.left]
+				if curSquare != None and curSquare.type == TYPE_ART:	return False	# won't place overlapping art
+			
+				# otherwise:
+				#TODO:? add new art regardless of what is already on the map
+				newGrid[newObject.top][newObject.left] = newObject
+
+			elif(newObject.type == TYPE_PATH):
+				x = newObject.left
+				y = newObject.top
+				if(newObject.length <= 0):
+					logging.error ("path length must be greater than 0!")
+					exit()
+				#print "DEBUG: adding path, ranging i to {0}...".format(newObject['length'])
+				adjacent_paths = {}	# dictionary of object IDs (for easy uniquifying)
+				intersected_paths = {} # dictionary of object IDs (for easy uniquifying)
+				for i in range(newObject.length):
+					# check for adjacencies
+					if newObject.direction_h:
+						adjx = x + i
+						adjy1 = y - 1
+						adjy2 = y + newObject.width
+						if adjy1 >= 0 and self.grid[adjy1][adjx] != None and self.grid[adjy1][adjx].type == TYPE_PATH:
+							#print "WARN: adjacent path at {0},{1}".format(adjx,adjy1)
+							adjacent_paths[self.grid[adjy1][adjx].id] = True
+						elif adjy2 < self.rows and self.grid[adjy2][adjx] != None and self.grid[adjy2][adjx].type == TYPE_PATH:
+							#print "WARN: adjacent path at {0},{1}".format(adjx,adjy2)
+							adjacent_paths[self.grid[adjy2][adjx].id] = True
+					else:
+						adjy = y + i
+						adjx1 = x - 1
+						adjx2 = x + newObject.width
+						if adjx1 >= 0 and self.grid[adjy][adjx1] != None and self.grid[adjy][adjx1].type == TYPE_PATH:
+							#print "WARN: adjacent path at {0},{1}".format(adjx1,adjy)
+							adjacent_paths[self.grid[adjy][adjx1].id] = True
+						elif adjx2 < self.cols and self.grid[adjy][adjx2] != None and self.grid[adjy][adjx2].type == TYPE_PATH:
+							#print "WARN: adjacent path at {0},{1}".format(adjx2,adjy)
+							adjacent_paths[self.grid[adjy][adjx2].id] = True
+				
+					#print "DEBUG: ranging j to {0}...".format(newObject['width'])
+					for j in range(newObject.width):
+						if newObject.direction_h:
+							posx = x + i
+							posy = y + j
+							newObject.symbol = HPATH_SYMBOL
+						else:
+							posx = x + j
+							posy = y + i
+							newObject.symbol = VPATH_SYMBOL
+						# check for obstructions
+						if self.grid[posy][posx] != SYMBOL_CLEAR:
+							#print "WARN: path obstructed at {0},{1}".format(posx,posy)
+							obstruction = self.grid[posy][posx]
+							if obstruction.type == TYPE_INTERSECTION:
+								#print "DEBUG: obstruction is an intersection, ignored at {0},{1}".format(posx,posy)
+								# intersection is a freebie, unchanged, but does not block
+								continue
+							if obstruction.type in [TYPE_PATH]:
+								#	ok for large pathways to intersect in the middle
+								im_large =  (newObject.length >= LARGE_PATH_MIN)
+								its_large = (obstruction.length >= LARGE_PATH_MIN)
+								if im_large and its_large:
+									#print "DEBUG: testing intersection of 2 large paths"
+									# intersection should be at least INTERSECTION_MIN_OVERLAP=4 away from either end for both pathways
+									# NOTE: intersection point should be adjusted by path width
+									# check current path
+									if i < INTERSECTION_MIN_OVERLAP: return False
+									if i > newObject.length-INTERSECTION_MIN_OVERLAP: return False
+									# check other path
+									if newObject.direction_h:	# new path is horizontal, obstruction is vertical
+										# check 'top' end first
+										if posy < obstruction.top+INTERSECTION_MIN_OVERLAP: return False
+										# check bottom
+										if posy > obstruction.top+obstruction.length-INTERSECTION_MIN_OVERLAP: return False
+									else:	# new path NOT horizontal, so obstruction is horizontal
+										# check left
+										if posx < obstruction.left+INTERSECTION_MIN_OVERLAP: return False
+										# check right
+										if posx > obstruction.left+obstruction.length-INTERSECTION_MIN_OVERLAP: return False
+								
+									# all qualifiers passed for large-large intersection, make it so!
+									#print "DEBUG: intersection happening at {0},{1}".format(posx, posy)
+									newGrid[posy][posx] = Intersection(newObject, obstruction, (posx, posy))
+									intersected_paths[obstruction.id] = True
+									continue
+							
+							
+								# medium pathways should only touch at corners at their ends
+								#TODO
+							
+							# otherwise, obstruction kills the road
+							return False
+						else:
+							# no obstructions, continue:
+						
+							#print "DEBUG: added new symbol at {0},{1}".format(posx,posy)
+							newGrid[posy][posx] = newObject
+					
+
+				# check cumulative obstructions
+				if len(adjacent_paths) > 0 and len(adjacent_paths) != len(intersected_paths):
+					#print "DEBUG: more adjacent paths ({0}) than intersections ({1}), throwing out".format(len(adjacent_paths), len(intersected_paths))
+					return False
+
 		
-		# if everything works out ok, save the new grid
-		self.grid = newGrid
+			elif(newObject.type == TYPE_ROOM):
+				basex = newObject.left
+				basey = newObject.top
+				if(newObject.width <= 0):
+					logging.error ("room width must be greater than 0!")
+					exit()
+				if(newObject.height <= 0):
+					logging.error ("room height must be greater than 0!")
+					exit()
+				for w in range(newObject.width):
+					posx = basex + w
+					for h in range(newObject.height):
+						posy = basey + h
+					
+						# check for obstructions
+						if self.grid[posy][posx] != SYMBOL_CLEAR:
+							# all obstructions kill a room
+							return False
+						
+						else:
+							# no obstructions, continue:
+						
+							#print "DEBUG: added new symbol at {0},{1}".format(posx,posy)
+							newGrid[posy][posx] = newObject
+					# end for h in height
+				# end for w in width
+			
+			else:
+				logging.critical ("Unknown type {0}".format(newObject.type))
+				exit()
+		
+			# if everything works out ok, save the new grid
+			self.grid = newGrid
+			#print "DEBUG: object added, new grid is: \n{0}".format(self.to_s())
+		#else:	# end of (if object gets added to the world grid)
+			#self.dynamicObjects.append(newObject)
+			
 		self.objectId_autoIncrement += 1
 		newObject.id = self.objectId_autoIncrement
 		logging.debug ("'{0}' object added, new objId is: {1}".format(newObject.type, newObject.id))
-		#print "DEBUG: object added, new grid is: \n{0}".format(self.to_s())
 		self.objects.append(newObject)
 		return newObject.id	# success
 	# end of World.addObject()

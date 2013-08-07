@@ -26,7 +26,7 @@ class Map(sprite.Sprite):
 		self.image.fill(colors.BLACK)
 		
 		self.walls = [] # List to hold the walls
-		
+		self.arts = []	# list to hold the arts
 		self.world = theworld
 		
 		#print "DEBUG: Map.__init__(): rendering world:\n{0}".format(theworld.to_s())
@@ -243,6 +243,20 @@ class Map(sprite.Sprite):
 				return True
 		return False
 
+	def checkTriggers(self, target):
+		for art in self.arts:
+			a = art
+			b = target
+			#We calculate the offset of the second mask relative to the first mask.
+			offset_x = b.mapCenter[0] - art.x
+			offset_y = b.mapCenter[1] - art.y
+			#logging.debug("checking for collisions between self ({0}) and art ({1}) at offset {2},{3}".format(target.mapCenter, (art.x,art.y), offset_x, offset_y))
+			# See if the two masks at the offset are overlapping.
+			if a.mask.overlap(b.mask, (offset_x, offset_y)):
+				#logging.debug("collision detected with art at {0},{1}!".format(art.x, art.y))
+				# handle collision
+				target.touchArt(art)
+		return False
 
 
 if __name__ == '__main__':

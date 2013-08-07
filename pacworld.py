@@ -88,7 +88,7 @@ class Pacworld:
 			crazySeed = 24669
 			logging.info("USING CHOSEN SEED: {0}",format(crazySeed))
 		
-		SCALE_FACTOR = 3
+		SCALE_FACTOR = 2
 
 
 		random.seed(crazySeed)
@@ -104,13 +104,12 @@ class Pacworld:
 		
 		# Create the world map, passing through the display size and world map
 		self.map = Map(mapSize, self.displaySize, theworld)
-		self.art = theworld.addArt(self.map)
+		art = theworld.addArt(self.map)
 		
 		# Create a single shape and add it to a sprite group
 		self.shape = Shape(self.displaySize, self.map, self.character_size, 3)
-		self.sprites = sprite.Group(self.shape, *self.art)
-		#self.sprites = sprite.Group(self.shape)
-		self.shape.sound = self.sound
+		theworld.addObject(self.shape)
+		self.sprites = sprite.Group(self.shape, *art)
 		self.map.shape = self.shape
 		#self.shape.mapCenter = [int(5.5*self.map.grid_cellwidth-self.shape.side_length/2), int(5.5*self.map.grid_cellheight-self.shape.side_length/2)]
 		
@@ -140,7 +139,7 @@ class Pacworld:
 			self.shape.draw(self.display)
 			# NOTE: we only want to show the art that is currently onscreen, and it needs to be shifted to its correct position
 			windowRect = self.map.getWindowRect(self.shape.mapCenter)
-			for artpiece in self.art:
+			for artpiece in self.map.arts:
 				# if artpiece is on the screen, we will draw it
 				if not artpiece.onScreen(windowRect): continue
 				#print "DEBUG: drawing art at {0}".format(artpiece.rect)
@@ -169,8 +168,14 @@ class Pacworld:
 						if(self.joystick.get_button(i) and not self.button_status[i]):
 							self.button_status[i] = True
 							logging.debug("Button "+str(i+1)+" pressed.")
-							if(i == 0):
-								self.shape.startBurst()
+							if(i == 0):	# "bottom" button
+								self.shape.tryAsk()
+							elif(i == 1):	# "right" button
+								self.shape.trySwirlRight()
+							elif(i == 2):	# "left" button
+								self.shape.trySwirlLeft()
+							elif(i == 3):	# "top" button
+								self.shape.tryGive()
 							elif(i == 4):
 								self.shape.sizeDown()
 							elif(i == 5):
@@ -199,8 +204,16 @@ class Pacworld:
 					# Find which key was pressed
 					#if event.key == K_s:
 					#elif event.key == K_w:
-					if event.key == K_SPACE:
+					if event.key == K_SPACE:		# NOTE: FOR DEBUG ONLY
 						self.shape.startBurst()
+					elif event.key == K_w:	# "top" button
+							self.shape.tryGive()
+					elif event.key == K_a:	# "left" button
+							self.shape.trySwirlLeft()
+					elif event.key == K_s:	# "bottom" button
+							self.shape.tryAsk()
+					elif event.key == K_d:	# "right" button
+							self.shape.trySwirlRight()
 					elif event.key == K_DOWN:
 						self.shape.startMove(DIR_DOWN)
 					elif event.key == K_UP:
@@ -209,7 +222,7 @@ class Pacworld:
 						self.shape.startMove(DIR_RIGHT)
 					elif event.key == K_LEFT:
 						self.shape.startMove(DIR_LEFT)
-					elif event.key == K_t:
+					elif event.key == K_t:	# NOTE: "teleport" effect - FOR DEBUG ONLY ??
 						self.shape.reset()
 					elif event.key == K_ESCAPE:
 						pygame.quit()

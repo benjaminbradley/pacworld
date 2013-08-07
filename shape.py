@@ -7,9 +7,11 @@ import logging
 from pygame.locals import *
 from pygame import *
 
+from pacsounds import Pacsounds,getPacsound
 import colors
 import effect
 from effect import Effect
+import world
 
 MAX_SIDES = 10
 SIZE_MINIMUM = 5
@@ -29,6 +31,7 @@ class Shape(sprite.Sprite):
 		# Initialize the sprite base class
 		super(Shape, self).__init__()
 		
+		self.type = world.TYPE_CHARACTER
 		self.map = themap
 		
 		# Get the display size for working out collisions later
@@ -56,8 +59,9 @@ class Shape(sprite.Sprite):
 		# Reset the shape & create the first image
 		self.reset()
 		
-		# placeholder variables for subsystems
-		self.sound = None
+		# initialize subsystems
+		self.sound = getPacsound()
+
 	
 	def setColor(self):
 		self.color = colors.COLORWHEEL[self.colorIdx]
@@ -238,13 +242,42 @@ class Shape(sprite.Sprite):
 		self.effects[effect.BURST_EFFECT] = Effect(effect.BURST_EFFECT)
 		self.makeSprite()
 
+	def tryAsk(self):
+		logging.debug("tryAsk")
+		#TODO
+		self.sound.play('ask')
+		
+	def tryGive(self):
+		logging.debug("tryGive")
+		#TODO
+		self.sound.play('give')
+
+	def trySwirlRight(self):
+		logging.debug("trySwirlRight")
+		#TODO
+		pass
+	
+	def trySwirlLeft(self):
+		logging.debug("trySwirlLeft")
+		#TODO
+		pass
+	
+
+	def touchArt(self, art):
+		logging.debug("shape #{0} is touching art #{1}".format(self.id, art.id))
+		#TODO
+
 
 	def move(self, dx, dy):
 		# Move each axis separately. Note that this checks for collisions both times.
+		movedx = movedy = False
 		if dx != 0:
-			self.move_single_axis(dx, 0)
+			movedx = self.move_single_axis(dx, 0)
 		if dy != 0:
-			self.move_single_axis(0, dy)
+			movedy = self.move_single_axis(0, dy)
+		if movedx or movedy:
+			# check for other map effects that happen based on movement
+			self.map.checkTriggers(self)
 
 	def move_single_axis(self, dx, dy):
 		# save initial positions
@@ -257,9 +290,11 @@ class Shape(sprite.Sprite):
 		if self.map.wallCollision(self):
 			#logging.debug("move aborted due to collision")
 			self.mapCenter = startpos
+			return False
 		else:
 			#logging.debug("shape moved to %s from %s", self.mapCenter, startpos)
 			self.updatePosition()
+			return True
 	
 	def moveUp(self):
 		"""docstring for moveUp"""
