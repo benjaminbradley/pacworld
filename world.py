@@ -700,7 +700,11 @@ class World():
 	def addArt(self, themap):
 		"""adds random art to the world"""
 		# how much art to generate
-		minTotalArts = 10
+		# we want roughly one piece per screen
+		screenArea = themap.displayGridSize[0] * themap.displayGridSize[1]
+		worldArea = self.cols * self.rows
+		minTotalArts = 1 + int(worldArea / screenArea)
+		#logging.debug("generating {0} art pieces...".format(minTotalArts))
 		curTotalArts = 0
 		arts = []
 		while curTotalArts < minTotalArts:

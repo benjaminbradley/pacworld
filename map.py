@@ -33,6 +33,7 @@ class Map(sprite.Sprite):
 		self.grid_cellheight = grid_cellheight = mapSize[1] / theworld.rows
 		self.grid_cellwidth = grid_cellwidth = mapSize[0] / theworld.cols
 		logging.debug ("cell size is {0} wide x {1} high".format(grid_cellwidth, grid_cellheight))
+		self.displayGridSize = (int(displaySize[0] / grid_cellwidth), int(displaySize[1] / grid_cellheight))
 		
 
 		# NEXT: render the world map from the 'world' class argument
