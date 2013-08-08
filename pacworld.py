@@ -208,9 +208,7 @@ class Pacworld:
 					# Find which key was pressed
 					#if event.key == K_s:
 					#elif event.key == K_w:
-					if event.key == K_SPACE:		# NOTE: FOR DEBUG ONLY
-						self.shape.startBurst()
-					elif event.key == K_w:	# "top" button
+					if event.key == K_w:	# "top" button
 							self.shape.tryGive()
 					elif event.key == K_a:	# "left" button
 							self.shape.trySwirlLeft()

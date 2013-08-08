@@ -4,7 +4,7 @@ import sys # Gives us the sys.exit function to close our program
 import math	# sin,cos,pi
 import logging
 
-from pygame.locals import *
+#from pygame.locals import *
 from pygame import *
 
 import pacglobal
@@ -12,6 +12,7 @@ from pacsounds import Pacsounds,getPacsound
 import colors
 import effect
 from effect import Effect
+from swirl import Swirl
 import world
 
 MAX_SIDES = 10
@@ -57,6 +58,24 @@ class Shape(sprite.Sprite):
 
 		# initialize effects
 		self.effects = {}	# dictionary of Effect.EFFECT_TYPE to Effect class
+		
+		self.swirls = []	# array of swirls the shape has
+		self.curSwirl = None	# array index pointer to "current" swirl
+		#self.swirl_angle = 0	#TODO: rotate swirls inside the character
+		#self.swirl_angle_delta = some random non-zero value between -20 and 20 (?)
+		"""
+		the swirls each have an x/y position
+		----
+		back to shape.py:
+		give a swirl
+		ask for a swirl
+		swirl left
+		swirl right
+		----
+		advanced:
+		rotate swirls with swirl_angle
+		different swirl rotation direction/speed with swirl_angle_delta
+		"""
 
 		# Reset the shape & create the first image
 		self.reset()
@@ -244,10 +263,19 @@ class Shape(sprite.Sprite):
 
 
 
-	def startBurst(self):
-		self.effects[effect.BURST_EFFECT] = Effect(effect.BURST_EFFECT, 1)
-		self.makeSprite()
-
+	def receiveSwirl(self, swirl):
+		#TODO: prevent duplicate swirls
+		self.swirls.append(swirl)
+		self.curSwirl = len(self.swirls) - 1	# change current to the new one
+		logging.debug("got a new swirl effect type {0}, total {1} swirls now".format(swirl.effect_type, len(self.swirls)))
+	
+	def activateSwirl(self):
+		# checks to make sure we do have at least one swirl
+		if self.curSwirl == None or len(self.swirls) == 0: return False
+		self.swirls[self.curSwirl].activate(self)
+		return True
+	
+	
 	def tryAsk(self):
 		logging.debug("tryAsk")
 		#TODO
@@ -255,6 +283,7 @@ class Shape(sprite.Sprite):
 		
 	def tryGive(self):
 		logging.debug("tryGive")
+		self.activateSwirl()
 		#TODO
 		self.sound.play('give')
 
@@ -288,6 +317,8 @@ class Shape(sprite.Sprite):
 		# trigger the art-touch event!
 		logging.debug("shape #{0} is touching art #{1} - triggering event!".format(self.id, art.id))
 		art.startEffect(effect.TRANSFER_EFFECT, self)
+		#TODO: wait to receive the swirl until the transfer effect is done (pass via a callback function maybe?)
+		self.receiveSwirl(Swirl(effect.BURST_EFFECT))	#FIXME: the effect.BURST_EFFECT should come from the art somewhere
 
 
 	def move(self, dx, dy):
@@ -320,19 +351,15 @@ class Shape(sprite.Sprite):
 			return True
 	
 	def moveUp(self):
-		"""docstring for moveUp"""
 		self.move(0, -self.linearSpeed)
 
 	def moveDown(self):
-		"""docstring for moveDown"""
 		self.move(0, self.linearSpeed)
 	
 	def moveLeft(self):
-		"""docstring for moveLeft"""
 		self.move(-self.linearSpeed, 0)
 
 	def moveRight(self):
-		"""docstring for moveRight"""
 		self.move(self.linearSpeed, 0)
 	
 	def startMove(self, direction):
@@ -496,8 +523,6 @@ class ShapeTest:
 					self.shape.colorUp()
 				elif event.key == K_z:
 					self.shape.colorDn()
-				elif event.key == K_m:
-					self.shape.startBurst()
 
 			#if event.type == KEYUP:
 				#if event.key == K_s or event.key == K_w:

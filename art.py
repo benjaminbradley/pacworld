@@ -91,7 +91,7 @@ class Art(sprite.Sprite):
 		
 		
 		for effect in self.effects.values():
-			effect.draw(self.image)
+			effect.draw(self.image)	# TODO: if it's the transfer effect, it should be drawn on the world map, right? where...
 		
 		# rotate image, if applicable
 		if(self.angle != 0):
