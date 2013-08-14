@@ -114,6 +114,21 @@ class Shape(sprite.Sprite):
 		self.rotationSpeed = self.linearSpeed
 		logging.debug("linearSpeed is now {0}".format(self.linearSpeed))
 	
+	def get_swirlpos(self, i):
+		num_swirls = len(self.swirls)
+		base_x = self.image.get_width()/2
+		base_y = self.image.get_height()/2
+		if num_swirls == 1:
+			return (base_x,base_y)
+		else:
+			SWIRL_ROTATE_RADIUS = 2 + num_swirls
+			theta = 2 * math.pi * float(i) / float(num_swirls)
+			x = int(SWIRL_ROTATE_RADIUS * math.cos(theta))
+			y = int(SWIRL_ROTATE_RADIUS * math.sin(theta))
+			logging.debug("swirl x,y is {0},{1}".format(x,y))
+			return (base_x + x, base_y + y)
+			
+
 	def makeSprite(self):
 		# Create an image for the sprite
 		self.image = Surface((self.side_length, self.side_length))
@@ -143,6 +158,13 @@ class Shape(sprite.Sprite):
 				#print "adding point at {0},{1}".format(x,y)
 				pointlist.append((x,y))
 			pygame.draw.polygon(self.image, self.color, pointlist, self.outlineWidth)
+		
+		# add the swirls
+		for i,swirl in enumerate(self.swirls):
+			# TODO: add special display for self.curSwirl
+			swirlpos = self.get_swirlpos(i)
+			logging.debug("drawing swirl #{0} at {1}".format(i, swirlpos))
+			swirl.draw(self.image, swirlpos, i == self.curSwirl)
 
 		# draw any effects
 		for effect in self.effects.values():
