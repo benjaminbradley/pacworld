@@ -3,12 +3,13 @@ TODO:
 - get transfer animation to move outside of art image rect (maybe apply to map instead of art? - add draw check to see if it's onscreen)
 
 BUGFIX:
-- occasionally it hands during world creation. at least once it was during room population. add something to detect repeating cycles and add a break-threshhold.
+- occasionally it hangs during world creation. at least once it was during room population. add something to detect repeating cycles and add a break-threshhold.
 
 NEXT STEPS for MVP:
 - turn drawn swirls into sprites to speed animation
 - add new types of swirls
 - only one type of each swirl
+- max # of swirls
 - move between swirls left/right
 - other characters
 - get a swirl from another character "ask"
