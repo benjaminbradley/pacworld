@@ -545,7 +545,7 @@ class World():
 					else: doorside = SIDE_S
 					total_edge_squares = newRoom.width
 				else:
-					doorside = random.randint(0,3)	#FIXME: one of the SIDES, at random
+					doorside = SIDES[random.randint(0,len(SIDES)-1)]
 					total_edge_squares = newRoom.width * 2 + newRoom.height * 2
 					#print "DEBUG: World.__init(): total_edge_squares={0}".format(total_edge_squares)
 				# choose a random square on that side

@@ -15,7 +15,7 @@ class Swirl(sprite.Sprite):
 		self.effect_type = effect_type
 	
 	def activate(self, shape):
-		shape.effects[self.effect_type] = Effect(self.effect_type, None)
+		shape.effects[self.effect_type] = Effect(self.effect_type)
 		shape.makeSprite()
 
 	def draw(self, image, position, active = False):

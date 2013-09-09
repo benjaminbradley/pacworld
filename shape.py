@@ -286,6 +286,7 @@ class Shape(sprite.Sprite):
 		self.swirls.append(swirl)
 		self.curSwirl = len(self.swirls) - 1	# change current to the new one
 		logging.debug("got a new swirl effect type {0}, total {1} swirls now".format(swirl.effect_type, len(self.swirls)))
+		self.makeSprite()
 	
 	def activateSwirl(self):
 		# checks to make sure we do have at least one swirl
@@ -334,9 +335,11 @@ class Shape(sprite.Sprite):
 			self.last_touched_art[art.id] = frames
 		# trigger the art-touch event!
 		logging.debug("shape #{0} is touching art #{1} - triggering event!".format(self.id, art.id))
-		self.map.startEffect(effect.TRANSFER_EFFECT, {EFFECT_SOURCE:art, EFFECT_TARGET:self})
-		#TODO: wait to receive the swirl until the transfer effect is done (pass via a callback function maybe?)
-		self.receiveSwirl(Swirl(effect.BURST_EFFECT))	#FIXME: the effect.BURST_EFFECT, or maybe the swirl itself, should come from the art
+		self.map.startEffect(effect.TRANSFER_EFFECT, 
+				{	EFFECT_SOURCE:art,
+					EFFECT_TARGET:self,
+					EFFECT_ONCOMPLETE: lambda: self.receiveSwirl(art.getSwirl())
+				})
 
 
 	def move(self, dx, dy):

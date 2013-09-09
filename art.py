@@ -12,6 +12,7 @@ import world
 import colors
 import effect
 from effect import *	# Effect, EFFECT_*
+from swirl import Swirl
 
 
 STYLE_DEFAULT = 0
@@ -32,13 +33,13 @@ class Art(sprite.Sprite):
 		self.map = themap
 		self.top = top
 		self.left = left
-		self.side_length = 60	#FIXME: get this number from somewhere more intelligent, maybe passed in?
+		self.side_length = 60	#FIXME: get this number from somewhere more intelligent, maybe passed in, or calculated?
 		self.width = 1#self.side_length
 		self.height = 1#self.side_length
 #		self.right = self.left + self.width
 #		self.bottom = self.top + self.height
-		self.type = 'art'#FIXME World.TYPE_ART
-		self.symbol = '&'#FIXME World.ART_SYMBOL,
+		self.type = world.TYPE_ART
+		self.symbol = world.ART_SYMBOL
 		self.doors = {}	# dictionary of side(int) to (X,Y) tuple of ints
 		self.effects = {}	# dictionary of Effect.EFFECT_TYPE to Effect class
 		self.angle = 0
@@ -117,6 +118,12 @@ class Art(sprite.Sprite):
 		self.effects[effect_type] = Effect(effect_type, effect_options)
 		self.makeSprite()
 	
+	def getSwirl(self):
+		# return the type of swirl that this art gives
+		#TODO: make this variable depending on art type - coordinate with effect type used in .update() below?
+		return Swirl(effect.BURST_EFFECT)
+
+
 	def update(self, t):
 		remakeSprite = False
 		# animate base sprite
@@ -128,10 +135,7 @@ class Art(sprite.Sprite):
 			remakeSprite = True
 			
 		
-		#print "DEBUG: Art.update({0})".format(t)
 		# check for periodic effects to start
-		#if self.lastBurst + self.burstFrequency < t and self.jitter > t: logging.debug("burst delayed by jitter (%d < %d)", t, self.jitter)
-
 		if self.lastBurst + self.burstFrequency < t and self.jitter < t:
 			self.lastBurst = t
 			#logging.debug ("Art.update(): triggering burst for art #{0} starting at {1}".format(self.id, t))

@@ -8,9 +8,11 @@ import colors
 BURST_EFFECT = 1	# solo sprite effect
 TRANSFER_EFFECT = 2	# sprite to sprite effect
 
+# enumerated constants for effect options parameters
 EFFECT_VOLUME = 1
 EFFECT_TARGET = 2
 EFFECT_SOURCE = 3
+EFFECT_ONCOMPLETE = 4
 
 BURST_EFFECT_NUMFRAMES = 6
 TRANSFER_EFFECT_NUMFRAMES = 14
@@ -48,7 +50,12 @@ class Effect():
 				return False
 			self.source = option_dict[EFFECT_SOURCE]
 			self.animate_numframes = TRANSFER_EFFECT_NUMFRAMES
-			logging.debug("initialized transfer effect")
+			#logging.debug("initialized transfer effect")
+		
+		if EFFECT_ONCOMPLETE in option_dict.keys() and option_dict[EFFECT_ONCOMPLETE] != None:
+			self.on_complete_callback = option_dict[EFFECT_ONCOMPLETE]
+		else:
+			self.on_complete_callback = None
 
 	def calcFrame(self):
 		final_radius = (self.target.rect.width + self.target.rect.height) / 2
@@ -72,7 +79,7 @@ class Effect():
 		target_x = self.target.mapCenter[0] + self.target.rect.width/2
 		#target_y = self.target.rect.centery
 		target_y = self.target.mapCenter[1] + self.target.rect.height/2
-		logging.debug("source center is {0}, target center is {1}".format(self.source.rect.center, self.target.rect.center))
+		#logging.debug("source center is {0}, target center is {1}".format(self.source.rect.center, self.target.rect.center))
 		self.frame_origin_x = source_x + (self.frame_gradpercent * (target_x - source_x))
 		self.frame_origin_y = source_y + (self.frame_gradpercent * (target_y - source_y))
 
@@ -90,7 +97,7 @@ class Effect():
 			pygame.draw.circle(image, grad_color, (final_radius,final_radius), burst_radius, lineWidth)
 		elif self.type == TRANSFER_EFFECT:
 			self.calcFrame()
-			logging.debug("drawing transfer effect with burst_radius {0} at {1}".format(self.frame_burst_radius, (self.frame_origin_x, self.frame_origin_y)))
+			#logging.debug("drawing transfer effect with burst_radius {0} at {1}".format(self.frame_burst_radius, (self.frame_origin_x, self.frame_origin_y)))
 			grad_color = [int(self.frame_gradpercent*c) for c in colors.PINK]
 			# NOTE: map effects are drawn directly onto the display !!! coordinates must be localized to the screen
 			# calculate frame screen position from map position
@@ -103,6 +110,9 @@ class Effect():
 		if ticks - self.animate_last_update > self.animate_delay:
 			self.animate_frame += 1
 			if self.animate_frame >= self.animate_numframes:
+				# complete the effect by calling any callbacks on this event trigger
+				if self.on_complete_callback != None:
+					self.on_complete_callback()
 				return False	# end the effect, only go through it once
 			self.animate_last_update = ticks
 		return True
@@ -113,7 +123,7 @@ class Effect():
 		# if effect is on the screen, we will draw it
 		if self.type == TRANSFER_EFFECT:
 			self.calcFrame()
-			logging.debug("calculated transfer effect with burst_radius {0} at {1}".format(self.frame_burst_radius, (self.frame_origin_x, self.frame_origin_y)))
+			#logging.debug("calculated transfer effect with burst_radius {0} at {1}".format(self.frame_burst_radius, (self.frame_origin_x, self.frame_origin_y)))
 			effectLeft = self.frame_origin_x - self.frame_burst_radius
 			effectRight = self.frame_origin_x + self.frame_burst_radius
 			effectTop = self.frame_origin_y - self.frame_burst_radius
