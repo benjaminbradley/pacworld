@@ -6,17 +6,19 @@ BUGFIX:
 - FIXMEs
 
 NEXT STEPS for MVP:
-- turn drawn swirls into sprites to speed animation
 - add new types of swirls
 - only one type of each swirl
 - max # of swirls
-- move between swirls left/right
 - other characters
 - get a swirl from another character "ask"
 - give a swirl to another character "give"
 - idle behavior for current character (plays itself)
 - switch between characters (for idle)
 - when the world reaches a certain level of swirl "saturation" (e.g. % of characters have # of swirls) then remake the world
+
+PERFORMANCE:
+- turn drawn swirls into sprites to speed animation
+- change all shape.makeSprite calls to set a dirty flag, collapse into a single makeSprite call
 
 ENHANCEMENTS:
 - in Shape.update(), calculate current angle over the past 5 frames, not just the last 1 frame (need to expand startMapCenter to include more history)

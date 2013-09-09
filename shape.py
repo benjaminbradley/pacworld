@@ -307,14 +307,14 @@ class Shape(sprite.Sprite):
 		self.sound.play('give')
 
 	def trySwirlRight(self):
-		logging.debug("trySwirlRight")
-		#TODO
-		pass
+		self.curSwirl = ((self.curSwirl + 1) % len(self.swirls))
+		logging.debug("trySwirlRight: new curSwirl = {0}".format(self.curSwirl))
+		self.makeSprite()
 	
 	def trySwirlLeft(self):
-		logging.debug("trySwirlLeft")
-		#TODO
-		pass
+		self.curSwirl = ((self.curSwirl - 1) % len(self.swirls))
+		logging.debug("trySwirlLeft: new curSwirl = {0}".format(self.curSwirl))
+		self.makeSprite()
 	
 
 	def touchArt(self, art):
