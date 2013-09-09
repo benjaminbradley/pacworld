@@ -1,3 +1,4 @@
+- why is self.type == TRANSFER_EFFECT code in swirl.py#draw() ?
 
 ---------------------------------------------------- FUTURE TASKS:
 
