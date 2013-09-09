@@ -1,9 +1,12 @@
 CURRENT TASK: get a swirl from an art piece
 TODO:
-- get transfer animation to move outside of art image rect (maybe apply to map instead of art? - add draw check to see if it's onscreen)
+- new swirl should not be received until animation is complete
+
+---------------------------------------------------- FUTURE TASKS:
 
 BUGFIX:
 - occasionally it hangs during world creation. at least once it was during room population. add something to detect repeating cycles and add a break-threshhold.
+- FIXMEs
 
 NEXT STEPS for MVP:
 - turn drawn swirls into sprites to speed animation

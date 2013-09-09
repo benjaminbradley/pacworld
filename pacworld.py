@@ -125,16 +125,20 @@ class Pacworld:
 		
 		while True:
 			# The code here runs when every frame is drawn
+			curtime = pygame.time.get_ticks()
 			#print "looping"
 			
 			# Handle Events
 			self.handleEvents()
 			
+			# update the map
+			self.map.update(curtime)
+			
 			# Draw the background
 			self.map.draw(self.display, self.shape.mapCenter)
 			
 			# Update and draw the sprites
-			self.sprites.update(pygame.time.get_ticks())
+			self.sprites.update(curtime)
 			#print "DEBUG: drawing shape via sprite group. shape rect is: {0}".format(self.shape.rect)
 			# draw the shape by itself onto tho display. it's always there.
 			self.shape.draw(self.display)

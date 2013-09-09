@@ -11,7 +11,7 @@ import math
 import world
 import colors
 import effect
-from effect import Effect
+from effect import *	# Effect, EFFECT_*
 
 
 STYLE_DEFAULT = 0
@@ -66,6 +66,8 @@ class Art(sprite.Sprite):
 		self.y = self.top * themap.grid_cellheight + ymargin
 		#self.rect.top = (self.top - 0.5 )* self.map.grid_cellheight
 		#self.rect.left = (self.left - 0.5) * self.map.grid_cellwidth
+		self.rect.left = self.x
+		self.rect.top = self.y
 		
 		# aspects particular to this type of art
 		self.burstFrequency = BURST_FREQUENCY	# pull this from somewhere ?
@@ -97,25 +99,22 @@ class Art(sprite.Sprite):
 		if(self.angle != 0):
 			self.image = pygame.transform.rotate(self.image, self.angle)
 
-		# Create the sprites rectangle from the image
-		self.rect = self.image.get_rect()		
+		# Create the sprites rectangle from the image, maintaining rect position if set
+		oldrectpos = None
+		if hasattr(self, 'rect'):
+			oldrectpos = self.rect.center
+		self.rect = self.image.get_rect()
+		if oldrectpos:
+			self.rect.center = oldrectpos
 
 		# create a mask for the sprite (for collision detection)
 		self.mask = pygame.mask.from_surface(self.image)
 	
 	
-	def startBurst(self):
-		windowRect = self.map.getWindowRect(self.map.shape.mapCenter)
-		if self.onScreen(windowRect): soundvolume = 1.0
-		elif self.nearScreen(windowRect): soundvolume = 0.3
-		else: soundvolume = 0
-		self.effects[effect.BURST_EFFECT] = Effect(effect.BURST_EFFECT, soundvolume)
-		self.makeSprite()
-	
-	def startEffect(self, effect_type, target):
+	def startEffect(self, effect_type, effect_options):
 		# initialize effect variables
-		logging.debug("starting new effect, type: {0}".format(effect_type))
-		self.effects[effect_type] = Effect(effect_type, target)
+		#logging.debug("starting new effect, type: {0}".format(effect_type))
+		self.effects[effect_type] = Effect(effect_type, effect_options)
 		self.makeSprite()
 	
 	def update(self, t):
@@ -136,7 +135,11 @@ class Art(sprite.Sprite):
 		if self.lastBurst + self.burstFrequency < t and self.jitter < t:
 			self.lastBurst = t
 			#logging.debug ("Art.update(): triggering burst for art #{0} starting at {1}".format(self.id, t))
-			self.startBurst()
+			windowRect = self.map.getWindowRect(self.map.shape.mapCenter)
+			if self.onScreen(windowRect): soundvolume = 1.0
+			elif self.nearScreen(windowRect): soundvolume = 0.3
+			else: soundvolume = 0
+			self.startEffect(effect.BURST_EFFECT, {EFFECT_VOLUME: soundvolume})
 		
 		# check for current effects to continue
 		for effect_type in self.effects.keys():

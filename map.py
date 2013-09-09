@@ -7,6 +7,7 @@ import wall
 from wall import Wall
 import colors
 import world
+from effect import *	# Effect, EFFECT_*
 
 # The class for the background
 class Map(sprite.Sprite):
@@ -205,6 +206,9 @@ class Map(sprite.Sprite):
 		# Create the sprite rectangle from the image
 		self.rect = self.image.get_rect()
 		
+		# holds current effects happening on the map
+		self.effects = []	# array of Effects
+		
 	
 	def getWindowRect(self, center):
 		"""get the rect for the display window containing the center point"""
@@ -224,8 +228,24 @@ class Map(sprite.Sprite):
 		
 		#print "DEBUG: Map.draw(): map size is {0}".format(self.image.get_size())
 		#print "DEBUG: Map.draw(): center for drawwindow is at {0}, resulting in a {1}x{2} window with topleft at {3},{4}".format(center, self.displaySize[0], self.displaySize[1], windowLeft, windowTop)
-		screenImage = self.image.subsurface( self.getWindowRect(center) )
+		windowRect = self.getWindowRect(center)
+		screenImage = self.image.subsurface( windowRect )
 		display.blit(screenImage, (0,0))
+		for effect in self.effects:
+			if effect.onScreen(windowRect):
+				effect.draw(display, windowRect)	# NOTE: map effects are drawn directly onto the display !!! coordinates must be localized
+
+	def update(self, ticks):
+		# check for current effects to continue
+		for i,effect in enumerate(self.effects):
+			if effect.update(ticks):
+				pass
+			else:
+				#TODO: does this work?
+				del self.effects[i]	# FIXME: is more explicit garbage collection needed here?
+
+	def newMapEffect(self, effect):
+		self.effects.append(effect)
 
 
 	def wallCollision(self, target):
@@ -258,6 +278,11 @@ class Map(sprite.Sprite):
 				# handle collision
 				target.touchArt(art)
 		return False
+
+	def startEffect(self, effect_type, effect_options):
+		# initialize effect variables
+		logging.debug("starting new effect, type: {0}, options={1}".format(effect_type, effect_options))
+		self.newMapEffect(Effect(effect_type, effect_options))
 
 
 if __name__ == '__main__':

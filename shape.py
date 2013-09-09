@@ -11,7 +11,7 @@ import pacglobal
 from pacsounds import Pacsounds,getPacsound
 import colors
 import effect
-from effect import Effect
+from effect import *	# Effect, EFFECT_*
 from swirl import Swirl
 import world
 
@@ -125,7 +125,7 @@ class Shape(sprite.Sprite):
 			theta = 2 * math.pi * float(i) / float(num_swirls)
 			x = int(SWIRL_ROTATE_RADIUS * math.cos(theta))
 			y = int(SWIRL_ROTATE_RADIUS * math.sin(theta))
-			logging.debug("swirl x,y is {0},{1}".format(x,y))
+			#logging.debug("swirl x,y is {0},{1}".format(x,y))
 			return (base_x + x, base_y + y)
 			
 
@@ -163,7 +163,7 @@ class Shape(sprite.Sprite):
 		for i,swirl in enumerate(self.swirls):
 			# TODO: add special display for self.curSwirl
 			swirlpos = self.get_swirlpos(i)
-			logging.debug("drawing swirl #{0} at {1}".format(i, swirlpos))
+			#logging.debug("drawing swirl #{0} at {1}".format(i, swirlpos))
 			swirl.draw(self.image, swirlpos, i == self.curSwirl)
 
 		# draw any effects
@@ -180,17 +180,13 @@ class Shape(sprite.Sprite):
 		if(self.angle != 0):
 			self.image = pygame.transform.rotate(self.image, self.angle)
 
-		# get position of old rect
-		oldx = None
+		# Create the sprites rectangle from the image, maintaining rect position if set
+		oldrectpos = None
 		if hasattr(self, 'rect'):
-			oldx = self.rect.left
-			oldy = self.rect.top
-		# Create the sprites rectangle from the image
+			oldrectpos = self.rect.center
 		self.rect = self.image.get_rect()
-		# restore position of rect
-		if oldx != None:
-			self.rect.top = oldy
-			self.rect.left = oldx
+		if oldrectpos != None:
+			self.rect.center = oldrectpos
 		
 		# create a mask for the sprite (for collision detection)
 		self.mask = pygame.mask.from_surface(self.image)
@@ -338,9 +334,9 @@ class Shape(sprite.Sprite):
 			self.last_touched_art[art.id] = frames
 		# trigger the art-touch event!
 		logging.debug("shape #{0} is touching art #{1} - triggering event!".format(self.id, art.id))
-		art.startEffect(effect.TRANSFER_EFFECT, self)
+		self.map.startEffect(effect.TRANSFER_EFFECT, {EFFECT_SOURCE:art, EFFECT_TARGET:self})
 		#TODO: wait to receive the swirl until the transfer effect is done (pass via a callback function maybe?)
-		self.receiveSwirl(Swirl(effect.BURST_EFFECT))	#FIXME: the effect.BURST_EFFECT should come from the art somewhere
+		self.receiveSwirl(Swirl(effect.BURST_EFFECT))	#FIXME: the effect.BURST_EFFECT, or maybe the swirl itself, should come from the art
 
 
 	def move(self, dx, dy):
