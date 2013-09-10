@@ -1,3 +1,8 @@
+'''
+world.py
+An abstract world map using 2d grid coordinates to define the environment symbolically.
+'''
+
 import random
 import copy
 import logging

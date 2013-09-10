@@ -1,3 +1,10 @@
+'''
+map.py
+The entire world map, rendered as a static background image.
+May have dynamic effects drawn on top.
+Tracks the currently displayed subsection of the world map (windowRect)
+'''
+
 import sys
 import pygame
 from pygame import *
@@ -210,8 +217,9 @@ class Map(sprite.Sprite):
 		self.effects = []	# array of Effects
 		
 	
-	def getWindowRect(self, center):
+	def getWindowRect(self):
 		"""get the rect for the display window containing the center point"""
+		center = self.player.shape.mapCenter
 		windowLeft = center[0] - self.displaySize[0]/2
 		if windowLeft+self.displaySize[0] >= self.mapSize[0]: windowLeft = self.mapSize[0]-self.displaySize[0]-1
 		if windowLeft < 0: windowLeft = 0
@@ -220,7 +228,7 @@ class Map(sprite.Sprite):
 		if windowTop < 0: windowTop = 0
 		return Rect(windowLeft, windowTop, self.displaySize[0], self.displaySize[1])
 	
-	def draw(self, display, center):
+	def draw(self, display):
 		# Draw a subsurface of the world map
 		# with dimensions of the displaySize
 		# centered on the position defined as center (within limits)
@@ -228,7 +236,7 @@ class Map(sprite.Sprite):
 		
 		#print "DEBUG: Map.draw(): map size is {0}".format(self.image.get_size())
 		#print "DEBUG: Map.draw(): center for drawwindow is at {0}, resulting in a {1}x{2} window with topleft at {3},{4}".format(center, self.displaySize[0], self.displaySize[1], windowLeft, windowTop)
-		windowRect = self.getWindowRect(center)
+		windowRect = self.getWindowRect()
 		screenImage = self.image.subsurface( windowRect )
 		display.blit(screenImage, (0,0))
 		for effect in self.effects:

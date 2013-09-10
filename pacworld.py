@@ -16,6 +16,7 @@ from map import Map
 import world
 from world import World
 from pacsounds import Pacsounds,getPacsound
+from player import Player
 
 INPUT_KEYBOARD = 'kb'
 INPUT_JOYSTICK = 'joy'
@@ -107,12 +108,13 @@ class Pacworld:
 		self.map = Map(mapSize, self.displaySize, theworld)
 		art = theworld.addArt(self.map)
 		
-		# Create a single shape and add it to a sprite group
-		self.shape = Shape(self.displaySize, self.map, self.character_size, 3)
-		theworld.addObject(self.shape)
-		self.sprites = sprite.Group(self.shape, *art)
-		self.map.shape = self.shape
-		#self.shape.mapCenter = [int(5.5*self.map.grid_cellwidth-self.shape.side_length/2), int(5.5*self.map.grid_cellheight-self.shape.side_length/2)]
+		# Create the player object and add it's shape to a sprite group
+		self.player = Player()
+		self.player.shape = Shape(self.displaySize, self.map, self.character_size, 3)
+		theworld.addObject(self.player.shape)	# gives the shape a unique ID# in the world
+		self.sprites = sprite.Group(self.player.shape, *art)
+		self.map.player = self.player
+		#self.player.shape.mapCenter = [int(5.5*self.map.grid_cellwidth-self.shape.side_length/2), int(5.5*self.map.grid_cellheight-self.shape.side_length/2)]
 		
 		logging.info("USING RANDOM SEED: {0}".format(crazySeed))
 
@@ -135,15 +137,15 @@ class Pacworld:
 			self.map.update(curtime)
 			
 			# Draw the background
-			self.map.draw(self.display, self.shape.mapCenter)
+			self.map.draw(self.display)
 			
 			# Update and draw the sprites
 			self.sprites.update(curtime)
 			#print "DEBUG: drawing shape via sprite group. shape rect is: {0}".format(self.shape.rect)
-			# draw the shape by itself onto tho display. it's always there.
-			self.shape.draw(self.display)
+			# draw the shape by itself onto the display. it's always there.
+			self.player.shape.draw(self.display)
 			# NOTE: we only want to show the art that is currently onscreen, and it needs to be shifted to its correct position
-			windowRect = self.map.getWindowRect(self.shape.mapCenter)
+			windowRect = self.map.getWindowRect()
 			for artpiece in self.map.arts:
 				# if artpiece is on the screen, we will draw it
 				if not artpiece.onScreen(windowRect): continue
@@ -177,23 +179,23 @@ class Pacworld:
 							self.button_status[i] = True
 							logging.debug("Button "+str(i+1)+" pressed.")
 							if(i == 0):	# "bottom" button
-								self.shape.tryAsk()
+								self.player.shape.tryAsk()
 							elif(i == 1):	# "right" button
-								self.shape.trySwirlRight()
+								self.player.shape.trySwirlRight()
 							elif(i == 2):	# "left" button
-								self.shape.trySwirlLeft()
+								self.player.shape.trySwirlLeft()
 							elif(i == 3):	# "top" button
-								self.shape.tryGive()
+								self.player.shape.tryGive()
 							elif(i == 4):
-								self.shape.sizeDown()
+								self.player.shape.sizeDown()
 							elif(i == 5):
-								self.shape.sizeUp()
+								self.player.shape.sizeUp()
 							elif(i == 6):
-								self.shape.lessSides()
+								self.player.shape.lessSides()
 							elif(i == 7):
-								self.shape.moreSides()
+								self.player.shape.moreSides()
 							elif(i == 8):
-								self.shape.reset()
+								self.player.shape.reset()
 							elif(i == 9):	# button 10 triggers program exit
 								logging.debug("Quitting program.")
 								pygame.quit()
@@ -213,23 +215,23 @@ class Pacworld:
 					#if event.key == K_s:
 					#elif event.key == K_w:
 					if event.key == K_w:	# "top" button
-							self.shape.tryGive()
+						self.player.shape.tryGive()
 					elif event.key == K_a:	# "left" button
-							self.shape.trySwirlLeft()
+						self.player.shape.trySwirlLeft()
 					elif event.key == K_s:	# "bottom" button
-							self.shape.tryAsk()
+						self.player.shape.tryAsk()
 					elif event.key == K_d:	# "right" button
-							self.shape.trySwirlRight()
+						self.player.shape.trySwirlRight()
 					elif event.key == K_DOWN:
-						self.shape.startMove(DIR_DOWN)
+						self.player.shape.startMove(DIR_DOWN)
 					elif event.key == K_UP:
-						self.shape.startMove(DIR_UP)
+						self.player.shape.startMove(DIR_UP)
 					elif event.key == K_RIGHT:
-						self.shape.startMove(DIR_RIGHT)
+						self.player.shape.startMove(DIR_RIGHT)
 					elif event.key == K_LEFT:
-						self.shape.startMove(DIR_LEFT)
+						self.player.shape.startMove(DIR_LEFT)
 					elif event.key == K_t:	# NOTE: "teleport" effect - FOR DEBUG ONLY ??
-						self.shape.reset()
+						self.player.shape.reset()
 					elif event.key == K_ESCAPE:
 						pygame.quit()
 						sys.exit()
@@ -237,13 +239,13 @@ class Pacworld:
 			
 				if event.type == KEYUP:
 					if event.key == K_DOWN:
-						self.shape.stopMove(DIR_DOWN)
+						self.player.shape.stopMove(DIR_DOWN)
 					elif event.key == K_UP:
-						self.shape.stopMove(DIR_UP)
+						self.player.shape.stopMove(DIR_UP)
 					elif event.key == K_RIGHT:
-						self.shape.stopMove(DIR_RIGHT)
+						self.player.shape.stopMove(DIR_RIGHT)
 					elif event.key == K_LEFT:
-						self.shape.stopMove(DIR_LEFT)
+						self.player.shape.stopMove(DIR_LEFT)
 					#if event.key == K_s or event.key == K_w:
 					#	self.player1Bat.stopMove()
 					#elif event.key == K_DOWN or event.key == K_UP:
@@ -256,12 +258,12 @@ class Pacworld:
 			fbAxis = round(self.joystick.get_axis(0), 3)
 			if(abs(fbAxis) > JOYSTICK_NOISE_LEVEL):
 				#print "DEBUG: fbAxis is: "+str(fbAxis)
-				self.shape.move(0, fbAxis * self.shape.linearSpeed)
+				self.player.shape.move(0, fbAxis * self.player.shape.linearSpeed)
 		
 			lrAxis = round(self.joystick.get_axis(1), 3)
 			if(abs(lrAxis) > JOYSTICK_NOISE_LEVEL):
 				#print "DEBUG: lrAxis is: "+str(lrAxis)
-				self.shape.move(lrAxis * self.shape.linearSpeed, 0)
+				self.player.shape.move(lrAxis * self.player.shape.linearSpeed, 0)
 
 			
 if __name__ == '__main__':

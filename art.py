@@ -139,7 +139,7 @@ class Art(sprite.Sprite):
 		if self.lastBurst + self.burstFrequency < t and self.jitter < t:
 			self.lastBurst = t
 			#logging.debug ("Art.update(): triggering burst for art #{0} starting at {1}".format(self.id, t))
-			windowRect = self.map.getWindowRect(self.map.shape.mapCenter)
+			windowRect = self.map.getWindowRect()
 			if self.onScreen(windowRect): soundvolume = 1.0
 			elif self.nearScreen(windowRect): soundvolume = 0.3
 			else: soundvolume = 0

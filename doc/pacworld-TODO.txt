@@ -1,5 +1,6 @@
 - why is self.type == TRANSFER_EFFECT code in swirl.py#draw() ?
 
+
 ---------------------------------------------------- FUTURE TASKS:
 
 BUGFIX:
@@ -24,6 +25,7 @@ PERFORMANCE:
 ENHANCEMENTS:
 - allow multiple doors per room side
 - make more interesting different looking art pieces
+- special ability to activate all of your swirls one after another
 
 LOWER LEVEL BUG FIXES:
 - art drifts during player movement (laggy drawing?)
