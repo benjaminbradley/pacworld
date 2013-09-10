@@ -22,7 +22,6 @@ PERFORMANCE:
 - change all shape.makeSprite calls to set a dirty flag, collapse into a single makeSprite call
 
 ENHANCEMENTS:
-- in Shape.update(), calculate current angle over the past 5 frames, not just the last 1 frame (need to expand startMapCenter to include more history)
 - allow multiple doors per room side
 - make more interesting different looking art pieces
 

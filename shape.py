@@ -26,6 +26,7 @@ DIRECTIONS = [DIR_UP, DIR_DOWN, DIR_LEFT, DIR_RIGHT]
 
 BURST_EFFECT_NUMFRAMES = 6
 ART_TOUCH_JITTER = 15	# time in game frames that re-touching the same art piece will not trigger a re-touch effect
+MOVE_HISTORY_SIZE = 5	# number of movements to use to calculating average movement over time to set character angle
 
 # The class for Shapes
 class Shape(sprite.Sprite):
@@ -78,7 +79,7 @@ class Shape(sprite.Sprite):
 		"""
 
 		# Reset the shape & create the first image
-		self.reset()
+		self.reset()	# also initializes some location-based variables
 		
 		# experience variables
 		self.last_touched_art = {}	# hash of art.id to ticks
@@ -197,8 +198,8 @@ class Shape(sprite.Sprite):
 		startx = self.map.grid_cellwidth * random.randint(0, self.map.world.cols-1)
 		# Start the shape directly in the centre of the screen
 		self.mapCenter = [startx, starty]
-		self.startMapCenter = self.mapCenter
 		self.imageCenter = list(self.mapCenter)
+		self.moveHistory = [list(self.mapCenter)]
 		# reset other attributes as well
 		self.angle = 0
 		self.makeSprite()
@@ -218,30 +219,32 @@ class Shape(sprite.Sprite):
 		
 		# check movement during this update cycle and update angle appropriately
 		newAngle = None
-		if self.startMapCenter != self.mapCenter:
-			dx = self.startMapCenter[0] - self.mapCenter[0]
-			dy = self.startMapCenter[1] - self.mapCenter[1]
-			#print "DEBUG: Shape.update(): self.startMapCenter={0}, mapCenter={1}, dx={2}, dy={3}".format(self.startMapCenter, self.mapCenter, dx, dy)
+		if self.moveHistory[-1] != self.mapCenter:
+			oldestPosition = self.moveHistory[0]
+			dx = -1* (oldestPosition[0] - self.mapCenter[0])
+			dy = oldestPosition[1] - self.mapCenter[1]
 			GRAPHIC_BASE_ANGLE = 90
 			if(dx == 0):
 				if(dy > 0): newAngle = GRAPHIC_BASE_ANGLE
 				else: newAngle = 180+GRAPHIC_BASE_ANGLE
 			elif(dy == 0):
-				if(dx > 0): newAngle = 90+GRAPHIC_BASE_ANGLE
-				else: newAngle = 270+GRAPHIC_BASE_ANGLE
+				if(dx > 0): newAngle = 270+GRAPHIC_BASE_ANGLE
+				else: newAngle = 90+GRAPHIC_BASE_ANGLE
 			else:
-				# Tangent: tan(theta) = Opposite / Adjacent
-				theta = math.atan(float(dy)/float(dx))
+				# atan2 returns an angle in radians
+				theta = math.atan2(float(dy), float(dx))
+				#logging.debug("newAngle theta={0}".format(theta))
 				# 2*pi rad = 360 deg
-				deg = theta * 180 / math.pi
-				newDeg = int(deg+GRAPHIC_BASE_ANGLE)
+				# (pi * theta) * 2 / 360 = deg
+				#deg = theta * 180 / math.pi
+				newAngle = theta / (2 * math.pi) * 360
 				#print "DEBUG: Shape.update(): self.theta={0}, deg={1}".format(theta, newDeg)
-				if(dy < 0):
-					newDeg += 180
-				newAngle = newDeg
+			#logging.debug("mapCenter={1}, dx={2}, dy={3}; newAngle={4}".format(None, self.mapCenter, dx, dy, newAngle))
 		
-		# set starting mapCenter for the top of the next update cycle
-		self.startMapCenter = list(self.mapCenter)
+		# record move history for angle calculation
+		self.moveHistory.append(list(self.mapCenter))
+		if(len(self.moveHistory) > MOVE_HISTORY_SIZE):
+			self.moveHistory.pop(0)	# remove front element
 		
 		if newAngle != None:
 			self.setAngle(newAngle)	# should happen after the object position is updated for movement so that collision detection test is accurate
@@ -307,11 +310,13 @@ class Shape(sprite.Sprite):
 		self.sound.play('give')
 
 	def trySwirlRight(self):
+		if self.curSwirl == None: return	# checks to make sure we do have at least one swirl
 		self.curSwirl = ((self.curSwirl + 1) % len(self.swirls))
 		logging.debug("trySwirlRight: new curSwirl = {0}".format(self.curSwirl))
 		self.makeSprite()
 	
 	def trySwirlLeft(self):
+		if self.curSwirl == None: return	# checks to make sure we do have at least one swirl
 		self.curSwirl = ((self.curSwirl - 1) % len(self.swirls))
 		logging.debug("trySwirlLeft: new curSwirl = {0}".format(self.curSwirl))
 		self.makeSprite()
