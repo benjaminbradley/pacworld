@@ -167,19 +167,21 @@ class Shape(sprite.Sprite):
 			#logging.debug("drawing swirl #{0} at {1}".format(i, swirlpos))
 			swirl.draw(self.image, swirlpos, i == self.curSwirl)
 
-		# draw any effects
-		for effect in self.effects.values():
-			effect.draw(self.image)
-		
 		# draw the "eye" direction indicator
 		radius = self.outlineWidth + self.outlineWidth
 		center = int(float(self.side_length) / 2)
 		pygame.draw.circle(self.image, self.eye_color, (self.side_length-radius, center), radius, self.outlineWidth)
 		
-		
 		# rotate image, if applicable
 		if(self.angle != 0):
 			self.image = pygame.transform.rotate(self.image, self.angle)
+
+		# create a mask for the sprite (for collision detection)
+		self.mask = pygame.mask.from_surface(self.image)
+
+		# draw any effects
+		for effect in self.effects.values():
+			effect.draw(self.image)
 
 		# Create the sprites rectangle from the image, maintaining rect position if set
 		oldrectpos = None
@@ -189,8 +191,7 @@ class Shape(sprite.Sprite):
 		if oldrectpos != None:
 			self.rect.center = oldrectpos
 		
-		# create a mask for the sprite (for collision detection)
-		self.mask = pygame.mask.from_surface(self.image)
+		
 	
 	def reset(self):
 		# put us in a random square to start
