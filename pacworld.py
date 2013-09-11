@@ -180,7 +180,7 @@ class Pacworld:
 			if(self.input_mode == INPUT_JOYSTICK):
 				# Possible joystick actions: JOYAXISMOTION JOYBALLMOTION JOYBUTTONDOWN JOYBUTTONUP JOYHATMOTION
 				if event.type == pygame.JOYBUTTONDOWN:
-					logging.debug("Joystick button pressed.")
+					#logging.debug("Joystick button pressed.")
 					for i in range( self.num_buttons ):
 						if(self.joystick.get_button(i) and not self.button_status[i]):
 							self.button_status[i] = True
@@ -209,11 +209,11 @@ class Pacworld:
 								sys.exit()
 							
 				if event.type == pygame.JOYBUTTONUP:
-					logging.debug("Joystick button released.")
+					#logging.debug("Joystick button released.")
 					for i in range( self.num_buttons ):
 						if(not self.joystick.get_button(i) and self.button_status[i]):
 							self.button_status[i] = False
-							logging.debug("Button "+str(i+1)+" released.")
+							#logging.debug("Button "+str(i+1)+" released.")
 			# end of : input_mode == INPUT_JOYSTICK
 
 			if(self.input_mode == INPUT_KEYBOARD):

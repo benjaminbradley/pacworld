@@ -3,11 +3,12 @@ import random
 import pygame
 from pygame import *
 import logging
+import math
 
 sys.path.append('art')
 from DrawSpiral import DrawSpiral
 
-import math
+import pacdefs
 import world
 import colors
 import effect
@@ -38,8 +39,8 @@ class Art(sprite.Sprite):
 		self.height = 1#self.side_length
 #		self.right = self.left + self.width
 #		self.bottom = self.top + self.height
-		self.type = world.TYPE_ART
-		self.symbol = world.ART_SYMBOL
+		self.type = pacdefs.TYPE_ART
+		self.symbol = pacdefs.ART_SYMBOL
 		self.doors = {}	# dictionary of side(int) to (X,Y) tuple of ints
 		self.effects = {}	# dictionary of Effect.EFFECT_TYPE to Effect class
 		self.angle = 0

@@ -7,13 +7,13 @@ import logging
 #from pygame.locals import *
 from pygame import *
 
+import pacdefs
 import pacglobal
 from pacsounds import Pacsounds,getPacsound
 import colors
 import effect
 from effect import *	# Effect, EFFECT_*
 from swirl import Swirl
-import world
 
 MAX_SIDES = 10
 SIZE_MINIMUM = 5
@@ -35,7 +35,7 @@ class Shape(sprite.Sprite):
 		# Initialize the sprite base class
 		super(Shape, self).__init__()
 		
-		self.type = world.TYPE_CHARACTER
+		self.type = pacdefs.TYPE_CHARACTER
 		self.map = themap
 		
 		# Get the display size for working out collisions later
@@ -128,7 +128,12 @@ class Shape(sprite.Sprite):
 			y = int(SWIRL_ROTATE_RADIUS * math.sin(theta))
 			#logging.debug("swirl x,y is {0},{1}".format(x,y))
 			return (base_x + x, base_y + y)
-			
+	
+	def getCenter(self):
+		"""returns an (x,y) tuple for the center of this shape on the map"""
+		x = self.mapCenter[0] + int(self.rect.width/2)
+		y = self.mapCenter[1] + int(self.rect.height/2)
+		return (x,y)
 
 	def makeSprite(self):
 		# Create an image for the sprite
@@ -312,10 +317,29 @@ class Shape(sprite.Sprite):
 		
 	def tryGive(self):
 		logging.debug("tryGive")
+		# checks to make sure we do have at least one swirl
+		if self.curSwirl == None or len(self.swirls) == 0: return False
 		self.activateSwirl()
-		#TODO
+		# check for nearby shapes
+		nearby_shapes = self.map.nearShapes(self.mapCenter, self.map.character_size * 1.5, self)
+		if len(nearby_shapes) > 0:
+			#logging.debug("Shapes near to S#{0}: {1}".format(self.id, nearby_shapes))
+			#TODO: be choosy about which shape to give to - is there one in front (closer to my eye?)
+			receiver = nearby_shapes[0]
+			logging.debug("shape #{0} is giving swirl to #{1}...".format(self.id, receiver.id))
+			self.map.startEffect(effect.TRANSFER_EFFECT, 
+					{	EFFECT_SOURCE:self,
+						EFFECT_TARGET:receiver,
+						EFFECT_ONCOMPLETE: lambda: receiver.receiveSwirl(self.copySwirl())
+					})
 		self.sound.play('give')
 
+	def copySwirl(self):
+		if self.curSwirl == None or len(self.swirls) == 0: return False
+		cur_swirl = self.swirls[self.curSwirl]
+		return Swirl(cur_swirl.effect_type)
+
+	
 	def trySwirlRight(self):
 		if self.curSwirl == None: return	# checks to make sure we do have at least one swirl
 		self.curSwirl = ((self.curSwirl + 1) % len(self.swirls))

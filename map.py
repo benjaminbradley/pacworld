@@ -10,7 +10,9 @@ import random
 import pygame
 from pygame import *
 import logging
+import math
 
+import pacdefs
 import wall
 from wall import Wall
 import colors
@@ -50,9 +52,9 @@ class Map(sprite.Sprite):
 
 		# NEXT: render the world map from the 'world' class argument
 		
-		for worldObj in sorted(theworld.objects, key=lambda obj: world.RENDER_ORDER[obj.type]):
+		for worldObj in sorted(theworld.objects, key=lambda obj: pacdefs.RENDER_ORDER[obj.type]):
 			logging.debug ("rendering the next world object: {0}".format(worldObj))
-			if worldObj.type == world.TYPE_PATH:
+			if worldObj.type == pacdefs.TYPE_PATH:
 				left = worldObj.left * grid_cellwidth
 				top = worldObj.top * grid_cellheight
 				if worldObj.direction_h:
@@ -81,11 +83,11 @@ class Map(sprite.Sprite):
 				pygame.draw.rect(self.image, (111,111,111), rect)
 				
 
-			elif worldObj.type == world.TYPE_ART:
+			elif worldObj.type == pacdefs.TYPE_ART:
 				# let the sprite manager draw it
 				pass
 
-			elif worldObj.type == world.TYPE_INTERSECTION:
+			elif worldObj.type == pacdefs.TYPE_INTERSECTION:
 				# draw a grey rectangle
 				left = worldObj.left * grid_cellwidth
 				top = worldObj.top * grid_cellheight
@@ -101,7 +103,7 @@ class Map(sprite.Sprite):
 				logging.debug ("intersection rect at {0}".format(rect))
 				pygame.draw.rect(self.image, (222,222,222), rect)
 
-			elif worldObj.type == world.TYPE_FIELD:
+			elif worldObj.type == pacdefs.TYPE_FIELD:
 				# draw a brown rectangle
 				left = worldObj.left * grid_cellwidth
 				top = worldObj.top * grid_cellheight
@@ -111,7 +113,7 @@ class Map(sprite.Sprite):
 				#print "DEBUG: field rect at {0}".format(rect)
 				pygame.draw.rect(self.image, (160,82,45), rect)
 
-			elif worldObj.type == world.TYPE_ROOM:
+			elif worldObj.type == pacdefs.TYPE_ROOM:
 				# calculate corners & dimensions
 				left = worldObj.left * grid_cellwidth
 				top = worldObj.top * grid_cellheight
@@ -141,7 +143,7 @@ class Map(sprite.Sprite):
 					doorx = doorpos[0]
 					doory = doorpos[1]
 					logging.debug ("rendering ROOM {0} has a door at {1} on side {2}".format(worldObj.id,doorpos,side))
-					if side == world.SIDE_N:
+					if side == pacdefs.SIDE_N:
 						doorLeft = doorx * grid_cellwidth
 						doorRight = (doorx+1) * grid_cellwidth
 						# add 2 walls, on either side of the door
@@ -149,7 +151,7 @@ class Map(sprite.Sprite):
 						roomWalls[side].append([(left,top), (doorLeft,top)])
 						roomWalls[side].append([(doorRight,top), (right,top)])
 				
-					if side == world.SIDE_E:
+					if side == pacdefs.SIDE_E:
 						doorTop = doory * grid_cellheight
 						doorBottom = (doory+1) * grid_cellheight
 						logging.debug ("rendering ROOM door top/bottom is {0}/{1}".format(doorTop,doorBottom))
@@ -158,7 +160,7 @@ class Map(sprite.Sprite):
 						roomWalls[side].append([(right,top), (right,doorTop)])
 						roomWalls[side].append([(right,doorBottom), (right,bottom)])
 				
-					if side == world.SIDE_S:
+					if side == pacdefs.SIDE_S:
 						doorLeft = doorx * grid_cellwidth
 						doorRight = (doorx+1) * grid_cellwidth
 						# add 2 walls, on either side of the door
@@ -166,7 +168,7 @@ class Map(sprite.Sprite):
 						roomWalls[side].append([(left,bottom), (doorLeft,bottom)])
 						roomWalls[side].append([(doorRight,bottom), (right,bottom)])
 				
-					if side == world.SIDE_W:
+					if side == pacdefs.SIDE_W:
 						doorTop = doory * grid_cellheight
 						doorBottom = (doory+1) * grid_cellheight
 						# add 2 walls, on either side of the door
@@ -176,14 +178,14 @@ class Map(sprite.Sprite):
 				# end of for each door (creating walls w/ doors)
 					
 				# check all directions and add a default wall if none is defined
-				for side in world.SIDES:
+				for side in pacdefs.SIDES:
 					if side not in roomWalls.keys() or len(roomWalls[side]) == 0:
 						logging.debug ("drawing default wall for side {0}".format(side))
 						roomWalls[side] = []
-						if side == world.SIDE_N: roomWalls[side].append([(left,top), (right,top)])
-						if side == world.SIDE_E: roomWalls[side].append([(right,top), (right, bottom)])
-						if side == world.SIDE_S: roomWalls[side].append([(right,bottom), (left,bottom)])
-						if side == world.SIDE_W: roomWalls[side].append([(left,bottom), (left,top)])
+						if side == pacdefs.SIDE_N: roomWalls[side].append([(left,top), (right,top)])
+						if side == pacdefs.SIDE_E: roomWalls[side].append([(right,top), (right, bottom)])
+						if side == pacdefs.SIDE_S: roomWalls[side].append([(right,bottom), (left,bottom)])
+						if side == pacdefs.SIDE_W: roomWalls[side].append([(left,bottom), (left,top)])
 
 				for walls in roomWalls.values():
 					for wallPoints in walls:
@@ -322,6 +324,26 @@ class Map(sprite.Sprite):
 		self.shapes = shapes
 		return shapes
 	# end of Map.addShapes()
+
+	def nearShapes(self, mapCenter, radius, ignore = None):
+		matches = []
+		for shape in self.shapes:
+			if shape == ignore: continue
+			# calculate distance between the shapes
+			dx = abs(mapCenter[0] - shape.mapCenter[0])
+			dy = abs(mapCenter[1] - shape.mapCenter[1])
+			if(dy == 0):
+				dist = dx
+			elif(dx == 0):
+				dist = dy
+			else:
+				# a^2 + b^2 = c^2
+				dist = math.sqrt(dx*dx+dy*dy)
+			if(dist < radius):
+				matches.append(shape)
+		return matches
+	# end of nearShapes()
+
 
 
 

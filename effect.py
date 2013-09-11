@@ -3,7 +3,7 @@ import logging
 
 from pacsounds import Pacsounds,getPacsound
 import colors
-
+import pacdefs
 
 BURST_EFFECT = 1	# solo sprite effect
 TRANSFER_EFFECT = 2	# sprite to sprite effect
@@ -73,13 +73,23 @@ class Effect():
 		#origin_x = image.get_width() / 2
 		#origin_y = image.get_height() / 2
 		# move the center of the effect between the source and the target over the course of the animation
-		source_x = self.source.rect.centerx
-		source_y = self.source.rect.centery
-		#target_x = self.target.rect.centerx
-		target_x = self.target.mapCenter[0] + self.target.rect.width/2
-		#target_y = self.target.rect.centery
-		target_y = self.target.mapCenter[1] + self.target.rect.height/2
-		#logging.debug("source center is {0}, target center is {1}".format(self.source.rect.center, self.target.rect.center))
+		if self.source.type == pacdefs.TYPE_ART:
+			source_x = self.source.rect.centerx
+			source_y = self.source.rect.centery
+		else:	# self.source.type == pacdefs.TYPE_CHARACTER
+			srcCenter = self.source.getCenter()
+			source_x = srcCenter[0]
+			source_y = srcCenter[1]
+
+		if self.target.type == pacdefs.TYPE_ART:
+			target_x = self.target.rect.centerx
+			target_y = self.target.rect.centery
+		else:	# self.target.type == pacdefs.TYPE_CHARACTER
+			trgCenter = self.target.getCenter()
+			target_x = trgCenter[0]
+			target_y = trgCenter[1]
+
+		#logging.debug("source center is {0}, target center is {1}".format((source_x, source_y), (target_x, target_y)))
 		self.frame_origin_x = source_x + (self.frame_gradpercent * (target_x - source_x))
 		self.frame_origin_y = source_y + (self.frame_gradpercent * (target_y - source_y))
 
