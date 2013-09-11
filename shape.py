@@ -131,8 +131,8 @@ class Shape(sprite.Sprite):
 	
 	def getCenter(self):
 		"""returns an (x,y) tuple for the center of this shape on the map"""
-		x = self.mapCenter[0] + int(self.rect.width/2)
-		y = self.mapCenter[1] + int(self.rect.height/2)
+		x = self.mapTopLeft[0] + int(self.rect.width/2)
+		y = self.mapTopLeft[1] + int(self.rect.height/2)
 		return (x,y)
 
 	def makeSprite(self):
@@ -203,9 +203,9 @@ class Shape(sprite.Sprite):
 		starty = self.map.grid_cellheight * random.randint(0, self.map.world.rows-1)
 		startx = self.map.grid_cellwidth * random.randint(0, self.map.world.cols-1)
 		# Start the shape directly in the centre of the screen
-		self.mapCenter = [startx, starty]
-		self.imageCenter = list(self.mapCenter)
-		self.moveHistory = [list(self.mapCenter)]
+		self.mapTopLeft = [startx, starty]
+		self.screenTopLeft = list(self.mapTopLeft)
+		self.moveHistory = [list(self.mapTopLeft)]
 		# reset other attributes as well
 		self.angle = 0
 		self.makeSprite()
@@ -225,10 +225,10 @@ class Shape(sprite.Sprite):
 		
 		# check movement during this update cycle and update angle appropriately
 		newAngle = None
-		if self.moveHistory[-1] != self.mapCenter:
+		if self.moveHistory[-1] != self.mapTopLeft:
 			oldestPosition = self.moveHistory[0]
-			dx = -1* (oldestPosition[0] - self.mapCenter[0])
-			dy = oldestPosition[1] - self.mapCenter[1]
+			dx = -1* (oldestPosition[0] - self.mapTopLeft[0])
+			dy = oldestPosition[1] - self.mapTopLeft[1]
 			GRAPHIC_BASE_ANGLE = 90
 			if(dx == 0):
 				if(dy > 0): newAngle = GRAPHIC_BASE_ANGLE
@@ -245,10 +245,10 @@ class Shape(sprite.Sprite):
 				#deg = theta * 180 / math.pi
 				newAngle = theta / (2 * math.pi) * 360
 				#print "DEBUG: Shape.update(): self.theta={0}, deg={1}".format(theta, newDeg)
-			#logging.debug("mapCenter={1}, dx={2}, dy={3}; newAngle={4}".format(None, self.mapCenter, dx, dy, newAngle))
+			#logging.debug("mapCenter={1}, dx={2}, dy={3}; newAngle={4}".format(None, self.mapTopLeft, dx, dy, newAngle))
 		
 		# record move history for angle calculation
-		self.moveHistory.append(list(self.mapCenter))
+		self.moveHistory.append(list(self.mapTopLeft))
 		if(len(self.moveHistory) > MOVE_HISTORY_SIZE):
 			self.moveHistory.pop(0)	# remove front element
 		
@@ -264,33 +264,33 @@ class Shape(sprite.Sprite):
 	
 
 	def updatePosition(self):
-		self.imageCenter = list(self.mapCenter)
-		if self.mapCenter[0] < self.displaySize[0]/2:
-			self.imageCenter[0] = self.mapCenter[0]
-		elif self.mapCenter[0] > self.map.mapSize[0]-self.displaySize[0]/2:
-			self.imageCenter[0] = self.displaySize[0] - (self.map.mapSize[0]-self.mapCenter[0])
+		self.screenTopLeft = list(self.mapTopLeft)
+		if self.mapTopLeft[0] < self.displaySize[0]/2:
+			self.screenTopLeft[0] = self.mapTopLeft[0]
+		elif self.mapTopLeft[0] > self.map.mapSize[0]-self.displaySize[0]/2:
+			self.screenTopLeft[0] = self.displaySize[0] - (self.map.mapSize[0]-self.mapTopLeft[0])
 		else: 
-			self.imageCenter[0] = self.displaySize[0]/2
+			self.screenTopLeft[0] = self.displaySize[0]/2
 
-		if self.mapCenter[1] < self.displaySize[1]/2:
-			self.imageCenter[1] = self.mapCenter[1]
-		elif self.mapCenter[1] > self.map.mapSize[1]-self.displaySize[1]/2:
-			self.imageCenter[1] = self.displaySize[1] - (self.map.mapSize[1]-self.mapCenter[1])
+		if self.mapTopLeft[1] < self.displaySize[1]/2:
+			self.screenTopLeft[1] = self.mapTopLeft[1]
+		elif self.mapTopLeft[1] > self.map.mapSize[1]-self.displaySize[1]/2:
+			self.screenTopLeft[1] = self.displaySize[1] - (self.map.mapSize[1]-self.mapTopLeft[1])
 		else: 
-			self.imageCenter[1] = self.displaySize[1]/2
+			self.screenTopLeft[1] = self.displaySize[1]/2
 		
-		self.rect.top = self.imageCenter[1]
-		self.rect.left = self.imageCenter[0]
+		self.rect.top = self.screenTopLeft[1]
+		self.rect.left = self.screenTopLeft[0]
 		#logging.debug("rect is: {0}".format(self.rect))
 
 	def draw(self, display):
 		if self.map.player.shape == self:
-			#print "DEBUG: drawing image at {0}".format(self.imageCenter)
-			display.blit(self.image, self.imageCenter)
+			#print "DEBUG: drawing image at {0}".format(self.screenTopLeft)
+			display.blit(self.image, self.screenTopLeft)
 		else:
 			windowRect = self.map.getWindowRect()
-			screenx = self.mapCenter[0] - windowRect.left
-			screeny = self.mapCenter[1] - windowRect.top
+			screenx = self.mapTopLeft[0] - windowRect.left
+			screeny = self.mapTopLeft[1] - windowRect.top
 			display.blit(self.image, (screenx,screeny))
 	# end of Shape.draw()
 
@@ -321,7 +321,7 @@ class Shape(sprite.Sprite):
 		if self.curSwirl == None or len(self.swirls) == 0: return False
 		self.activateSwirl()
 		# check for nearby shapes
-		nearby_shapes = self.map.nearShapes(self.mapCenter, self.map.character_size * 1.5, self)
+		nearby_shapes = self.map.nearShapes(self.mapTopLeft, self.map.character_size * 1.5, self)
 		if len(nearby_shapes) > 0:
 			#logging.debug("Shapes near to S#{0}: {1}".format(self.id, nearby_shapes))
 			#TODO: be choosy about which shape to give to - is there one in front (closer to my eye?)
@@ -392,18 +392,18 @@ class Shape(sprite.Sprite):
 
 	def move_single_axis(self, dx, dy):
 		# save initial positions
-		startpos = list(self.mapCenter)
+		startpos = list(self.mapTopLeft)
 		# Move the rect
 		#logging.debug("Shape.move_single_axis({0}, {1})".format(dx, dy))
-		self.mapCenter[0] += int(dx)
-		self.mapCenter[1] += int(dy)
+		self.mapTopLeft[0] += int(dx)
+		self.mapTopLeft[1] += int(dy)
 		# if there's a collision, un-do the move
 		if self.map.wallCollision(self):
 			#logging.debug("move aborted due to collision")
-			self.mapCenter = startpos
+			self.mapTopLeft = startpos
 			return False
 		else:
-			#logging.debug("shape moved to %s from %s", self.mapCenter, startpos)
+			#logging.debug("shape moved to %s from %s", self.mapTopLeft, startpos)
 			self.updatePosition()
 			return True
 	
@@ -431,9 +431,9 @@ class Shape(sprite.Sprite):
 		dy = math.cos(theta)
 		dx = math.sin(theta)
 		#print "DEBUG: angle={0}, dx={1}, dy={2}".format(theta, dx, dy)
-		#print "DEBUG: Shape.moveFwd(): old mapCenter={0}".format(self.mapCenter)
+		#print "DEBUG: Shape.moveFwd(): old mapCenter={0}".format(self.mapTopLeft)
 		self.move(dx * self.linearSpeed, dy * self.linearSpeed)
-		#print "DEBUG: Shape.moveFwd(): new mapCenter={0}".format(self.mapCenter)
+		#print "DEBUG: Shape.moveFwd(): new mapCenter={0}".format(self.mapTopLeft)
 
 	def moveBack(self):
 		# Move away from the direction we're pointing
@@ -512,10 +512,10 @@ class Shape(sprite.Sprite):
 		windowRight = windowRect.left + windowRect.width
 		windowBottom = windowRect.top + windowRect.height
 		# if shape is on the screen, we will draw it
-		objLeft = self.mapCenter[0]
-		objRight = self.mapCenter[0]+self.rect.width
-		objTop = self.mapCenter[1]
-		objBottom = self.mapCenter[1]+self.rect.height
+		objLeft = self.mapTopLeft[0]
+		objRight = self.mapTopLeft[0]+self.rect.width
+		objTop = self.mapTopLeft[1]
+		objBottom = self.mapTopLeft[1]+self.rect.height
 		if objLeft > windowRight: return False
 		if objRight < windowRect.left: return False
 		if objBottom < windowRect.top: return False

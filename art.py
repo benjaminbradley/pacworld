@@ -157,7 +157,7 @@ class Art(sprite.Sprite):
 		if remakeSprite: self.makeSprite()
 	
 	def draw(self, display, windowRect):
-		#TODO: adjust blit dest by mapCenter
+		#TODO: adjust blit dest by mapTopLeft
 		screenpos = (self.x - windowRect[0], self.y - windowRect[1])
 		#print "DEBUG: Art.draw(): drawing image at {0}".format(screenpos)
 		display.blit(self.image, screenpos)

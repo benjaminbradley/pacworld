@@ -8,9 +8,6 @@ BUGFIX:
 - FIXMEs
 
 NEXT STEPS for MVP:
-- rename shape.mapCenter to mapTopLeft
-- rename shape.imageCenter to screenTopLeft
-
 - add new types of swirls (change size, sides, color, etc - what attributes are fixed, but variable?)
 - add collision detection for size/side changes
 - only one type of each swirl

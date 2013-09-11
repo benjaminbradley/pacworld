@@ -114,7 +114,7 @@ class Pacworld:
 		self.player.shape = self.map.shapes[0]	# just grab the first shape for the player
 
 		self.map.player = self.player
-		#self.player.shape.mapCenter = [int(5.5*self.map.grid_cellwidth-self.shape.side_length/2), int(5.5*self.map.grid_cellheight-self.shape.side_length/2)]
+		#self.player.shape.mapTopLeft = [int(5.5*self.map.grid_cellwidth-self.shape.side_length/2), int(5.5*self.map.grid_cellheight-self.shape.side_length/2)]
 		
 		logging.info("USING RANDOM SEED: {0}".format(crazySeed))
 
@@ -156,7 +156,7 @@ class Pacworld:
 			for shape in self.map.shapes:
 				# if artpiece is on the screen, we will draw it
 				if not shape.onScreen(windowRect): continue
-				#logging.debug("drawing shape {0} at {1}".format(shape.id, shape.mapCenter))
+				#logging.debug("drawing shape {0} at {1}".format(shape.id, shape.mapTopLeft))
 				shape.draw(self.display)
 			
 			
