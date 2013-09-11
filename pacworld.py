@@ -81,18 +81,18 @@ class Pacworld:
 		
 		
 		# if no random seed was given, make one up:
-		if(True):
-			crazySeed = random.randint(0, MAX_RANDOM_SEED)
-			logging.info("USING RANDOM SEED: {0}",format(crazySeed))
+		if(False):
+			self.crazySeed = random.randint(0, MAX_RANDOM_SEED)
+			logging.info("USING RANDOM SEED: {0}",format(self.crazySeed))
 		else:
-			# cool seeds: 24669 
-			crazySeed = 24669
-			logging.info("USING CHOSEN SEED: {0}",format(crazySeed))
+			# cool seeds: 24669
+			self.crazySeed = 51097
+			logging.info("USING CHOSEN SEED: {0}",format(self.crazySeed))
 		
 		SCALE_FACTOR = 2
 
 
-		random.seed(crazySeed)
+		random.seed(self.crazySeed)
 
 		mapSize = [SCALE_FACTOR*x for x in self.displaySize]
 		
@@ -116,7 +116,7 @@ class Pacworld:
 		self.map.player = self.player
 		#self.player.shape.mapTopLeft = [int(5.5*self.map.grid_cellwidth-self.shape.side_length/2), int(5.5*self.map.grid_cellheight-self.shape.side_length/2)]
 		
-		logging.info("USING RANDOM SEED: {0}".format(crazySeed))
+		logging.info("USING RANDOM SEED: {0}".format(self.crazySeed))
 
 		# play a "startup" sound
 		self.sound.play('3robobeat')
@@ -204,6 +204,7 @@ class Pacworld:
 							elif(i == 8):
 								self.player.shape.reset()
 							elif(i == 9):	# button 10 triggers program exit
+								logging.info("That was RANDOM SEED {0}. Hope you had fun.".format(self.crazySeed))
 								logging.debug("Quitting program.")
 								pygame.quit()
 								sys.exit()

@@ -53,6 +53,8 @@ class Shape(sprite.Sprite):
 		# data for helper functs startmove/stopmove for keyboard movement
 		self.going_in_dir = {}	# hash of direction (DIR_* constants) to boolean
 		for d in DIRECTIONS: self.going_in_dir[d] = False
+		# data for rotation movement over time
+		self.turning = None	# if set, will be a hash containing the key 'angle'
 
 		# Work out a speed
 		self.setSpeed()
@@ -177,6 +179,11 @@ class Shape(sprite.Sprite):
 		center = int(float(self.side_length) / 2)
 		pygame.draw.circle(self.image, self.eye_color, (self.side_length-radius, center), radius, self.outlineWidth)
 		
+		# save the old sprite location before generating new rect
+		oldrectpos = None
+		if hasattr(self, 'rect'):
+			oldrectpos = self.rect.center
+		
 		# rotate image, if applicable
 		if(self.angle != 0):
 			self.image = pygame.transform.rotate(self.image, self.angle)
@@ -189,9 +196,7 @@ class Shape(sprite.Sprite):
 			effect.draw(self.image)
 
 		# Create the sprites rectangle from the image, maintaining rect position if set
-		oldrectpos = None
-		if hasattr(self, 'rect'):
-			oldrectpos = self.rect.center
+		#pygame.draw.rect(self.image, (255,0,0), self.image.get_rect(), 3)	# DEBUG RED BORDER
 		self.rect = self.image.get_rect()
 		if oldrectpos != None:
 			self.rect.center = oldrectpos
@@ -222,10 +227,54 @@ class Shape(sprite.Sprite):
 			self.moveLeft()
 		elif self.going_in_dir[DIR_RIGHT]:
 			self.moveRight()
-		
-		# check movement during this update cycle and update angle appropriately
-		newAngle = None
-		if self.moveHistory[-1] != self.mapTopLeft:
+
+
+		# angle changes...
+
+		# check for on-going rotation
+		if self.turning != None:
+			if self.angle == self.turning['angle']:	# we're there!
+				# stop rotating
+				self.turning = None
+			else:	# move closer to the target angle
+				#logging.debug("shape #{0} is rotating towards {1}, currently at {2}".format(self.id, self.turning['angle'], self.angle))
+				minAngle = min(self.angle, self.turning['angle'])
+				maxAngle = max(self.angle, self.turning['angle'])
+				a = maxAngle - minAngle
+				b = 360 + minAngle - maxAngle
+				angleDiff = min(a, b)
+				if angleDiff < self.rotationSpeed:	# if we're close enough (within one rotation), just set it
+					self.angle = self.turning['angle']
+				else:
+					# need to change center and angle at the same time, if possible
+					oldrect = self.rect
+					if (self.turning['angle']-self.angle+360) % 360 > 180:
+						dir = -1
+					else:
+						dir = 1
+					logging.debug("cur={4}, goal={5}; dir={2}".format(a,b,dir,None, self.angle,self.turning['angle']))
+					#logging.debug("angle diff options {0} or {1}; cur={4}, goal={5}; dir={2}".format(a,b,dir,None, self.angle,self.turning['angle']))
+					#logging.debug("new angle set by turning")
+					if not self.changeAngle(dir * self.rotationSpeed):
+						# if the angle change was unsuccessful/blocked, cancel the operation
+						self.turning = None
+
+					# if the rect got resized we'll need to move the center to match
+					if self.rect != oldrect:
+						# attempt to move the mapcenter by the change in rect size
+						dx = self.rect.left - oldrect.left
+						dy = self.rect.top - oldrect.top
+
+						if (dx != 0 or dy != 0):
+							# move the center to match the new angle, if possible
+							moved = self.move(dx, dy)
+							#logging.debug("moving by ({0},{1}): success={2}".format(dx,dy,moved))
+							self.recordMove()
+
+		# no on-going rotation, what about movement?
+		elif self.moveHistory[-1] != self.mapTopLeft:
+			# check movement during this update cycle and update angle appropriately
+			newAngle = None
 			oldestPosition = self.moveHistory[0]
 			dx = -1* (oldestPosition[0] - self.mapTopLeft[0])
 			dy = oldestPosition[1] - self.mapTopLeft[1]
@@ -244,16 +293,15 @@ class Shape(sprite.Sprite):
 				# (pi * theta) * 2 / 360 = deg
 				#deg = theta * 180 / math.pi
 				newAngle = theta / (2 * math.pi) * 360
-				#print "DEBUG: Shape.update(): self.theta={0}, deg={1}".format(theta, newDeg)
+			#print "DEBUG: Shape.update(): self.theta={0}, deg={1}".format(theta, newDeg)
 			#logging.debug("mapCenter={1}, dx={2}, dy={3}; newAngle={4}".format(None, self.mapTopLeft, dx, dy, newAngle))
 		
-		# record move history for angle calculation
-		self.moveHistory.append(list(self.mapTopLeft))
-		if(len(self.moveHistory) > MOVE_HISTORY_SIZE):
-			self.moveHistory.pop(0)	# remove front element
-		
-		if newAngle != None:
-			self.setAngle(newAngle)	# should happen after the object position is updated for movement so that collision detection test is accurate
+			# record move history for future angle calculation
+			self.recordMove()
+			
+			if newAngle != None:
+				self.setAngle(newAngle)	# should happen after the object position is updated for movement so that collision detection test is accurate
+				#logging.debug("new angle set by movement")
 
 
 		# check for and update sprite animations
@@ -262,6 +310,20 @@ class Shape(sprite.Sprite):
 				del self.effects[effect.BURST_EFFECT]	# FIXME: is more explicit garbage collection needed here?
 			self.makeSprite()
 	
+
+	def recordMove(self):
+		self.moveHistory.append(list(self.mapTopLeft))
+		if(len(self.moveHistory) > MOVE_HISTORY_SIZE):
+			self.moveHistory.pop(0)	# remove front element
+	
+	
+	def animateToAngle(self, newAngle):
+		logging.debug("")
+		self.turning = {
+			'angle' : newAngle
+		}
+
+
 
 	def updatePosition(self):
 		self.screenTopLeft = list(self.mapTopLeft)
@@ -327,6 +389,7 @@ class Shape(sprite.Sprite):
 			#TODO: be choosy about which shape to give to - is there one in front (closer to my eye?)
 			receiver = nearby_shapes[0]
 			logging.debug("shape #{0} is giving swirl to #{1}...".format(self.id, receiver.id))
+			receiver.faceTo(self)
 			self.map.startEffect(effect.TRANSFER_EFFECT, 
 					{	EFFECT_SOURCE:self,
 						EFFECT_TARGET:receiver,
@@ -389,6 +452,7 @@ class Shape(sprite.Sprite):
 			# check for other map effects that happen based on movement
 			self.map.checkTriggers(self)
 		self.last_moved_frame = pacglobal.get_frames()
+		return movedx or movedy
 
 	def move_single_axis(self, dx, dy):
 		# save initial positions
@@ -482,13 +546,34 @@ class Shape(sprite.Sprite):
 			# re-create the sprite in the new position
 			#logging.debug ("new angle: {0}".format(self.angle))
 			self.makeSprite()
+			#logging.debug("new angle={0}, new sprite rect is: {1}".format(self.angle, self.rect))
 			return True
 		
 		
 	def changeAngle(self, delta):
 		""" angle in degrees. 0 is (12 noon?) """
 		return self.setAngle(self.angle + delta)
-		
+	
+	
+	def faceTo(self, target):
+		"""change shape's angle to face towards the passed target"""
+		slf = self.getCenter()
+		trg = target.getCenter()
+		dx = -1* (slf[0] - trg[0])
+		dy = slf[1] - trg[1]
+		GRAPHIC_BASE_ANGLE = 90
+		if(dx == 0):
+			if(dy > 0): newAngle = GRAPHIC_BASE_ANGLE
+			else: newAngle = 180+GRAPHIC_BASE_ANGLE
+		elif(dy == 0):
+			if(dx > 0): newAngle = 270+GRAPHIC_BASE_ANGLE
+			else: newAngle = 90+GRAPHIC_BASE_ANGLE
+		else:
+			theta = math.atan2(float(dy), float(dx))
+			newAngle = ((theta / (2 * math.pi) * 360) + 360) % 360
+		#SohCahToa
+		self.animateToAngle(newAngle)
+
 
 	def rotateLeft(self):
 		self.changeAngle(self.rotationSpeed)

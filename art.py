@@ -195,5 +195,5 @@ class Art(sprite.Sprite):
 		if artBottom > adjWindowBottom: return False
 		return True	# art IS near the screen
 	
-
-	# idea: the "effects" are the abilities passed from the art piece to the shape.
+	def getCenter(self):
+		return self.rect.center
