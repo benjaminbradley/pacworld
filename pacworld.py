@@ -36,6 +36,7 @@ class Pacworld:
 		#self.displaySize = (640, 480)
 		self.displaySize = (800,600)
 		#self.displaySize = (1024, 768)
+		self.character_size = self.displaySize[0] / 10
 		
 		# Initialize pygame
 		pygame.init()
@@ -79,8 +80,6 @@ class Pacworld:
 		display.update()
 		
 		
-		self.character_size = self.displaySize[0] / 10
-		
 		# if no random seed was given, make one up:
 		if(True):
 			crazySeed = random.randint(0, MAX_RANDOM_SEED)
@@ -105,14 +104,15 @@ class Pacworld:
 		theworld = World(gridDisplaySize)
 		
 		# Create the world map, passing through the display size and world map
-		self.map = Map(mapSize, self.displaySize, theworld)
+		self.map = Map(mapSize, self.displaySize, self.character_size, theworld)
 		art = theworld.addArt(self.map)
-		
+		shapes = self.map.addShapes()
+		self.sprites = sprite.Group(shapes, art)
+
 		# Create the player object and add it's shape to a sprite group
 		self.player = Player()
-		self.player.shape = Shape(self.displaySize, self.map, self.character_size, 3)
-		theworld.addObject(self.player.shape)	# gives the shape a unique ID# in the world
-		self.sprites = sprite.Group(self.player.shape, *art)
+		self.player.shape = self.map.shapes[0]	# just grab the first shape for the player
+
 		self.map.player = self.player
 		#self.player.shape.mapCenter = [int(5.5*self.map.grid_cellwidth-self.shape.side_length/2), int(5.5*self.map.grid_cellheight-self.shape.side_length/2)]
 		
@@ -144,13 +144,20 @@ class Pacworld:
 			#print "DEBUG: drawing shape via sprite group. shape rect is: {0}".format(self.shape.rect)
 			# draw the shape by itself onto the display. it's always there.
 			self.player.shape.draw(self.display)
-			# NOTE: we only want to show the art that is currently onscreen, and it needs to be shifted to its correct position
 			windowRect = self.map.getWindowRect()
+			# NOTE: we only want to show the art that is currently onscreen, and it needs to be shifted to its correct position
 			for artpiece in self.map.arts:
 				# if artpiece is on the screen, we will draw it
 				if not artpiece.onScreen(windowRect): continue
 				#print "DEBUG: drawing art at {0}".format(artpiece.rect)
 				artpiece.draw(self.display, windowRect)
+			
+			# draw any other shapes that are currently onscreen
+			for shape in self.map.shapes:
+				# if artpiece is on the screen, we will draw it
+				if not shape.onScreen(windowRect): continue
+				#logging.debug("drawing shape {0} at {1}".format(shape.id, shape.mapCenter))
+				shape.draw(self.display)
 			
 			
 			# Update the full display surface to the screen

@@ -11,11 +11,12 @@ NEXT STEPS for MVP:
 - add new types of swirls
 - only one type of each swirl
 - max # of swirls
-- other characters
 - get a swirl from another character "ask"
 - give a swirl to another character "give"
+- make other characters move around
 - idle behavior for current character (plays itself)
 - switch between characters (for idle)
+- make the swirls rotate inside each shape, at variable speeds
 - when the world reaches a certain level of swirl "saturation" (e.g. % of characters have # of swirls) then remake the world
 
 PERFORMANCE:

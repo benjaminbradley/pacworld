@@ -194,7 +194,7 @@ class Shape(sprite.Sprite):
 		
 	
 	def reset(self):
-		# put us in a random square to start
+		# put us in a random square
 		starty = self.map.grid_cellheight * random.randint(0, self.map.world.rows-1)
 		startx = self.map.grid_cellwidth * random.randint(0, self.map.world.cols-1)
 		# Start the shape directly in the centre of the screen
@@ -276,11 +276,17 @@ class Shape(sprite.Sprite):
 		
 		self.rect.top = self.imageCenter[1]
 		self.rect.left = self.imageCenter[0]
-		#print "DEBUG: Shape.updatePosition(): rect is: {0}".format(self.rect)
+		#logging.debug("rect is: {0}".format(self.rect))
 
 	def draw(self, display):
-		#print "DEBUG: drawing image at {0}".format(self.imageCenter)
-		display.blit(self.image, self.imageCenter)
+		if self.map.player.shape == self:
+			#print "DEBUG: drawing image at {0}".format(self.imageCenter)
+			display.blit(self.image, self.imageCenter)
+		else:
+			windowRect = self.map.getWindowRect()
+			screenx = self.mapCenter[0] - windowRect.left
+			screeny = self.mapCenter[1] - windowRect.top
+			display.blit(self.image, (screenx,screeny))
 	# end of Shape.draw()
 
 
@@ -478,6 +484,19 @@ class Shape(sprite.Sprite):
 		logging.debug ("num_sides is now {0}".format(self.num_sides))
 		self.makeSprite()
 
+	def onScreen(self, windowRect):
+		windowRight = windowRect.left + windowRect.width
+		windowBottom = windowRect.top + windowRect.height
+		# if shape is on the screen, we will draw it
+		objLeft = self.mapCenter[0]
+		objRight = self.mapCenter[0]+self.rect.width
+		objTop = self.mapCenter[1]
+		objBottom = self.mapCenter[1]+self.rect.height
+		if objLeft > windowRight: return False
+		if objRight < windowRect.left: return False
+		if objBottom < windowRect.top: return False
+		if objTop > windowBottom: return False
+		return True	# obj IS on the screen
 
 
 class ShapeTest:

@@ -6,6 +6,7 @@ Tracks the currently displayed subsection of the world map (windowRect)
 '''
 
 import sys
+import random
 import pygame
 from pygame import *
 import logging
@@ -14,12 +15,13 @@ import wall
 from wall import Wall
 import colors
 import world
+from shape import Shape
 from effect import *	# Effect, EFFECT_*
 
 # The class for the background
 class Map(sprite.Sprite):
 	
-	def __init__(self, mapSize, displaySize, theworld):
+	def __init__(self, mapSize, displaySize, character_size, theworld):
 		# Initialize the sprite base class
 		super(Map, self).__init__()
 		
@@ -28,6 +30,7 @@ class Map(sprite.Sprite):
 		self.mapSize = mapSize
 		#self.mapSize = list(displaySize)
 		logging.debug ("mapSize is {0}".format(self.mapSize))
+		self.character_size = character_size
 		self.image = Surface(self.mapSize)
 		
 		# Fill the image with a green colour (specified as R,G,B)
@@ -35,6 +38,7 @@ class Map(sprite.Sprite):
 		
 		self.walls = [] # List to hold the walls
 		self.arts = []	# list to hold the arts
+		self.shapes = []	# list to hold the shapes
 		self.world = theworld
 		
 		#print "DEBUG: Map.__init__(): rendering world:\n{0}".format(theworld.to_s())
@@ -293,6 +297,34 @@ class Map(sprite.Sprite):
 		self.newMapEffect(Effect(effect_type, effect_options))
 
 
+	def addShapes(self):
+		"""adds more shapes to the world"""
+		# how many shapes to generate
+		# we want roughly one piece per screen
+		screenArea = self.displayGridSize[0] * self.displayGridSize[1]
+		worldArea = self.world.cols * self.world.rows
+		minTotalShapes = 1 + int(worldArea / screenArea)
+		#logging.debug("generating {0} shape pieces...".format(minTotalShapes))
+		curTotalShapes = 0
+		shapes = []
+		while curTotalShapes < minTotalShapes:
+		# until enough shape generated
+			# create new shape, placed randomly
+			num_sides = random.randint(3,6)
+			newShape = Shape(self.displaySize, self, self.character_size, num_sides)
+
+			# add shape to the list of objects
+			if(self.world.addObject(newShape)):
+				curTotalShapes += 1
+				shapes.append(newShape)
+				logging.debug ("shape #{0} added to the map, id {1} with position {2} and rect={3}".format(curTotalShapes, newShape, newShape.mapCenter, newShape.rect))
+		# now there's enough shape in the world
+		self.shapes = shapes
+		return shapes
+	# end of Map.addShapes()
+
+
+
 if __name__ == '__main__':
 	# Make the display size a member of the class
 	displaySize = (640, 480)
@@ -308,7 +340,7 @@ if __name__ == '__main__':
 		
 	# Create the background, passing through the display size
 	mapSize = [4*x for x in displaySize]
-	map = Map(mapSize, displaySize)
+	map = Map(mapSize, displaySize, displaySize[0]/10, World(mapSize))
 
 	# Draw the background
 	map.draw(window, (10,10))
