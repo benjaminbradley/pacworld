@@ -67,21 +67,10 @@ class Shape(sprite.Sprite):
 		
 		self.swirls = []	# array of swirls the shape has
 		self.curSwirl = None	# array index pointer to "current" swirl
-		#self.swirl_angle = 0	#TODO: rotate swirls inside the character
-		#self.swirl_angle_delta = some random non-zero value between -20 and 20 (?)
-		"""
-		the swirls each have an x/y position
-		----
-		back to shape.py:
-		give a swirl
-		ask for a swirl
-		swirl left
-		swirl right
-		----
-		advanced:
-		rotate swirls with swirl_angle
-		different swirl rotation direction/speed with swirl_angle_delta
-		"""
+		self.swirlRotationAngle_rad = 0	# swirls rotate inside the character
+		self.swirlRotationAngle_delta_rad = float(random.randint(1,20)) / 360 * 2*math.pi
+		if(random.randint(0,1) == 0): self.swirlRotationAngle_delta_rad *= -1
+		#logging.debug("swirlRotationAngle_delta_rad = {0}".format(self.swirlRotationAngle_delta_rad))
 
 		# Reset the shape & create the first image
 		self.reset()	# also initializes some location-based variables
@@ -133,6 +122,9 @@ class Shape(sprite.Sprite):
 		else:
 			SWIRL_ROTATE_RADIUS = 2 + num_swirls
 			theta = 2 * math.pi * float(i) / float(num_swirls)
+			theta = theta + self.swirlRotationAngle_rad;
+			if(theta > 2*math.pi): theta -= 2*math.pi
+			if(theta < 0): theta += 2*math.pi
 			x = int(SWIRL_ROTATE_RADIUS * math.cos(theta))
 			y = int(SWIRL_ROTATE_RADIUS * math.sin(theta))
 			#logging.debug("swirl x,y is {0},{1}".format(x,y))
@@ -208,7 +200,8 @@ class Shape(sprite.Sprite):
 		if oldrectpos != None:
 			self.rect.center = oldrectpos
 		
-		
+		self.dirty_sprite = False
+	
 	
 	def reset(self):
 		# put us in a random square
@@ -316,18 +309,29 @@ class Shape(sprite.Sprite):
 		if self.autonomous:
 			self.autoUpdate(t)
 		
+		if len(self.swirls) > 1:	# rotate swirls inside the character
+			self.swirlRotationAngle_rad = (self.swirlRotationAngle_rad + self.swirlRotationAngle_delta_rad)
+			#logging.debug("new angle: {0}".format(self.swirlRotationAngle_rad))
+			if(self.swirlRotationAngle_rad > 2*math.pi): self.swirlRotationAngle_rad -= 2*math.pi
+			if(self.swirlRotationAngle_rad < 0): self.swirlRotationAngle_rad += 2*math.pi
+			#logging.debug("rotating swirls to new angle: {0}".format(self.swirlRotationAngle_rad))
+			self.dirty_sprite = True
+		
 		# check for and update sprite animations
 		if effect.BURST_EFFECT in self.effects.keys():
 			if not self.effects[effect.BURST_EFFECT].update(t):
 				del self.effects[effect.BURST_EFFECT]	# FIXME: is more explicit garbage collection needed here?
-			self.makeSprite()
+			self.dirty_sprite = True
 		
+		if(self.dirty_sprite): self.makeSprite()
 	# end of update()
 	
 	
 	def autoUpdate(self, ticks):
 		"""this is the master update routine for the NPC AI"""
 		# possible random activities:
+		# #TODO: ACTIVITY: switch to a different swirl (if more than one & haven't switched in a while - picks a random trg and cycles through intermediaries)
+		
 		# ACTIVITY: activate a swirl
 		if len(self.swirls) > 0 and \
 				('last-swirl-activation' not in self.auto_status.keys() or self.auto_status['last-swirl-activation'] + AUTO_SWIRL_ACTIVATION_MINTICKS < ticks) \

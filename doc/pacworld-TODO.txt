@@ -16,7 +16,6 @@ NEXT STEPS for MVP:
 - make other characters move around
 - idle behavior for current character (plays itself)
 - switch between characters (for idle)
-- make the swirls rotate inside each shape, at variable speeds
 - when the world reaches a certain level of swirl "saturation" (e.g. % of characters have # of swirls) then remake the world
 - other TODOs in code
 
