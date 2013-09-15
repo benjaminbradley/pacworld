@@ -15,3 +15,9 @@ class Player():
 	def __init__(self): #, mapSize, displaySize, theworld): , map ?
 		self.shape = None
 
+	def selectShape(self, shape):
+			if self.shape != None:
+				self.shape.autonomous = True	# make the old shape autonomous again
+			# 
+			self.shape = shape
+			self.shape.autonomous = False	# the player shape

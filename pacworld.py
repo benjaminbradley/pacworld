@@ -81,7 +81,7 @@ class Pacworld:
 		
 		
 		# if no random seed was given, make one up:
-		if(False):
+		if(True):
 			self.crazySeed = random.randint(0, MAX_RANDOM_SEED)
 			logging.info("USING RANDOM SEED: {0}",format(self.crazySeed))
 		else:
@@ -111,7 +111,7 @@ class Pacworld:
 
 		# Create the player object and add it's shape to a sprite group
 		self.player = Player()
-		self.player.shape = self.map.shapes[0]	# just grab the first shape for the player
+		self.player.selectShape(self.map.shapes[0])	# just grab the first shape for the player
 
 		self.map.player = self.player
 		#self.player.shape.mapTopLeft = [int(5.5*self.map.grid_cellwidth-self.shape.side_length/2), int(5.5*self.map.grid_cellheight-self.shape.side_length/2)]

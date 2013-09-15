@@ -28,6 +28,9 @@ BURST_EFFECT_NUMFRAMES = 6
 ART_TOUCH_JITTER = 15	# time in game frames that re-touching the same art piece will not trigger a re-touch effect
 MOVE_HISTORY_SIZE = 5	# number of movements to use to calculating average movement over time to set character angle
 
+AUTO_SWIRL_ACTIVATION_MINTICKS = 5000
+AUTO_SWIRL_ACTIVATION_CHANCE = 0.05
+
 # The class for Shapes
 class Shape(sprite.Sprite):
 	
@@ -86,6 +89,10 @@ class Shape(sprite.Sprite):
 		# experience variables
 		self.last_touched_art = {}	# hash of art.id to ticks
 		self.last_moved_frame = 0	# frame of last character movement
+		
+		# AI
+		self.autonomous = False
+		self.auto_status = {}	# dictionary of key/value pairs for autonomous activity
 		
 		# initialize subsystems
 		self.sound = getPacsound()
@@ -252,7 +259,7 @@ class Shape(sprite.Sprite):
 						dir = -1
 					else:
 						dir = 1
-					logging.debug("cur={4}, goal={5}; dir={2}".format(a,b,dir,None, self.angle,self.turning['angle']))
+					#logging.debug("turning: cur={4}, goal={5}; dir={2}".format(a,b,dir,None, self.angle,self.turning['angle']))
 					#logging.debug("angle diff options {0} or {1}; cur={4}, goal={5}; dir={2}".format(a,b,dir,None, self.angle,self.turning['angle']))
 					#logging.debug("new angle set by turning")
 					if not self.changeAngle(dir * self.rotationSpeed):
@@ -302,14 +309,42 @@ class Shape(sprite.Sprite):
 			if newAngle != None:
 				self.setAngle(newAngle)	# should happen after the object position is updated for movement so that collision detection test is accurate
 				#logging.debug("new angle set by movement")
-
-
+		# end checks for ongoing rotation or movement
+		
+		
+		# advance self play, if enabled
+		if self.autonomous:
+			self.autoUpdate(t)
+		
 		# check for and update sprite animations
 		if effect.BURST_EFFECT in self.effects.keys():
 			if not self.effects[effect.BURST_EFFECT].update(t):
 				del self.effects[effect.BURST_EFFECT]	# FIXME: is more explicit garbage collection needed here?
 			self.makeSprite()
+		
+	# end of update()
 	
+	
+	def autoUpdate(self, ticks):
+		"""this is the master update routine for the NPC AI"""
+		# possible random activities:
+		# ACTIVITY: activate a swirl
+		if len(self.swirls) > 0 and \
+				('last-swirl-activation' not in self.auto_status.keys() or self.auto_status['last-swirl-activation'] + AUTO_SWIRL_ACTIVATION_MINTICKS < ticks) \
+				and random.random() < AUTO_SWIRL_ACTIVATION_CHANCE:
+			logging.debug("[Shape {1}] self-activating current swirl at {0}".format(ticks, self.id))
+			self.activateSwirl()
+			self.auto_status['last-swirl-activation'] = ticks
+		
+		# #TODO: ACTIVITY: turn to look at something
+		#- using faceTo(targetobj)
+		#if there is another shape or an art piece in my vicinity, (stop and?) turn to look at it
+		
+		# #TODO: ACTIVITY: move in a direction
+		#- using self.going_in_dir[DIR_?]
+		#if something interesting is onscreen, and we haven't seen it yet, and we can get to it, then go to that thing
+		# else - wander around the map?
+
 
 	def recordMove(self):
 		self.moveHistory.append(list(self.mapTopLeft))
@@ -318,7 +353,6 @@ class Shape(sprite.Sprite):
 	
 	
 	def animateToAngle(self, newAngle):
-		logging.debug("")
 		self.turning = {
 			'angle' : newAngle
 		}
@@ -406,13 +440,13 @@ class Shape(sprite.Sprite):
 	def trySwirlRight(self):
 		if self.curSwirl == None: return	# checks to make sure we do have at least one swirl
 		self.curSwirl = ((self.curSwirl + 1) % len(self.swirls))
-		logging.debug("trySwirlRight: new curSwirl = {0}".format(self.curSwirl))
+		#logging.debug("trySwirlRight: new curSwirl = {0}".format(self.curSwirl))
 		self.makeSprite()
 	
 	def trySwirlLeft(self):
 		if self.curSwirl == None: return	# checks to make sure we do have at least one swirl
 		self.curSwirl = ((self.curSwirl - 1) % len(self.swirls))
-		logging.debug("trySwirlLeft: new curSwirl = {0}".format(self.curSwirl))
+		#logging.debug("trySwirlLeft: new curSwirl = {0}".format(self.curSwirl))
 		self.makeSprite()
 	
 
