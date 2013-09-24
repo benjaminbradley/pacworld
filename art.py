@@ -9,7 +9,6 @@ sys.path.append('art')
 from DrawSpiral import DrawSpiral
 
 import pacdefs
-import world
 import colors
 import effect
 from effect import *	# Effect, EFFECT_*
@@ -74,8 +73,10 @@ class Art(sprite.Sprite):
 		# aspects particular to this type of art
 		self.burstFrequency = BURST_FREQUENCY	# pull this from somewhere ?
 		self.lastBurst = 0
-		
-		
+	
+	def __str__(self):
+		return '<Art #'+str(self.id)+'>'
+	
 	def makeSprite(self):
 		# Create an image for the sprite
 		self.image = Surface((self.side_length, self.side_length))
