@@ -7,6 +7,8 @@ import logging
 #from pygame.locals import *
 from pygame import *
 
+from pathfinder import PathFinder
+
 import pacdefs
 import pacglobal
 from pacsounds import Pacsounds,getPacsound
@@ -205,10 +207,11 @@ class Shape(sprite.Sprite):
 	
 	def reset(self):
 		# put us in a random square
-		starty = self.map.grid_cellheight * random.randint(0, self.map.world.rows-1)
-		startx = self.map.grid_cellwidth * random.randint(0, self.map.world.cols-1)
+		startRow = random.randint(0, self.map.world.rows-1)
+		startCol = random.randint(0, self.map.world.cols-1)
+		startPos = (startCol, startRow)
 		# Start the shape directly in the centre of the screen
-		self.mapTopLeft = [startx, starty]
+		self.mapTopLeft = list(self.map.gridToScreenCoord(startPos))
 		self.screenTopLeft = list(self.mapTopLeft)
 		self.moveHistory = [list(self.mapTopLeft)]
 		# reset other attributes as well
@@ -336,7 +339,7 @@ class Shape(sprite.Sprite):
 		if len(self.swirls) > 0 and \
 				('last-swirl-activation' not in self.auto_status.keys() or self.auto_status['last-swirl-activation'] + AUTO_SWIRL_ACTIVATION_MINTICKS < ticks) \
 				and random.random() < AUTO_SWIRL_ACTIVATION_CHANCE:
-			logging.debug("[Shape {1}] self-activating current swirl at {0}".format(ticks, self.id))
+			#logging.debug("[Shape {1}] self-activating current swirl at {0}".format(ticks, self.id))
 			self.activateSwirl()
 			self.auto_status['last-swirl-activation'] = ticks
 		
@@ -344,10 +347,55 @@ class Shape(sprite.Sprite):
 		#- using faceTo(targetobj)
 		#if there is another shape or an art piece in my vicinity, (stop and?) turn to look at it
 		
-		# #TODO: ACTIVITY: move in a direction
-		#- using self.going_in_dir[DIR_?]
-		#if something interesting is onscreen, and we haven't seen it yet, and we can get to it, then go to that thing
-		# else - wander around the map?
+		# ACTIVITY: move in a direction
+		# if we're already moving to a known destination, carry on
+		if 'movement_destination' in self.auto_status.keys() and self.auto_status['movement_destination'] != None:
+			# move along the path
+			# destination in X,Y coords is the next point in the path
+			nextnodeGridYX = self.auto_status['movement_path'][self.auto_status['movement_path_curidx']]
+			destGridLeftTopXY = self.map.gridToScreenCoord((nextnodeGridYX[1], nextnodeGridYX[0]))
+			# adjust dest to center shape on dest grid square
+			xoffset = (self.map.grid_cellwidth - self.rect.width) / 2
+			yoffset = (self.map.grid_cellheight - self.rect.height) / 2
+			destXY = (destGridLeftTopXY[0] + xoffset, destGridLeftTopXY[1] + yoffset)
+			dest_distance = self.map.world.move_cost(self.mapTopLeft, list(destXY))
+			#logging.debug("moving from {0} towards destination at {1} via node {2}, distance to target is {3}".format(self.mapTopLeft, destXY, nextnodeGridYX, dest_distance))
+			self.moveTowards(destXY)
+
+			# if we're at the node (or close enough), move to the next node
+			if dest_distance < pacdefs.WALL_LINE_WIDTH + self.linearSpeed:
+				logging.debug("reached node {0}, moving to next node in path (out of {1} total nodes)".format(self.auto_status['movement_path_curidx'], len(self.auto_status['movement_path'])))
+				# if we're at our destination, clear the destination & path
+				self.auto_status['movement_path_curidx'] += 1
+				if self.auto_status['movement_path_curidx'] == len(self.auto_status['movement_path']):
+					logging.debug("reached destination, clearing path")
+					del self.auto_status['movement_destination']
+					del self.auto_status['movement_path']
+					del self.auto_status['movement_path_curidx']
+		else:
+		# else, look for a new destination
+		#	if something interesting is onscreen
+			for art in self.map.art_onscreen():
+				# if artpiece is on the screen,
+				#	 and we haven't seen it yet
+				if art.id in self.last_touched_art.keys(): continue # skip arts that we've already seen
+				#  then look for a path from current pos to artpiece
+				start = self.get_gridCoordsYX()
+				goal = (art.top, art.left) # grid square of art piece; NOTE: pathfinder takes (y,x) coordinates
+				logging.debug("[FORMAT (y,x)] looking for path from {0} to {1}".format(start, goal))
+				pf = PathFinder(self.map.world.successors, self.map.world.move_cost, self.map.world.move_cost)
+				path = list(pf.compute_path(start, goal))
+				if(path):	# if we can get to it, set our destination
+					logging.debug("setting destination as art {0}, via path: {1}".format(art,path))
+					self.auto_status['movement_destination'] = art
+					self.auto_status['movement_path'] = path
+					self.auto_status['movement_path_curidx'] = 1	# destination starts at node 1 since node 0 is starting point
+					break
+				else:
+					# no path is possible, mark this destination as inaccessible
+					self.last_touched_art[art.id] = None	# adding the key to the dictionary marks this as "seen"
+		#	TODO: if no accessible destination, wander around the map - use an exploratory algorithm ?
+	# end of autoUpdate()
 
 
 	def recordMove(self):
@@ -361,6 +409,11 @@ class Shape(sprite.Sprite):
 			'angle' : newAngle
 		}
 
+	def get_gridCoordsYX(self):
+		gridY = self.mapTopLeft[1] / self.map.grid_cellheight
+		gridX = self.mapTopLeft[0] / self.map.grid_cellwidth
+		logging.debug("shape #{0} is in grid square {1},{2} (X,Y)".format(self.id, gridX, gridY))
+		return (gridY,gridX)
 
 
 	def updatePosition(self):
@@ -402,6 +455,8 @@ class Shape(sprite.Sprite):
 		self.curSwirl = len(self.swirls) - 1	# change current to the new one
 		logging.debug("got a new swirl effect type {0}, total {1} swirls now".format(swirl.effect_type, len(self.swirls)))
 		self.makeSprite()
+		#FIXME: REMOVE DEBUG HELPER:
+		if self.map.player.shape != self: self.autonomous = True
 	
 	def activateSwirl(self):
 		# checks to make sure we do have at least one swirl
@@ -508,6 +563,19 @@ class Shape(sprite.Sprite):
 			#logging.debug("shape moved to %s from %s", self.mapTopLeft, startpos)
 			self.updatePosition()
 			return True
+	
+	def moveTowards(self, (destx, desty)):
+		dx = destx - self.mapTopLeft[0]
+		if self.autonomous:
+			maxspeed = self.linearSpeed/2	# cap autonomous movement at half normal speed
+		else:
+			maxspeed = self.linearSpeed
+		if(dx < -maxspeed): dx = -maxspeed
+		elif(dx > maxspeed): dx = maxspeed
+		dy = desty - self.mapTopLeft[1]
+		if(dy < -maxspeed): dy = -maxspeed
+		elif(dy > maxspeed): dy = maxspeed
+		self.move(dx, dy)
 	
 	def moveUp(self):
 		self.move(0, -self.linearSpeed)

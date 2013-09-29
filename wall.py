@@ -2,9 +2,8 @@ import pygame
 #from pygame.locals import *
 from pygame import *
 
+import pacdefs
 import colors
-
-WALL_LINE_WIDTH = 8
 
 # The class for a blocking wall
 class Wall(sprite.Sprite):
@@ -26,7 +25,7 @@ class Wall(sprite.Sprite):
 		# Get width proportionate to display size
 		#print "DEBUG: Wall.__init__(): creating new wall from {0} to {1}".format(point1, point2)
 		# draw the line on the surface
-		self.rect = pygame.draw.line(self.image, colors.NEONBLUE, point1, point2, WALL_LINE_WIDTH)
+		self.rect = pygame.draw.line(self.image, colors.NEONBLUE, point1, point2, pacdefs.WALL_LINE_WIDTH)
 		#print "DEBUG: Wall.__init__(): wall rect is {0}".format(self.rect)
 		# grab a bitmask for collision detection
 		self.mask = pygame.mask.from_surface(self.image)

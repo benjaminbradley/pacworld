@@ -6,8 +6,10 @@ An abstract world map using 2d grid coordinates to define the environment symbol
 import random
 import copy
 import logging
+import math	# for sqrt in move_cost
 
 import pacdefs
+#from pacdefs import *
 from art import Art
 
 
@@ -83,23 +85,40 @@ def getsymbol(obj, pos):
 	#print "DEBUG: getsymbol({0}, {1})".format(obj, pos)
 	if obj.type == pacdefs.TYPE_ROOM:
 		if pos in obj.doors.values():
+			for doorside, doorpos in obj.doors.items():
+				if pos == doorpos:
+					if doorside == pacdefs.SIDE_N:
+						return 'V'
+					elif doorside == pacdefs.SIDE_E:
+						return '<'
+					elif doorside == pacdefs.SIDE_S:
+						return 'A'
+					elif doorside == pacdefs.SIDE_W:
+						return '>'
 			return 'D'
 		elif pos[1] == obj.top:
 			if pos[0] == obj.left:
-				return 'r'
+				if obj.height == 1: return '['
+				elif obj.width == 1: return 'n'
+				else: return 'r'
 			elif pos[0] == obj.right:
-				return '7'
+				if obj.height == 1: return ']'
+				else: return '7'
 			else:
 				return '-'
 		elif pos[1] == obj.bottom:
 			if pos[0] == obj.left:
-				return 'L'
+				if obj.height == 1: return '['
+				elif obj.width == 1: return 'u'
+				else: return 'L'
 			elif pos[0] == obj.right:
-				return 'j'
+				if obj.height == 1: return ']'
+				else: return 'J'
 			else:
 				return '_'
 		elif pos[0] == obj.left:
-			return 'b'
+			if obj.width == 1: return 'i'
+			else: return 'b'
 		elif pos[0] == obj.right:
 			return 'd'
 		return '.'
@@ -132,7 +151,10 @@ class Room():
 		if self.left > 0: self.insides.append(pacdefs.SIDE_W)
 		if self.right < cols-1: self.insides.append(pacdefs.SIDE_E)
 		return self.insides
-		
+	def door_at(self, pos, side):
+		"""return True if there is a door in this room at the position 'pos' on side 'side'"""
+		return (side in self.doors.keys() and self.doors[side] == pos)
+
 
 class Path():
 	def __init__(self, left, top, path_width, path_len, pathDir_h):
@@ -194,7 +216,7 @@ class Field():
 def negotiateDoorPlacement(newRoom, adjacent_room, doorpos, doorside):
 	#logging.debug ("Door for room {0} was placed next to an adjacent ROOM {1}: {2}".format(newRoom.id, adjacent_room.id, adjacent_room))
 	# if a door is placed next to another room, add a door to the other room, or coordinate with location of existing door
-	adj_doorside = (doorside + 2) % 4	# NOTE: number of SIDES is fixed at 4
+	adj_doorside = pacdefs.opposite_side(doorside)
 	(doorx,doory) = doorpos
 	roomTop = newRoom.top
 	roomRight = newRoom.right
@@ -276,9 +298,15 @@ def negotiateDoorPlacement(newRoom, adjacent_room, doorpos, doorside):
 	# end of (adjacent square is a room)
 
 	# update the grid with the door location
+	#logging.debug("adding door to room on side {0}".format(doorside))
 	newRoom.doors[doorside] = (doorx, doory)
 	door_placed = True
 # end of negotiateDoorPlacement()
+
+
+
+
+
 
 # The class to create a symbolic 'world', will be translated into a map
 class World():
@@ -740,11 +768,11 @@ class World():
 			
 			elif(newObject.type == pacdefs.TYPE_ART):
 				curSquare = newGrid[newObject.top][newObject.left]
-				if curSquare != None and curSquare.type == pacdefs.TYPE_ART:	return False	# won't place overlapping art
-			
-				# otherwise:
-				#TODO:? add new art regardless of what is already on the map
-				newGrid[newObject.top][newObject.left] = newObject
+				if curSquare == None:	return False	# won't place art in no-mans-land
+				if curSquare.type == pacdefs.TYPE_ART:	return False	# won't place overlapping art
+				# otherwise, proceed
+				# object is added to the world and granted a unique ID via code below
+				# do not add to world grid as background structure must be preserved	-- newGrid[newObject.top][newObject.left] = newObject
 
 			elif(newObject.type == pacdefs.TYPE_PATH):
 				x = newObject.left
@@ -888,14 +916,14 @@ class World():
 		return newObject.id	# success
 	# end of World.addObject()
 
-	def to_s(self):
+	def to_s(self, highlights = []):
 		"""converts world grid to a string for display to console"""
 		gridstr = '_'
 		for i in range(self.cols):	# add number ruler at top
 			gridstr += str(i%10)
 		gridstr += "\n"
 		for i,row in enumerate(self.grid):
-			disprow = [ pacdefs.SYMBOL_BACKGROUND if obj == pacdefs.SYMBOL_CLEAR else getsymbol(obj, (j, i)) for j,obj in enumerate(row) ]
+			disprow = [ '@' if (i,j) in highlights else pacdefs.SYMBOL_BACKGROUND if obj == pacdefs.SYMBOL_CLEAR else getsymbol(obj, (j, i)) for j,obj in enumerate(row) ]
 			rowstr = ''.join(disprow)
 			gridstr += str(i%10)+rowstr+str(i%10)+"\n"
 		gridstr += "_"
@@ -904,15 +932,119 @@ class World():
 		return gridstr
 
 
+	#####################################
+	# PATHFINDING METHODS
+	#####################################
+	
+	def move_cost(self, c1, c2):
+		""" Compute the cost of movement from one coordinate to
+		another. 
+		The cost is the Euclidean distance.
+		"""
+		return math.sqrt((c1[0] - c2[0]) ** 2 + (c1[1] - c2[1]) ** 2) 
+
+	def _successors__check_adjacent__accessible(self,coord_a,coord_b):
+		if not (0 <= coord_b[0] <= self.rows - 1 and
+				0 <= coord_b[1] <= self.cols - 1):
+			# illegal square, outside of world map
+			return False
+		# if it's inside the map, check if there's a wall between the two squares:
+		current_square = self.grid[coord_a[0]][coord_a[1]]
+		adjacent_square = self.grid[coord_b[0]][coord_b[1]]
+		current_room = (current_square != None and current_square.type == pacdefs.TYPE_ROOM)
+		adjacent_room = (adjacent_square != None and adjacent_square.type == pacdefs.TYPE_ROOM)
+		#if c == (1,9) and coord_b[0] == 0 and coord_b[1] == 9:
+		#	logging.debug("DEBUG CASE: current_square={0}, adjacent_square={1}, curroom={2},adjroom={3}".format(current_square,adjacent_square,current_room,adjacent_room))
+		# if neither square is a room, it's clear
+		if not current_room and not adjacent_room:
+			return True
+		else:
+			# one or both squares is a room
+			# if both squares are room, and they are in the same room, it's clear
+			if current_room and adjacent_room and current_square.id == adjacent_square.id:
+				return True
+			else:
+				# otherwise, check to see if there is a door between the two squares
+				if coord_b[0] < coord_a[0]: cursidedir = pacdefs.SIDE_N
+				elif coord_b[0] > coord_a[0]: cursidedir = pacdefs.SIDE_S
+				elif coord_b[1] > coord_a[1]: cursidedir = pacdefs.SIDE_E
+				elif coord_b[1] < coord_a[1]: cursidedir = pacdefs.SIDE_W
+				else:
+					logging.error("[FORMAT (y,x)] couldn't determine orientation of current ({0}) vs adjacent ({1}) squares".format(coord_a, (coord_b[0],coord_b[1])))
+				adjsidedir = pacdefs.opposite_side(cursidedir)
+				if((current_square != pacdefs.SYMBOL_CLEAR and current_square.type == pacdefs.TYPE_ROOM and current_square.door_at((coord_a[1],coord_a[0]), cursidedir)) or
+						(adjacent_square != pacdefs.SYMBOL_CLEAR and adjacent_square.type == pacdefs.TYPE_ROOM and adjacent_square.door_at((coord_b[1],coord_b[0]), adjsidedir))):
+					# if there is a door, it's clear
+					return True
+				else:
+					return False
+				# if there is not a door, it's blocked
+	# end of self._successors__check_adjacent__accessible()
+
+	def successors(self, c):
+		""" Compute the successors of coordinate 'c': all the 
+		coordinates that can be reached by one step from 'c'.
+		"""
+		slist = []
+
+		# check verticals first, 
+		for drow in (-1, 1):
+			dcol = 0
+			newrow = c[0] + drow
+			newcol = c[1] + dcol
+			newcoord = (newrow, newcol)
+#			logging.debug("[FORMAT: (y,x)]a checking successors for {0}: checking {1}".format(c, newcoord))
+			if(self._successors__check_adjacent__accessible(c,newcoord)):
+				slist.append(newcoord)
+				# then check diagonals from verticals (if possible)
+			#	for dcol in (-1, 1):
+			#		newrow = c[0] + drow
+			#		newcol = c[1] + dcol
+#			#		logging.debug("[FORMAT: (y,x)]b checking successors for {0}: checking {1}".format(newcoord, (newrow,newcol)))
+			#		if(self._successors__check_adjacent__accessible(newcoord,(newrow,newcol))):
+			#			slist.append((newrow, newcol))
+
+		# check horizontals
+		for dcol in (-1, 1):
+			drow = 0
+			newrow = c[0] + drow
+			newcol = c[1] + dcol
+#			logging.debug("[FORMAT: (y,x)]c checking successors for {0}: checking {1}".format(c, (newrow,newcol)))
+			if(self._successors__check_adjacent__accessible(c,(newrow,newcol))):
+				slist.append((newrow, newcol))
+				# finally, if for any diagonals that weren't accessible via verticals, check diagonals from horizontals
+			#	newcoord = (newrow, newcol)
+			#	for drow in (-1, 1):
+			#		newrow = c[0] + drow
+			#		newcol = c[1] + dcol
+#					logging.debug("[FORMAT: (y,x)]d checking successors for {0}: checking {1}".format(newcoord, (newrow,newcol)))
+			#		if(self._successors__check_adjacent__accessible(newcoord,newcoord) and newcoord in slist):
+						# we reach this branch when the diagonal is accessible via both verticals and horizontals
+						#slist.append((newrow, newcol))	# don't need to re-append, it's already there
+			#			pass
+			#		elif(newcoord in slist):
+						# we reach this point if the diagonal is accessible via the verticals but NOT the horizontals
+			#			slist.remove(newcoord)# remove it from the list!
+						#else:
+							#logging.debug("[FORMAT: (y,x)] checking successors for {0}: skipping {1} check, already in list".format(newcoord, (newrow,newcol)))
+		
+		logging.debug("[FORMAT: (y,x)] successors for {0} are: {1}".format(c, slist))
+		return slist
+	# end of successors()
+
+
+	### END OF PATHFINDING METHODS ####################################
+
+### END OF class World
 
 if __name__ == '__main__':
 	# if no random seed was given, make one up:
-	crazySeed = random.randint(0, MAX_RANDOM_SEED)
+	crazySeed = random.randint(0, 65535)
 	random.seed(crazySeed)
 	
-	#gridDisplaySize = (10, 40)
-	gridDisplaySize = (20, 40)
-	#gridDisplaySize = (35, 100)
+	#gridDisplaySize = (20, 10)
+	gridDisplaySize = (40, 20)
+	#gridDisplaySize = (100, 35)
 	
 	'''
 	print "random number tests..."

@@ -12,6 +12,7 @@ from pygame import *
 import logging
 import math
 
+import pacglobal
 import pacdefs
 import wall
 from wall import Wall
@@ -43,6 +44,11 @@ class Map(sprite.Sprite):
 		self.shapes = []	# list to hold the shapes
 		self.world = theworld
 		
+		# cache for list of arts currently on screen, should be calculated only once per cycle
+		self.onscreen_art_lastupdated = None
+		self.onscreen_art = []
+		
+		
 		#print "DEBUG: Map.__init__(): rendering world:\n{0}".format(theworld.to_s())
 		self.grid_cellheight = grid_cellheight = mapSize[1] / theworld.rows
 		self.grid_cellwidth = grid_cellwidth = mapSize[0] / theworld.cols
@@ -70,12 +76,12 @@ class Map(sprite.Sprite):
 				# draw a line down each side of the path
 				if worldObj.direction_h:
 					logging.debug ("path line1 from {0} to {1}".format(topLt, topRt))
-					pygame.draw.line(self.image, colors.GREEN, topLt, topRt, wall.WALL_LINE_WIDTH)
-					pygame.draw.line(self.image, colors.GREEN, bottomLt, bottomRt, wall.WALL_LINE_WIDTH)
+					pygame.draw.line(self.image, colors.GREEN, topLt, topRt, pacdefs.WALL_LINE_WIDTH)
+					pygame.draw.line(self.image, colors.GREEN, bottomLt, bottomRt, pacdefs.WALL_LINE_WIDTH)
 				else:
 					logging.debug ("path line1 from {0} to {1}".format(topLt, bottomLt))
-					pygame.draw.line(self.image, colors.GREEN, topLt, bottomLt, wall.WALL_LINE_WIDTH)
-					pygame.draw.line(self.image, colors.GREEN, topRt, bottomRt, wall.WALL_LINE_WIDTH)
+					pygame.draw.line(self.image, colors.GREEN, topLt, bottomLt, pacdefs.WALL_LINE_WIDTH)
+					pygame.draw.line(self.image, colors.GREEN, topRt, bottomRt, pacdefs.WALL_LINE_WIDTH)
 				# note, these are NOT blocking walls
 				width = right - left
 				height = bottom - top
@@ -314,7 +320,7 @@ class Map(sprite.Sprite):
 			# create new shape, placed randomly
 			num_sides = random.randint(3,6)
 			newShape = Shape(self.displaySize, self, self.character_size, num_sides)
-			newShape.autonomous = True	# all new shapes will be autonomous by default
+			#FIXME: re-enable autonomous behavior!!! DISABLED FOR DEBUGGING ONLY:		newShape.autonomous = True	# all new shapes will be autonomous by default
 			
 			# add shape to the list of objects
 			if(self.world.addObject(newShape)):
@@ -346,6 +352,27 @@ class Map(sprite.Sprite):
 	# end of nearShapes()
 
 
+	def art_onscreen(self):
+		"""returns an array of all arts currently on the screen
+		caches data for multiple calls in each game frame
+		"""
+		cur_frame = pacglobal.get_frames()
+		windowRect = self.getWindowRect()
+		if self.onscreen_art_lastupdated != None and self.onscreen_art_lastupdated == cur_frame:
+			#logging.debug("returning cached art_onscreen")
+			return self.onscreen_art
+		#logging.debug("Re-calculating on-screen art at F#{0}...".format(cur_frame))
+		self.onscreen_art_lastupdated = cur_frame
+		self.onscreen_art = []
+		for artpiece in self.arts:
+			if artpiece.onScreen(windowRect): self.onscreen_art.append(artpiece)
+		#logging.debug("returning new onscreen_art: {0}".format(self.onscreen_art))
+		return self.onscreen_art
+
+	def gridToScreenCoord(self, gridCoord):
+		return (gridCoord[0] * self.grid_cellwidth, gridCoord[1] * self.grid_cellheight)
+
+# end of class Map
 
 
 if __name__ == '__main__':

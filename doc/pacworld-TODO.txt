@@ -1,5 +1,20 @@
 - why is self.type == TRANSFER_EFFECT code in swirl.py#draw() ?
 
+CURRENT FEATURE: make other characters move around
+
+SUBTASK: determine "destination selection" algorithm
+if something interesting is onscreen, and we haven't seen it yet, and we can get to it, then go to that thing
+else - go to an open spot within view and look around again
+
+TODO:
+FIX in world.py: world map - successor function checks background on grid square. art is currently overwriting 
+	the room status of the square in the world grid. :(
+FIX movement to diagonals was disabled - should be re-enabled if there are no walls on either side
+FIX windowrect for checking onscreen-art in auto shape should be based on that shape's windowrect, not players
+SLOW DOWN MOVEMENT!!!
+add look around behavior
+add random pauses for contemplation
+re-enable autonomous behavior by default	
 
 ---------------------------------------------------- FUTURE TASKS:
 
@@ -13,7 +28,6 @@ NEXT STEPS for MVP:
 - only one type of each swirl
 - max # of swirls
 - get a swirl from another character "ask"
-- make other characters move around
 - idle behavior for current character (plays itself)
 - switch between characters (for idle)
 - when the world reaches a certain level of swirl "saturation" (e.g. % of characters have # of swirls) then remake the world
@@ -30,4 +44,4 @@ ENHANCEMENTS:
 - special ability to activate all of your swirls one after another
 
 LOWER LEVEL BUG FIXES:
-- art drifts during player movement (laggy drawing?)
+- sprites (art & shapes) drifts during player movement (laggy drawing?)

@@ -1,4 +1,4 @@
-
+import logging
 
 ######### WORLD #########
 
@@ -40,3 +40,13 @@ SIDE_E = 1
 SIDE_S = 2
 SIDE_W = 3
 SIDES = [SIDE_N, SIDE_E, SIDE_S, SIDE_W]
+
+# graphics
+WALL_LINE_WIDTH = 8	# pixel width for drawing
+
+
+def opposite_side(side):
+	# assumes an even number of sides
+	opposite = (side + (len(SIDES)/2)) % len(SIDES)
+	#logging.debug("opposite side of {0} is {1}".format(side, opposite))
+	return opposite
