@@ -61,8 +61,8 @@ class Art(sprite.Sprite):
 		
 		# calculated variables
 		# x,y is the art piece's location on the map (left,top corner)
-		xmargin = (themap.grid_cellwidth - self.rect.width ) / 2
-		ymargin = (themap.grid_cellheight - self.rect.height ) / 2
+		xmargin = int((themap.grid_cellwidth - self.rect.width ) / 2)
+		ymargin = int((themap.grid_cellheight - self.rect.height ) / 2)
 		self.x = self.left * themap.grid_cellwidth + xmargin
 		self.y = self.top * themap.grid_cellheight + ymargin
 		#self.rect.top = (self.top - 0.5 )* self.map.grid_cellheight
@@ -92,7 +92,7 @@ class Art(sprite.Sprite):
 		elif self.style == STYLE_SPIRAL:
 			#DrawSpiral(self.image, [radius,radius], radius = curRad, rotation = curRot, numSpokes = 5, clockwise = True, startAngle = startAngle)
 			DrawSpiral(self.image, [self.spiral_maxRad,self.spiral_maxRad], self.spiral_curRad, self.spiral_curRot, 3, True, self.spiral_startAngle)
-		    
+
 		
 		
 		for effect in self.effects.values():
@@ -148,12 +148,16 @@ class Art(sprite.Sprite):
 			self.startEffect(effect.BURST_EFFECT, {EFFECT_VOLUME: soundvolume})
 		
 		# check for current effects to continue
+		completed_effects = []
 		for effect_type in self.effects.keys():
 			if self.effects[effect_type].update(t):
 				remakeSprite = True
 			else:
-				del self.effects[effect_type]	# FIXME: is more explicit garbage collection needed here?
+				completed_effects.append(effect_type)
 				remakeSprite = True
+		# clean up completed effects
+		for effect_type in completed_effects:
+			del self.effects[effect_type]	# FIXME: is more explicit garbage collection needed here?
 		
 		if remakeSprite: self.makeSprite()
 	

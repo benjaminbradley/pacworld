@@ -322,7 +322,7 @@ class World():
 		(self.cols, self.rows) = gridDisplaySize
 		self.totalArea = self.rows * self.cols
 		# initialize data storage variables
-		self.grid = [[pacdefs.SYMBOL_CLEAR for x in xrange(self.cols)] for x in xrange(self.rows)]
+		self.grid = [[pacdefs.SYMBOL_CLEAR for x in range(self.cols)] for y in range(self.rows)]
 		
 		# calculate intermediary vars
 		shortside = min(self.rows, self.cols)
@@ -1047,16 +1047,16 @@ if __name__ == '__main__':
 	#gridDisplaySize = (100, 35)
 	
 	'''
-	print "random number tests..."
+	print("random number tests...")
 	for size in ['small', 'medium', 'large']:
 		for time in range(10):
-			print "a {0} random number is: {1}".format(size, get_random_value([size]))
+			print("a {0} random number is: {1}".format(size, get_random_value([size])))
 	for time in range(5):
-		print "a random number in small-med: {0}".format(get_random_value(['small', 'medium']))
+		print("a random number in small-med: {0}".format(get_random_value(['small', 'medium'])))
 	for time in range(5):
-		print "a random number in med-large: {0}".format(get_random_value(['medium', 'large']))
+		print("a random number in med-large: {0}".format(get_random_value(['medium', 'large'])))
 	for time in range(10):
-		print "a random number in small-large: {0}".format(get_random_value(['small', 'large']))
+		print("a random number in small-large: {0}".format(get_random_value(['small', 'large'])))
 	exit()
 	'''
 	
@@ -1064,9 +1064,9 @@ if __name__ == '__main__':
 	themap = World(gridDisplaySize)
 
 	# show the final product
-	print "USING RANDOM SEED: {0}",format(crazySeed)
-	print "final world map is:"
-	print themap.to_s()
+	print("USING RANDOM SEED: {0}",format(crazySeed))
+	print("final world map is:")
+	print(themap.to_s())
 
 
 
