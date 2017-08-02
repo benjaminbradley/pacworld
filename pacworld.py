@@ -36,7 +36,7 @@ class Pacworld:
 		#self.displaySize = (640, 480)
 		self.displaySize = (800,600)
 		#self.displaySize = (1024, 768)
-		self.character_size = self.displaySize[0] / 10
+		self.character_size = int(self.displaySize[0] / 10)
 		
 		# Initialize pygame
 		pygame.init()
@@ -97,7 +97,7 @@ class Pacworld:
 		mapSize = [SCALE_FACTOR*x for x in self.displaySize]
 		
 		gridSize = int(self.character_size * 1.5)
-		gridDisplaySize = (mapSize[0] / gridSize, mapSize[1] / gridSize)	# assumes square grid cells
+		gridDisplaySize = (int(mapSize[0] / gridSize), int(mapSize[1] / gridSize))	# assumes square grid cells
 		logging.debug("gridDisplaySize is {0}".format(gridDisplaySize))
 
 		# Create the world, passing through the grid size

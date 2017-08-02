@@ -80,14 +80,14 @@ class Effect():
 		target_y = trgCenter[1]
 
 		#logging.debug("source center is {0}, target center is {1}".format((source_x, source_y), (target_x, target_y)))
-		self.frame_origin_x = source_x + (self.frame_gradpercent * (target_x - source_x))
-		self.frame_origin_y = source_y + (self.frame_gradpercent * (target_y - source_y))
+		self.frame_origin_x = int(source_x + (self.frame_gradpercent * (target_x - source_x)))
+		self.frame_origin_y = int(source_y + (self.frame_gradpercent * (target_y - source_y)))
 
 
 	def draw(self, image, windowRect = None):
 		lineWidth = 2	# default, may be adjusted later
 		if self.type == BURST_EFFECT:
-			final_radius = image.get_width() / 2
+			final_radius = int(image.get_width() / 2)
 			#print "DEBUG: Effect.draw(): frame={0}, numframe={1}, radius={2}".format(self.animate_frame, self.animate_numframes, final_radius)
 			burst_radius = int(float(self.animate_frame) / float(self.animate_numframes) * final_radius)
 			if burst_radius < lineWidth: lineWidth = burst_radius

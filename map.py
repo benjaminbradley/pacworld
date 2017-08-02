@@ -44,8 +44,8 @@ class Map(sprite.Sprite):
 		self.world = theworld
 		
 		#print "DEBUG: Map.__init__(): rendering world:\n{0}".format(theworld.to_s())
-		self.grid_cellheight = grid_cellheight = mapSize[1] / theworld.rows
-		self.grid_cellwidth = grid_cellwidth = mapSize[0] / theworld.cols
+		self.grid_cellheight = grid_cellheight = int(mapSize[1] / theworld.rows)
+		self.grid_cellwidth = grid_cellwidth = int(mapSize[0] / theworld.cols)
 		logging.debug ("cell size is {0} wide x {1} high".format(grid_cellwidth, grid_cellheight))
 		self.displayGridSize = (int(displaySize[0] / grid_cellwidth), int(displaySize[1] / grid_cellheight))
 		

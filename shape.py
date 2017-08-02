@@ -4,9 +4,6 @@ import sys # Gives us the sys.exit function to close our program
 import math	# sin,cos,pi
 import logging
 
-#from pygame.locals import *
-from pygame import *
-
 import pacdefs
 import pacglobal
 from pacsounds import Pacsounds,getPacsound
@@ -32,7 +29,7 @@ AUTO_SWIRL_ACTIVATION_MINTICKS = 5000
 AUTO_SWIRL_ACTIVATION_CHANCE = 0.05
 
 # The class for Shapes
-class Shape(sprite.Sprite):
+class Shape(pygame.sprite.Sprite):
 	
 	def __init__(self, displaySize, themap, shape_size, num_sides = 3):
 		# Initialize the sprite base class
@@ -115,8 +112,8 @@ class Shape(sprite.Sprite):
 	
 	def get_swirlpos(self, i):
 		num_swirls = len(self.swirls)
-		base_x = self.image.get_width()/2
-		base_y = self.image.get_height()/2
+		base_x = int(self.image.get_width()/2)
+		base_y = int(self.image.get_height()/2)
 		if num_swirls == 1:
 			return (base_x,base_y)
 		else:
@@ -138,9 +135,9 @@ class Shape(sprite.Sprite):
 
 	def makeSprite(self):
 		# Create an image for the sprite
-		self.image = Surface((self.side_length, self.side_length))
+		self.image = pygame.Surface((self.side_length, self.side_length))
 		self.image.fill(colors.BLACK)
-		self.image.set_colorkey(colors.BLACK, RLEACCEL)	# set the background to transparent
+		self.image.set_colorkey(colors.BLACK, pygame.RLEACCEL)	# set the background to transparent
 		if(self.num_sides == 1):
 			# dot
 			radius = self.outlineWidth + self.outlineWidth
@@ -665,7 +662,7 @@ class ShapeTest:
 		# Create the window
 		self.display = display.set_mode(self.displaySize)
 		
-		self.shape = Shape(self.displaySize, None, self.displaySize[0] / 10, 3)
+		self.shape = Shape(self.displaySize, None, int(self.displaySize[0] / 10), 3)
 		self.sprites = sprite.Group(self.shape)
 		
 	def run(self):
