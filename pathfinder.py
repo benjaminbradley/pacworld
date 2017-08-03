@@ -151,7 +151,7 @@ if __name__ == "__main__":
 
 	crazySeed = random.randint(0, 65535)
 	#crazySeed = 38849
-	print "USING RANDOM SEED: {0}",format(crazySeed)
+	print("USING RANDOM SEED: {0}".format(crazySeed))
 	random.seed(crazySeed)
 	#gridDisplaySize = (20, 10)
 	gridDisplaySize = (40, 20)
@@ -168,17 +168,17 @@ if __name__ == "__main__":
 	t = time.clock()
 	logging.debug("Computing path for world map:\n"+theworld.to_s())
 	path = list(pf.compute_path(start, goal))
-	print "Elapsed: %s" % (time.clock() - t)
+	print("Elapsed: %s" % (time.clock() - t))
 	if(path):
-		print "Path from {0} to {1} is: {2}".format(start,goal,path)
+		print("Path from {0} to {1} is: {2}".format(start,goal,path))
 
 		# show the final product
-		print "world map with path:"
-		print theworld.to_s(path)
+		print("world map with path:")
+		print(theworld.to_s(path))
 	else:
-		print "Path could not be found from {0} to {1}".format(start,goal)
-		print "world map is:"
-		print theworld.to_s()
+		print("Path could not be found from {0} to {1}".format(start,goal))
+		print("world map is:")
+		print(theworld.to_s())
     
     
 

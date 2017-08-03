@@ -426,7 +426,7 @@ class Shape(pygame.sprite.Sprite):
 				# if artpiece is on the screen,
 				#	 and we haven't seen it yet
 				if art.id in self.last_touched_art.keys(): continue # skip arts that we've already seen
-				#  then look for a path from current pos to artpiece
+				#	then look for a path from current pos to artpiece
 				start = self.get_gridCoordsYX()
 				goal = (art.top, art.left) # grid square of art piece; NOTE: pathfinder takes (y,x) coordinates
 				logging.debug("[FORMAT (y,x)] looking for path from {0} to {1}".format(start, goal))
@@ -464,8 +464,8 @@ class Shape(pygame.sprite.Sprite):
 		}
 
 	def get_gridCoordsYX(self):
-		gridY = self.mapTopLeft[1] / self.map.grid_cellheight
-		gridX = self.mapTopLeft[0] / self.map.grid_cellwidth
+		gridY = int(self.mapTopLeft[1] / self.map.grid_cellheight)
+		gridX = int(self.mapTopLeft[0] / self.map.grid_cellwidth)
 		logging.debug("shape #{0} is in grid square {1},{2} (X,Y)".format(self.id, gridX, gridY))
 		return (gridY,gridX)
 
@@ -618,7 +618,8 @@ class Shape(pygame.sprite.Sprite):
 			self.updatePosition()
 			return True
 	
-	def moveTowards(self, (destx, desty)):
+	def moveTowards(self, destination):
+		(destx, desty) = destination
 		dx = destx - self.getCenter()[0]
 		if self.autonomous:
 			maxspeed = self.linearSpeed/2	# cap autonomous movement at half normal speed
