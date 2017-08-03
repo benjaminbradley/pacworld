@@ -385,7 +385,7 @@ class Shape(pygame.sprite.Sprite):
 			#print "DEBUG: drawing image at {0}".format(self.screenTopLeft)
 			display.blit(self.image, self.screenTopLeft)
 		else:
-			windowRect = self.map.getWindowRect()
+			windowRect = self.map.player.shape.getWindowRect()
 			screenx = self.mapTopLeft[0] - windowRect.left
 			screeny = self.mapTopLeft[1] - windowRect.top
 			display.blit(self.image, (screenx,screeny))
@@ -641,6 +641,17 @@ class Shape(pygame.sprite.Sprite):
 		if objBottom < windowRect.top: return False
 		if objTop > windowBottom: return False
 		return True	# obj IS on the screen
+
+	def getWindowRect(self):
+		"""get the rect for the display window containing the center point"""
+		center = self.mapTopLeft
+		windowLeft = center[0] - self.displaySize[0]/2
+		if windowLeft+self.displaySize[0] >= self.map.mapSize[0]: windowLeft = self.map.mapSize[0]-self.displaySize[0]-1
+		if windowLeft < 0: windowLeft = 0
+		windowTop = center[1] - self.displaySize[1]/2
+		if windowTop+self.displaySize[1] >= self.map.mapSize[1]: windowTop = self.map.mapSize[1]-self.displaySize[1]-1
+		if windowTop < 0: windowTop = 0
+		return pygame.Rect(windowLeft, windowTop, self.displaySize[0], self.displaySize[1])
 
 
 class ShapeTest:

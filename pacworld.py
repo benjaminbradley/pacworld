@@ -144,7 +144,7 @@ class Pacworld:
 			#print "DEBUG: drawing shape via sprite group. shape rect is: {0}".format(self.shape.rect)
 			# draw the shape by itself onto the display. it's always there.
 			self.player.shape.draw(self.display)
-			windowRect = self.map.getWindowRect()
+			windowRect = self.map.player.shape.getWindowRect()
 			# NOTE: we only want to show the art that is currently onscreen, and it needs to be shifted to its correct position
 			for artpiece in self.map.arts:
 				# if artpiece is on the screen, we will draw it

@@ -222,18 +222,7 @@ class Map(sprite.Sprite):
 		# holds current effects happening on the map
 		self.effects = []	# array of Effects
 		
-	
-	def getWindowRect(self):
-		"""get the rect for the display window containing the center point"""
-		center = self.player.shape.mapTopLeft
-		windowLeft = center[0] - self.displaySize[0]/2
-		if windowLeft+self.displaySize[0] >= self.mapSize[0]: windowLeft = self.mapSize[0]-self.displaySize[0]-1
-		if windowLeft < 0: windowLeft = 0
-		windowTop = center[1] - self.displaySize[1]/2
-		if windowTop+self.displaySize[1] >= self.mapSize[1]: windowTop = self.mapSize[1]-self.displaySize[1]-1
-		if windowTop < 0: windowTop = 0
-		return Rect(windowLeft, windowTop, self.displaySize[0], self.displaySize[1])
-	
+
 	def draw(self, display):
 		# Draw a subsurface of the world map
 		# with dimensions of the displaySize
@@ -242,7 +231,7 @@ class Map(sprite.Sprite):
 		
 		#print "DEBUG: Map.draw(): map size is {0}".format(self.image.get_size())
 		#print "DEBUG: Map.draw(): center for drawwindow is at {0}, resulting in a {1}x{2} window with topleft at {3},{4}".format(center, self.displaySize[0], self.displaySize[1], windowLeft, windowTop)
-		windowRect = self.getWindowRect()
+		windowRect = self.player.shape.getWindowRect()
 		screenImage = self.image.subsurface( windowRect )
 		display.blit(screenImage, (0,0))
 		for effect in self.effects:
