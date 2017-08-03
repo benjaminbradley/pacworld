@@ -33,3 +33,11 @@ AUDIENCE
 Many will observe, some will play. When the current player leaves, the game 
 will revert to a self-play mode after a period of inactivity. Gameplay can 
 transition easily back and forth between user-controlled and self-play mode.
+
+
+INSTALLATION REQUIREMENTS
+* Python
+* Pygame  https://www.pygame.org/
+
+OPERATION
+`python pacworld.py`
