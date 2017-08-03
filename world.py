@@ -986,7 +986,9 @@ class World():
 		coordinates that can be reached by one step from 'c'.
 		"""
 		slist = []
-
+		diagonals_accessible_vert = []
+		diagonals_accessible_horiz = []
+		
 		# check verticals first, 
 		for drow in (-1, 1):
 			dcol = 0
@@ -997,12 +999,14 @@ class World():
 			if(self._successors__check_adjacent__accessible(c,newcoord)):
 				slist.append(newcoord)
 				# then check diagonals from verticals (if possible)
-			#	for dcol in (-1, 1):
-			#		newrow = c[0] + drow
-			#		newcol = c[1] + dcol
-#			#		logging.debug("[FORMAT: (y,x)]b checking successors for {0}: checking {1}".format(newcoord, (newrow,newcol)))
-			#		if(self._successors__check_adjacent__accessible(newcoord,(newrow,newcol))):
-			#			slist.append((newrow, newcol))
+				for dcol in (-1, 1):
+					newrow = c[0] + drow
+					newcol = c[1] + dcol
+					diagcoord = (newrow,newcol)
+#					logging.debug("[FORMAT: (y,x)]b checking successors for {0}: checking {1}".format(newcoord, (newrow,newcol)))
+					if(self._successors__check_adjacent__accessible(newcoord,diagcoord)):
+						diagonals_accessible_vert.append(diagcoord)
+		
 
 		# check horizontals
 		for dcol in (-1, 1):
@@ -1013,22 +1017,21 @@ class World():
 			if(self._successors__check_adjacent__accessible(c,(newrow,newcol))):
 				slist.append((newrow, newcol))
 				# finally, if for any diagonals that weren't accessible via verticals, check diagonals from horizontals
-			#	newcoord = (newrow, newcol)
-			#	for drow in (-1, 1):
-			#		newrow = c[0] + drow
-			#		newcol = c[1] + dcol
+				newcoord = (newrow, newcol)
+				for drow in (-1, 1):
+					newrow = c[0] + drow
+					newcol = c[1] + dcol
+					diagcoord = (newrow,newcol)
 #					logging.debug("[FORMAT: (y,x)]d checking successors for {0}: checking {1}".format(newcoord, (newrow,newcol)))
-			#		if(self._successors__check_adjacent__accessible(newcoord,newcoord) and newcoord in slist):
-						# we reach this branch when the diagonal is accessible via both verticals and horizontals
-						#slist.append((newrow, newcol))	# don't need to re-append, it's already there
-			#			pass
-			#		elif(newcoord in slist):
-						# we reach this point if the diagonal is accessible via the verticals but NOT the horizontals
-			#			slist.remove(newcoord)# remove it from the list!
-						#else:
-							#logging.debug("[FORMAT: (y,x)] checking successors for {0}: skipping {1} check, already in list".format(newcoord, (newrow,newcol)))
+					if(self._successors__check_adjacent__accessible(newcoord,diagcoord)):
+						diagonals_accessible_horiz.append(diagcoord)
+
+		diagonals_accessible = list(set(diagonals_accessible_vert) & set(diagonals_accessible_horiz))
+		logging.debug("Intersection of V-diag [{0}] & H-diag [{1}] is: {2}".format(diagonals_accessible_vert, diagonals_accessible_horiz, diagonals_accessible))
+		if len(diagonals_accessible) > 0:
+			slist.extend(diagonals_accessible)
 		
-		logging.debug("[FORMAT: (y,x)] successors for {0} are: {1}".format(c, slist))
+		logging.debug("[FORMAT: (y,x)] final successors for {0} are: {1}".format(c, slist))
 		return slist
 	# end of successors()
 

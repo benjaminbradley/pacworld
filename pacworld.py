@@ -81,7 +81,7 @@ class Pacworld:
 		
 		
 		# if no random seed was given, make one up:
-		if(False):
+		if(True):
 			self.crazySeed = random.randint(0, MAX_RANDOM_SEED)
 			logging.info("USING RANDOM SEED: {0}",format(self.crazySeed))
 		else:
@@ -146,7 +146,7 @@ class Pacworld:
 			self.player.shape.draw(self.display)
 			windowRect = self.map.player.shape.getWindowRect()
 			# NOTE: we only want to show the art that is currently onscreen, and it needs to be shifted to its correct position
-			for artpiece in self.map.art_onscreen():
+			for artpiece in self.player.shape.art_onscreen():
 				# if artpiece is on the screen, we will draw it
 				#logging.debug("drawing art at {0}".format(artpiece.rect))
 				artpiece.draw(self.display, windowRect)

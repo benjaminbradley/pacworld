@@ -44,9 +44,6 @@ class Map(sprite.Sprite):
 		self.shapes = []	# list to hold the shapes
 		self.world = theworld
 		
-		# cache for list of arts currently on screen, should be calculated only once per cycle
-		self.onscreen_art_lastupdated = None
-		self.onscreen_art = []
 		
 		
 		#print "DEBUG: Map.__init__(): rendering world:\n{0}".format(theworld.to_s())
@@ -228,7 +225,6 @@ class Map(sprite.Sprite):
 		# holds current effects happening on the map
 		self.effects = []	# array of Effects
 		
-
 	def draw(self, display):
 		# Draw a subsurface of the world map
 		# with dimensions of the displaySize
@@ -340,23 +336,6 @@ class Map(sprite.Sprite):
 		return matches
 	# end of nearShapes()
 
-
-	def art_onscreen(self):
-		"""returns an array of all arts currently on the screen
-		caches data for multiple calls in each game frame
-		"""
-		cur_frame = pacglobal.get_frames()
-		windowRect = self.getWindowRect()
-		if self.onscreen_art_lastupdated != None and self.onscreen_art_lastupdated == cur_frame:
-			#logging.debug("returning cached art_onscreen")
-			return self.onscreen_art
-		#logging.debug("Re-calculating on-screen art at F#{0}...".format(cur_frame))
-		self.onscreen_art_lastupdated = cur_frame
-		self.onscreen_art = []
-		for artpiece in self.arts:
-			if artpiece.onScreen(windowRect): self.onscreen_art.append(artpiece)
-		#logging.debug("returning new onscreen_art: {0}".format(self.onscreen_art))
-		return self.onscreen_art
 
 	def gridToScreenCoord(self, gridCoord):
 		return (gridCoord[0] * self.grid_cellwidth, gridCoord[1] * self.grid_cellheight)

@@ -1,3 +1,16 @@
+TODONOW: break up current changes into separate commits:
+- art_onscreen and related stuff ?
+- changing maptopleft references to map.getcenter
+- movement activity
+  including diagonals
+- stop to think activity
+
+
+
+
+
+
+
 - why is self.type == TRANSFER_EFFECT code in swirl.py#draw() ?
 
 CURRENT FEATURE: make other characters move around
@@ -7,10 +20,11 @@ if something interesting is onscreen, and we haven't seen it yet, and we can get
 else - go to an open spot within view and look around again
 
 TODO:
-FIX in world.py: world map - successor function checks background on grid square. art is currently overwriting 
-	the room status of the square in the world grid. :(
-FIX movement to diagonals was disabled - should be re-enabled if there are no walls on either side
+REFACTOR: all shape movement should be based on the sprite's center, not on it's topleft
+	may need to rewrite all uses of shape.mapTopLeft
 FIX windowrect for checking onscreen-art in auto shape should be based on that shape's windowrect, not players
+- fixed, but at the price that pathfinding is wrong?
+FIX NPC movement is really jerky - maybe wobbling because the linearspeed is too high, bouncing over the target?
 SLOW DOWN MOVEMENT!!!
 add look around behavior
 add random pauses for contemplation

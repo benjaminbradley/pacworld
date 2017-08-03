@@ -29,6 +29,10 @@ MOVE_HISTORY_SIZE = 5	# number of movements to use to calculating average moveme
 
 AUTO_SWIRL_ACTIVATION_MINTICKS = 5000
 AUTO_SWIRL_ACTIVATION_CHANCE = 0.05
+AUTO_THOUGHT_CREATION_CHANCE = 0.01
+
+MAX_THOUGHTFORM_ID = 2147483647
+MAX_THOUGHTFORM_COMPLEXITY = 100
 
 # The class for Shapes
 class Shape(pygame.sprite.Sprite):
@@ -81,6 +85,10 @@ class Shape(pygame.sprite.Sprite):
 		# AI
 		self.autonomous = False
 		self.auto_status = {}	# dictionary of key/value pairs for autonomous activity
+
+		# cache for list of arts currently on screen, should be calculated only once per cycle
+		self.onscreen_art_lastupdated = None
+		self.onscreen_art = []
 		
 		# initialize subsystems
 		self.sound = getPacsound()
@@ -210,11 +218,11 @@ class Shape(pygame.sprite.Sprite):
 		# Start the shape directly in the centre of the screen
 		self.mapTopLeft = list(self.map.gridToScreenCoord(startPos))
 		self.screenTopLeft = list(self.mapTopLeft)
-		self.moveHistory = [list(self.mapTopLeft)]
 		# reset other attributes as well
 		self.angle = 0
 		self.makeSprite()
 		self.updatePosition()
+		self.moveHistory = [list(self.getCenter())]	# must happen after self.rect is set in makeSprite()
 
 	def update(self, t):
 		# check for on-going movement (for kb input)
@@ -272,12 +280,12 @@ class Shape(pygame.sprite.Sprite):
 							self.recordMove()
 
 		# no on-going rotation, what about movement?
-		elif self.moveHistory[-1] != self.mapTopLeft:
+		elif self.moveHistory[-1] != self.getCenter():
 			# check movement during this update cycle and update angle appropriately
 			newAngle = None
 			oldestPosition = self.moveHistory[0]
-			dx = -1* (oldestPosition[0] - self.mapTopLeft[0])
-			dy = oldestPosition[1] - self.mapTopLeft[1]
+			dx = -1* (oldestPosition[0] - self.getCenter()[0])
+			dy = oldestPosition[1] - self.getCenter()[1]
 			GRAPHIC_BASE_ANGLE = 90
 			if(dx == 0):
 				if(dy > 0): newAngle = GRAPHIC_BASE_ANGLE
@@ -327,6 +335,31 @@ class Shape(pygame.sprite.Sprite):
 	# end of update()
 	
 	
+	def art_onscreen(self):
+		"""returns an array of all arts currently on the screen
+		caches data for multiple calls in each game frame
+		"""
+		windowRect = self.getWindowRect()
+		cur_frame = pacglobal.get_frames()
+		if self.onscreen_art_lastupdated != None and self.onscreen_art_lastupdated == cur_frame:
+			#logging.debug("returning cached art_onscreen")
+			return self.onscreen_art
+		#logging.debug("Re-calculating on-screen art for shape {1} at F#{0}...".format(cur_frame, self.id))
+		self.onscreen_art_lastupdated = cur_frame
+		self.onscreen_art = []
+		for artpiece in self.map.arts:
+			if artpiece.onScreen(windowRect): self.onscreen_art.append(artpiece)
+		#logging.debug("returning new onscreen_art: {0}".format(self.onscreen_art))
+		return self.onscreen_art
+	# end of art_onscreen()
+	
+	
+	def in_move(self):
+		return 'movement_destination' in self.auto_status.keys() and self.auto_status['movement_destination'] != None
+
+	def in_head(self):
+		return 'thoughtform_seed' in self.auto_status.keys() and self.auto_status['thoughtform_seed'] != None
+	
 	def autoUpdate(self, ticks):
 		"""this is the master update routine for the NPC AI"""
 		# possible random activities:
@@ -340,23 +373,39 @@ class Shape(pygame.sprite.Sprite):
 			self.activateSwirl()
 			self.auto_status['last-swirl-activation'] = ticks
 		
+		# ACTIVITY: stop to think
+		# TODO: modify probability based on interesting things in environment
+		if False and random.random() < AUTO_THOUGHT_CREATION_CHANCE:
+			self.auto_status['thoughtform_id'] = random.randint(0, MAX_THOUGHTFORM_ID)
+			self.auto_status['thoughtform_complexity'] = random.randint(0, MAX_THOUGHTFORM_COMPLEXITY)
+			self.auto_status['thoughtform_starttick'] = ticks
+			logging.debug("[Shape {1}] spawning thoughtform[#{2}, c={3}] at {0}".format(ticks, self.id, self.auto_status['thoughtform_id'], self.auto_status['thoughtform_complexity']))
+		if False and self.in_head():
+			if ticks < self.auto_status['thoughtform_starttick'] + self.auto_status['thoughtform_complexity'] * 3:
+				logger.debug("Thoughtform {0} has expired.".format(self.auto_status['thoughtform_id']))
+				del self.auto_status['thoughtform_id']
+				del self.auto_status['thoughtform_complexity']
+				del self.auto_status['thoughtform_starttick']
+		
 		# #TODO: ACTIVITY: turn to look at something
 		#- using faceTo(targetobj)
 		#if there is another shape or an art piece in my vicinity, (stop and?) turn to look at it
 		
 		# ACTIVITY: move in a direction
 		# if we're already moving to a known destination, carry on
-		if 'movement_destination' in self.auto_status.keys() and self.auto_status['movement_destination'] != None:
+		#TODO: if self.in_move() and not self.in_head():
+		if self.in_move():
 			# move along the path
 			# destination in X,Y coords is the next point in the path
 			nextnodeGridYX = self.auto_status['movement_path'][self.auto_status['movement_path_curidx']]
 			destGridLeftTopXY = self.map.gridToScreenCoord((nextnodeGridYX[1], nextnodeGridYX[0]))
 			# adjust dest to center shape on dest grid square
-			xoffset = (self.map.grid_cellwidth - self.rect.width) / 2
-			yoffset = (self.map.grid_cellheight - self.rect.height) / 2
+			xoffset = (self.map.grid_cellwidth) / 2
+			yoffset = (self.map.grid_cellheight) / 2
 			destXY = (destGridLeftTopXY[0] + xoffset, destGridLeftTopXY[1] + yoffset)
-			dest_distance = self.map.world.move_cost(self.mapTopLeft, list(destXY))
-			#logging.debug("moving from {0} towards destination at {1} via node {2}, distance to target is {3}".format(self.mapTopLeft, destXY, nextnodeGridYX, dest_distance))
+			dest_distance = self.map.world.move_cost(self.getCenter(), list(destXY))
+			logging.debug("moving from {0} towards destination at {1} (based on destTopLeft of {2} adjusted by offset {5}) via node {3}, distance to target is {4}".format(self.getCenter(), destXY, destGridLeftTopXY, nextnodeGridYX, dest_distance, (xoffset, yoffset)))
+			logging.debug("moving towards {0}".format(destXY))
 			self.moveTowards(destXY)
 
 			# if we're at the node (or close enough), move to the next node
@@ -372,7 +421,8 @@ class Shape(pygame.sprite.Sprite):
 		else:
 		# else, look for a new destination
 		#	if something interesting is onscreen
-			for art in self.map.art_onscreen():
+			logging.debug("Searching for nearby art...")
+			for art in self.art_onscreen():
 				# if artpiece is on the screen,
 				#	 and we haven't seen it yet
 				if art.id in self.last_touched_art.keys(): continue # skip arts that we've already seen
@@ -391,12 +441,19 @@ class Shape(pygame.sprite.Sprite):
 				else:
 					# no path is possible, mark this destination as inaccessible
 					self.last_touched_art[art.id] = None	# adding the key to the dictionary marks this as "seen"
+			# if we finish the for loop, there is no art on screen
+			# ACTIVITY: go to a random unvisited square on screen
+			if not 'movement_destination' in self.auto_status.keys():
+				#TODO: need to keep track of visited (and inaccessible) squares in the grid...
+				pass
+			
+			
 		#	TODO: if no accessible destination, wander around the map - use an exploratory algorithm ?
 	# end of autoUpdate()
 
 
 	def recordMove(self):
-		self.moveHistory.append(list(self.mapTopLeft))
+		self.moveHistory.append(list(self.getCenter()))
 		if(len(self.moveHistory) > MOVE_HISTORY_SIZE):
 			self.moveHistory.pop(0)	# remove front element
 	
@@ -562,14 +619,14 @@ class Shape(pygame.sprite.Sprite):
 			return True
 	
 	def moveTowards(self, (destx, desty)):
-		dx = destx - self.mapTopLeft[0]
+		dx = destx - self.getCenter()[0]
 		if self.autonomous:
 			maxspeed = self.linearSpeed/2	# cap autonomous movement at half normal speed
 		else:
 			maxspeed = self.linearSpeed
 		if(dx < -maxspeed): dx = -maxspeed
 		elif(dx > maxspeed): dx = maxspeed
-		dy = desty - self.mapTopLeft[1]
+		dy = desty - self.getCenter()[1]
 		if(dy < -maxspeed): dy = -maxspeed
 		elif(dy > maxspeed): dy = maxspeed
 		self.move(dx, dy)
@@ -743,6 +800,7 @@ class ShapeTest:
 		
 		self.shape = Shape(self.displaySize, None, int(self.displaySize[0] / 10), 3)
 		self.sprites = sprite.Group(self.shape)
+	# end of __init__
 		
 	def run(self):
 		# Runs the game loop
