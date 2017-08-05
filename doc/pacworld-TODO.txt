@@ -23,6 +23,7 @@ re-enable autonomous behavior by default
 
 BUGFIX:
 - occasionally it hangs during world creation. at least once it was during room population. add something to detect repeating cycles and add a break-threshhold.
+  example seed: 36987
 - FIXMEs
 
 NEXT STEPS for MVP:
