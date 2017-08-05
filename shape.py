@@ -241,6 +241,7 @@ class Shape(pygame.sprite.Sprite):
 
 		# check for on-going rotation
 		if self.turning != None:
+			#print("self.turning from {0} to {1}".format(self.angle, self.turning['angle']))
 			if self.angle == self.turning['angle']:	# we're there!
 				# stop rotating
 				self.turning = None
@@ -280,7 +281,7 @@ class Shape(pygame.sprite.Sprite):
 							self.recordMove()
 
 		# no on-going rotation, what about movement?
-		elif self.moveHistory[-1] != self.getCenter():
+		elif self.moveHistory[-1] != list(self.getCenter()):
 			# check movement during this update cycle and update angle appropriately
 			newAngle = None
 			oldestPosition = self.moveHistory[0]
@@ -308,6 +309,7 @@ class Shape(pygame.sprite.Sprite):
 			self.recordMove()
 			
 			if newAngle != None:
+				print("setting angle in update to {0}".format(newAngle))
 				self.setAngle(newAngle)	# should happen after the object position is updated for movement so that collision detection test is accurate
 				#logging.debug("new angle set by movement")
 		# end checks for ongoing rotation or movement
@@ -692,7 +694,7 @@ class Shape(pygame.sprite.Sprite):
 		# check for wrap-around
 		if(self.angle < 0): self.angle = 360 + self.angle
 		if(self.angle >= 360): self.angle = 360 - self.angle
-		#print "DEBUG: angle is now {0}".format(self.angle)
+		#print("DEBUG: angle is now {0}".format(self.angle))
 		
 		# if there's a collision, un-do the rotation
 		#if hasattr(self, 'map') and self.map.wallCollision(self):
