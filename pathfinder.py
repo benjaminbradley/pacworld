@@ -133,9 +133,18 @@ class PathFinder(object):
         def __eq__(self, other):
             return self.coord == other.coord
         
-        def __cmp__(self, other):
-            return cmp(self.f_cost, other.f_cost)
+        def __lt__(self, other):
+            return self.f_cost < other.f_cost
+
+        def __le__(self, other):
+            return self.f_cost <= other.f_cost
         
+        def __gt__(self, other):
+            return self.f_cost > other.f_cost
+
+        def __ge__(self, other):
+            return self.f_cost >= other.f_cost
+
         def __hash__(self):
             return hash(self.coord)
 
