@@ -9,15 +9,15 @@ if something interesting is onscreen, and we haven't seen it yet, and we can get
 else - go to an open spot within view and look around again
 
 TODO:
-REFACTOR: all shape movement should be based on the sprite's center, not on it's topleft
-	may need to rewrite all uses of shape.mapTopLeft
-FIX windowrect for checking onscreen-art in auto shape should be based on that shape's windowrect, not players
-- fixed, but at the price that pathfinding is wrong?
-FIX NPC movement is really jerky - maybe wobbling because the linearspeed is too high, bouncing over the target?
 SLOW DOWN MOVEMENT!!!
 add look around behavior
 add random pauses for contemplation
 re-enable autonomous behavior by default	
+
+UNKNOWN:
+FIX windowrect for checking onscreen-art in auto shape should be based on that shape's windowrect, not players
+- fixed, but at the price that pathfinding is wrong?
+
 
 ---------------------------------------------------- FUTURE TASKS:
 

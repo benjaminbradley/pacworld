@@ -258,8 +258,9 @@ class Map(sprite.Sprite):
 			a = wall
 			b = target
 			#We calculate the offset of the second mask relative to the first mask.
-			offset_x = b.mapTopLeft[0]
-			offset_y = b.mapTopLeft[1]
+			mapTopLeft = b.getMapTopLeft()
+			offset_x = mapTopLeft[0]
+			offset_y = mapTopLeft[1]
 			# See if the two masks at the offset are overlapping.
 			if a.mask.overlap(b.mask, (offset_x, offset_y)):
 				#print "DEBUG: Map.wallCollision(): collision detected with wall {0}!".format(wall.rect)
@@ -274,9 +275,10 @@ class Map(sprite.Sprite):
 			a = art
 			b = target
 			#We calculate the offset of the second mask relative to the first mask.
-			offset_x = b.mapTopLeft[0] - art.x
-			offset_y = b.mapTopLeft[1] - art.y
-			#logging.debug("checking for collisions between self ({0}) and art ({1}) at offset {2},{3}".format(target.mapTopLeft, (art.x,art.y), offset_x, offset_y))
+			mapTopLeft = b.getMapTopLeft()
+			offset_x = mapTopLeft[0] - art.x
+			offset_y = mapTopLeft[1] - art.y
+			#logging.debug("checking for collisions between self ({0}) and art ({1}) at offset {2},{3}".format(target.getMapTopLeft(), (art.x,art.y), offset_x, offset_y))
 			# See if the two masks at the offset are overlapping.
 			if a.mask.overlap(b.mask, (offset_x, offset_y)):
 				#logging.debug("collision detected with art at {0},{1}!".format(art.x, art.y))
@@ -311,7 +313,7 @@ class Map(sprite.Sprite):
 			if(self.world.addObject(newShape)):
 				curTotalShapes += 1
 				shapes.append(newShape)
-				logging.debug ("shape #{0} added to the map, id {1} with position {2} and rect={3}".format(curTotalShapes, newShape, newShape.mapTopLeft, newShape.rect))
+				logging.debug ("shape #{0} added to the map, id {1} with position {2} and rect={3}".format(curTotalShapes, newShape, newShape.getMapTopLeft(), newShape.rect))
 		# now there's enough shape in the world
 		self.shapes = shapes
 		return shapes
@@ -322,8 +324,9 @@ class Map(sprite.Sprite):
 		for shape in self.shapes:
 			if shape == ignore: continue
 			# calculate distance between the shapes
-			dx = abs(mapCenter[0] - shape.mapTopLeft[0])
-			dy = abs(mapCenter[1] - shape.mapTopLeft[1])
+			mapTopLeft = shape.getMapTopLeft()
+			dx = abs(mapCenter[0] - mapTopLeft[0])
+			dy = abs(mapCenter[1] - mapTopLeft[1])
 			if(dy == 0):
 				dist = dx
 			elif(dx == 0):

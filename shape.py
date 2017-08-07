@@ -138,9 +138,12 @@ class Shape(pygame.sprite.Sprite):
 			return (base_x + x, base_y + y)
 	
 	def getCenter(self):
-		"""returns an (x,y) tuple for the center of this shape on the map"""
-		x = self.mapTopLeft[0] + int(self.rect.width/2)
-		y = self.mapTopLeft[1] + int(self.rect.height/2)
+		return self.center
+
+	def getMapTopLeft(self):
+		"""returns an (x,y) tuple for the top-left of this shape on the map"""
+		x = self.center[0] - int(self.rect.width/2)
+		y = self.center[1] - int(self.rect.height/2)
 		return (x,y)
 
 	def makeSprite(self):
@@ -208,19 +211,22 @@ class Shape(pygame.sprite.Sprite):
 			self.rect.center = oldrectpos
 		
 		self.dirty_sprite = False
-	
+
+	def topLeftToCenter(self, xy):
+		return [xy[0] + int(self.rect.width/2), xy[1] + int(self.rect.height/2)]
 	
 	def reset(self):
 		# put us in a random square
 		startRow = random.randint(0, self.map.world.rows-1)
 		startCol = random.randint(0, self.map.world.cols-1)
 		startPos = (startCol, startRow)
-		# Start the shape directly in the centre of the screen
-		self.mapTopLeft = list(self.map.gridToScreenCoord(startPos))
-		self.screenTopLeft = list(self.mapTopLeft)
-		# reset other attributes as well
+		# reset sprite
 		self.angle = 0
 		self.makeSprite()
+		# Start the shape directly in the centre of the screen
+		self.center = self.topLeftToCenter(self.map.gridToScreenCoord(startPos))
+		self.screenTopLeft = list(self.getMapTopLeft())
+		# reset other attributes as well
 		self.updatePosition()
 		self.moveHistory = [list(self.getCenter())]	# must happen after self.rect is set in makeSprite()
 
@@ -303,13 +309,13 @@ class Shape(pygame.sprite.Sprite):
 				#deg = theta * 180 / math.pi
 				newAngle = theta / (2 * math.pi) * 360
 			#print "DEBUG: Shape.update(): self.theta={0}, deg={1}".format(theta, newDeg)
-			#logging.debug("mapCenter={1}, dx={2}, dy={3}; newAngle={4}".format(None, self.mapTopLeft, dx, dy, newAngle))
+			#logging.debug("mapCenter={1}, dx={2}, dy={3}; newAngle={4}".format(None, self.getMapTopLeft(), dx, dy, newAngle))
 		
 			# record move history for future angle calculation
 			self.recordMove()
 			
 			if newAngle != None:
-				print("setting angle in update to {0}".format(newAngle))
+				#print("setting angle in update to {0}".format(newAngle))
 				self.setAngle(newAngle)	# should happen after the object position is updated for movement so that collision detection test is accurate
 				#logging.debug("new angle set by movement")
 		# end checks for ongoing rotation or movement
@@ -466,25 +472,28 @@ class Shape(pygame.sprite.Sprite):
 		}
 
 	def get_gridCoordsYX(self):
-		gridY = int(self.mapTopLeft[1] / self.map.grid_cellheight)
-		gridX = int(self.mapTopLeft[0] / self.map.grid_cellwidth)
+		gridY = int(self.center[1] / self.map.grid_cellheight)
+		gridX = int(self.center[0] / self.map.grid_cellwidth)
 		logging.debug("shape #{0} is in grid square {1},{2} (X,Y)".format(self.id, gridX, gridY))
 		return (gridY,gridX)
 
 
 	def updatePosition(self):
-		self.screenTopLeft = list(self.mapTopLeft)
-		if self.mapTopLeft[0] < self.displaySize[0]/2:
-			self.screenTopLeft[0] = self.mapTopLeft[0]
-		elif self.mapTopLeft[0] > self.map.mapSize[0]-self.displaySize[0]/2:
-			self.screenTopLeft[0] = self.displaySize[0] - (self.map.mapSize[0]-self.mapTopLeft[0])
+		"""place the shape's sprite on the screen based on it's current position on the map"""
+		"""updates screenTopLeft and sprite.rect's position"""
+		mapTopLeft = self.getMapTopLeft()
+		self.screenTopLeft = list(mapTopLeft)
+		if mapTopLeft[0] < self.displaySize[0]/2:
+			self.screenTopLeft[0] = mapTopLeft[0]
+		elif mapTopLeft[0] > self.map.mapSize[0]-self.displaySize[0]/2:
+			self.screenTopLeft[0] = self.displaySize[0] - (self.map.mapSize[0]-mapTopLeft[0])
 		else: 
 			self.screenTopLeft[0] = self.displaySize[0]/2
 
-		if self.mapTopLeft[1] < self.displaySize[1]/2:
-			self.screenTopLeft[1] = self.mapTopLeft[1]
-		elif self.mapTopLeft[1] > self.map.mapSize[1]-self.displaySize[1]/2:
-			self.screenTopLeft[1] = self.displaySize[1] - (self.map.mapSize[1]-self.mapTopLeft[1])
+		if mapTopLeft[1] < self.displaySize[1]/2:
+			self.screenTopLeft[1] = mapTopLeft[1]
+		elif mapTopLeft[1] > self.map.mapSize[1]-self.displaySize[1]/2:
+			self.screenTopLeft[1] = self.displaySize[1] - (self.map.mapSize[1]-mapTopLeft[1])
 		else: 
 			self.screenTopLeft[1] = self.displaySize[1]/2
 		
@@ -498,8 +507,9 @@ class Shape(pygame.sprite.Sprite):
 			display.blit(self.image, self.screenTopLeft)
 		else:
 			windowRect = self.map.player.shape.getWindowRect()
-			screenx = self.mapTopLeft[0] - windowRect.left
-			screeny = self.mapTopLeft[1] - windowRect.top
+			mapTopLeft = self.getMapTopLeft()
+			screenx = mapTopLeft[0] - windowRect.left
+			screeny = mapTopLeft[1] - windowRect.top
 			display.blit(self.image, (screenx,screeny))
 	# end of Shape.draw()
 
@@ -532,7 +542,7 @@ class Shape(pygame.sprite.Sprite):
 		if self.curSwirl == None or len(self.swirls) == 0: return False
 		self.activateSwirl()
 		# check for nearby shapes
-		nearby_shapes = self.map.nearShapes(self.mapTopLeft, self.map.character_size * 1.5, self)
+		nearby_shapes = self.map.nearShapes(self.getCenter(), self.map.character_size * 1.5, self)
 		if len(nearby_shapes) > 0:
 			#logging.debug("Shapes near to S#{0}: {1}".format(self.id, nearby_shapes))
 			#TODO: be choosy about which shape to give to - is there one in front (closer to my eye?)
@@ -605,18 +615,18 @@ class Shape(pygame.sprite.Sprite):
 
 	def move_single_axis(self, dx, dy):
 		# save initial positions
-		startpos = list(self.mapTopLeft)
+		startpos = list(self.getCenter())
 		# Move the rect
 		#logging.debug("Shape.move_single_axis({0}, {1})".format(dx, dy))
-		self.mapTopLeft[0] += int(dx)
-		self.mapTopLeft[1] += int(dy)
+		self.center[0] += int(dx)
+		self.center[1] += int(dy)
 		# if there's a collision, un-do the move
 		if self.map.wallCollision(self):
 			#logging.debug("move aborted due to collision")
-			self.mapTopLeft = startpos
+			self.center = startpos
 			return False
 		else:
-			#logging.debug("shape moved to %s from %s", self.mapTopLeft, startpos)
+			#logging.debug("shape moved to %s from %s", self.center, startpos)
 			self.updatePosition()
 			return True
 	
@@ -658,9 +668,9 @@ class Shape(pygame.sprite.Sprite):
 		dy = math.cos(theta)
 		dx = math.sin(theta)
 		#print "DEBUG: angle={0}, dx={1}, dy={2}".format(theta, dx, dy)
-		#print "DEBUG: Shape.moveFwd(): old mapCenter={0}".format(self.mapTopLeft)
+		#print "DEBUG: Shape.moveFwd(): old mapCenter={0}".format(self.center)
 		self.move(dx * self.linearSpeed, dy * self.linearSpeed)
-		#print "DEBUG: Shape.moveFwd(): new mapCenter={0}".format(self.mapTopLeft)
+		#print "DEBUG: Shape.moveFwd(): new mapCenter={0}".format(self.center)
 
 	def moveBack(self):
 		# Move away from the direction we're pointing
@@ -760,10 +770,11 @@ class Shape(pygame.sprite.Sprite):
 		windowRight = windowRect.left + windowRect.width
 		windowBottom = windowRect.top + windowRect.height
 		# if shape is on the screen, we will draw it
-		objLeft = self.mapTopLeft[0]
-		objRight = self.mapTopLeft[0]+self.rect.width
-		objTop = self.mapTopLeft[1]
-		objBottom = self.mapTopLeft[1]+self.rect.height
+		mapTopLeft = self.getMapTopLeft()
+		objLeft = mapTopLeft[0]
+		objRight = mapTopLeft[0]+self.rect.width
+		objTop = mapTopLeft[1]
+		objBottom = mapTopLeft[1]+self.rect.height
 		if objLeft > windowRight: return False
 		if objRight < windowRect.left: return False
 		if objBottom < windowRect.top: return False
@@ -772,7 +783,7 @@ class Shape(pygame.sprite.Sprite):
 
 	def getWindowRect(self):
 		"""get the rect for the display window containing the center point"""
-		center = self.mapTopLeft
+		center = self.getMapTopLeft()
 		windowLeft = center[0] - self.displaySize[0]/2
 		if windowLeft+self.displaySize[0] >= self.map.mapSize[0]: windowLeft = self.map.mapSize[0]-self.displaySize[0]-1
 		if windowLeft < 0: windowLeft = 0
