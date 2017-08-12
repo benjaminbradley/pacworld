@@ -162,6 +162,9 @@ class Pacworld:
 			# Update the full display surface to the screen
 			display.update()
 			
+			# display debug if enabled
+			display.set_caption("fps: " + str(int(self.clock.get_fps())))
+
 			# Limit the game to 30 frames per second
 			self.clock.tick(30)
 			
@@ -242,7 +245,16 @@ class Pacworld:
 					elif event.key == K_ESCAPE:
 						pygame.quit()
 						sys.exit()
-			
+					elif event.key == K_SPACE:
+						# DEBUG - activate autonomosity
+						nearby_shapes = self.map.nearShapes(self.player.shape.getCenter(), self.map.character_size * 1.5, self.player.shape)
+						if len(nearby_shapes) > 0:
+							#logging.debug("Shapes near to S#{0}: {1}".format(self.id, nearby_shapes))
+							receiver = nearby_shapes[0]
+							receiver.autonomous = not receiver.autonomous
+							logging.debug("toggling autonomy for shape #{0}, now {1}".format(receiver.id, receiver.autonomous))
+						else:
+							logging.debug("no nearby shapes")
 			
 				if event.type == KEYUP:
 					if event.key == K_DOWN:
