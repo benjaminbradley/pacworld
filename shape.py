@@ -81,6 +81,7 @@ class Shape(pygame.sprite.Sprite):
 		# experience variables
 		self.last_touched_art = {}	# hash of art.id to ticks
 		self.last_moved_frame = 0	# frame of last character movement
+		self.last_artsearch_position = None # position where we were last time we searched for nearby art
 		
 		# AI
 		self.autonomous = False
@@ -425,9 +426,11 @@ class Shape(pygame.sprite.Sprite):
 					del self.auto_status['movement_destination']
 					del self.auto_status['movement_path']
 					del self.auto_status['movement_path_curidx']
-		else:
-		# else, look for a new destination
-		#	if something interesting is onscreen
+		elif(self.last_artsearch_position != list(self.getCenter())): # if we have moved since the last look, or have never looked
+		#else:
+			# else, look for a new destination
+			#	if something interesting is onscreen
+			self.last_artsearch_position = list(self.getCenter())
 			logging.debug("Searching for nearby art...")
 			for art in self.art_onscreen():
 				# if artpiece is on the screen,
@@ -453,9 +456,10 @@ class Shape(pygame.sprite.Sprite):
 			if not 'movement_destination' in self.auto_status.keys():
 				#TODO: need to keep track of visited (and inaccessible) squares in the grid...
 				pass
+		else:
+			pass
+			#	TODO: if no accessible destination, wander around the map - use an exploratory algorithm ?
 			
-			
-		#	TODO: if no accessible destination, wander around the map - use an exploratory algorithm ?
 	# end of autoUpdate()
 
 
