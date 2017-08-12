@@ -1,6 +1,7 @@
+TODONOW: something in autonomous movement is degrading FPS?
+
 open questions:
 - why is self.type == TRANSFER_EFFECT code in swirl.py#draw() ?
-- why is self.moveHistory storing lists/arrays while self.getCenter() is a tuple?
 
 CURRENT FEATURE: make other characters move around
 
@@ -9,15 +10,9 @@ if something interesting is onscreen, and we haven't seen it yet, and we can get
 else - go to an open spot within view and look around again
 
 TODO:
-SLOW DOWN MOVEMENT!!!
 add look around behavior
 add random pauses for contemplation
 re-enable autonomous behavior by default	
-
-UNKNOWN:
-FIX windowrect for checking onscreen-art in auto shape should be based on that shape's windowrect, not players
-- fixed, but at the price that pathfinding is wrong?
-
 
 ---------------------------------------------------- FUTURE TASKS:
 
