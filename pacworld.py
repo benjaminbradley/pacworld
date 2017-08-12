@@ -81,13 +81,14 @@ class Pacworld:
 		
 		
 		# if no random seed was given, make one up:
-		if(True):
+		if(len(sys.argv) > 1):
+			# cool seeds: 24669
+			# ? 36097
+			self.crazySeed = int(sys.argv[1])
+			logging.info("USING CHOSEN SEED: {0}".format(self.crazySeed))
+		else:
 			self.crazySeed = random.randint(0, MAX_RANDOM_SEED)
 			logging.info("USING RANDOM SEED: {0}".format(self.crazySeed))
-		else:
-			# cool seeds: 24669
-			self.crazySeed = 36097
-			logging.info("USING CHOSEN SEED: {0}".format(self.crazySeed))
 		
 		SCALE_FACTOR = 2
 
