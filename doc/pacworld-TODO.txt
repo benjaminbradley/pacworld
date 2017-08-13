@@ -1,5 +1,3 @@
-TODO: log to file, not STDx -- when invoked with `python3 pacworld.py 2>&1 | tee pacworld.log` FPS degradation goes away
-
 open questions:
 - why is self.type == TRANSFER_EFFECT code in swirl.py#draw() ?
 

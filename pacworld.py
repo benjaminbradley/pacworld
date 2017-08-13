@@ -29,7 +29,7 @@ MAX_RANDOM_SEED = 65535
 class Pacworld:
 	
 	def __init__(self):
-		logging.basicConfig(format='%(asctime)-15s:%(levelname)s:%(filename)s#%(funcName)s(): %(message)s', level=logging.DEBUG)	# filename='myapp.log'
+		logging.basicConfig(format='%(asctime)-15s:%(levelname)s:%(filename)s#%(funcName)s(): %(message)s', level=logging.DEBUG, filename='log/pacworld.log')
 		logging.debug("Initializing Pacworld()...")
 		
 		# Make the display size a member of the class
