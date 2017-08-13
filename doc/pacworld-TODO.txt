@@ -41,6 +41,3 @@ ENHANCEMENTS:
 - allow multiple doors per room side
 - make more interesting different looking art pieces
 - special ability to activate all of your swirls one after another
-
-LOWER LEVEL BUG FIXES:
-- sprites (art & shapes) drifts during player movement (laggy drawing?)

@@ -137,11 +137,13 @@ class Pacworld:
 			# update the map
 			self.map.update(curtime)
 			
+			# Update the sprites
+			self.sprites.update(curtime)
+
 			# Draw the background
 			self.map.draw(self.display)
 			
-			# Update and draw the sprites
-			self.sprites.update(curtime)
+			# draw the sprites
 			#print "DEBUG: drawing shape via sprite group. shape rect is: {0}".format(self.shape.rect)
 			# draw the shape by itself onto the display. it's always there.
 			self.player.shape.draw(self.display)
