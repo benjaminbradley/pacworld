@@ -1027,11 +1027,11 @@ class World():
 						diagonals_accessible_horiz.append(diagcoord)
 
 		diagonals_accessible = list(set(diagonals_accessible_vert) & set(diagonals_accessible_horiz))
-		logging.debug("Intersection of V-diag [{0}] & H-diag [{1}] is: {2}".format(diagonals_accessible_vert, diagonals_accessible_horiz, diagonals_accessible))
+		#logging.debug("Intersection of V-diag [{0}] & H-diag [{1}] is: {2}".format(diagonals_accessible_vert, diagonals_accessible_horiz, diagonals_accessible))
 		if len(diagonals_accessible) > 0:
 			slist.extend(diagonals_accessible)
 		
-		logging.debug("[FORMAT: (y,x)] final successors for {0} are: {1}".format(c, slist))
+		#logging.debug("[FORMAT: (y,x)] final successors for {0} are: {1}".format(c, slist))
 		return slist
 	# end of successors()
 

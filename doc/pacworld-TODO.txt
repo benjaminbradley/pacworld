@@ -1,17 +1,6 @@
 open questions:
 - why is self.type == TRANSFER_EFFECT code in swirl.py#draw() ?
 
-CURRENT FEATURE: make other characters move around
-
-SUBTASK: determine "destination selection" algorithm
-if something interesting is onscreen, and we haven't seen it yet, and we can get to it, then go to that thing
-else - go to an open spot within view and look around again
-
-TODO:
-add look around behavior
-add random pauses for contemplation
-re-enable autonomous behavior by default	
-
 ---------------------------------------------------- FUTURE TASKS:
 
 BUGFIX:

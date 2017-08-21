@@ -83,6 +83,7 @@ class Shape(pygame.sprite.Sprite):
 		self.last_touched_art = {}	# hash of art.id to ticks
 		self.last_moved_frame = 0	# frame of last character movement
 		self.last_artsearch_position = None # position where we were last time we searched for nearby art
+		self.map_knowledge = [[None for x in range(self.map.world.cols)] for y in range(self.map.world.rows)]	# hash of y,x indices to: -1=inaccessible, 0=accessible, never been there, 1+=times visited; None=unknown
 		
 		# AI
 		self.autonomous = False
@@ -426,7 +427,7 @@ class Shape(pygame.sprite.Sprite):
 			yoffset = (self.map.grid_cellheight) / 2
 			destXY = (destGridLeftTopXY[0] + xoffset, destGridLeftTopXY[1] + yoffset)
 			dest_distance = int(self.map.world.move_cost(self.getCenter(), list(destXY)))
-			logging.debug("moving from {0} towards destination at {1} (based on destTopLeft of {2} adjusted by offset {5}) via node {3}, distance to target is {4}".format(self.getCenter(), destXY, destGridLeftTopXY, nextnodeGridYX, dest_distance, (xoffset, yoffset)))
+			#logging.debug("moving from {0} towards destination at {1} (based on destTopLeft of {2} adjusted by offset {5}) via node {3}, distance to target is {4}".format(self.getCenter(), destXY, destGridLeftTopXY, nextnodeGridYX, dest_distance, (xoffset, yoffset)))
 			self.moveTowards(destXY)
 
 			# if we're at the node (or close enough), move to the next node
@@ -440,7 +441,6 @@ class Shape(pygame.sprite.Sprite):
 					del self.auto_status['movement_path']
 					del self.auto_status['movement_path_curidx']
 		elif(self.last_artsearch_position != list(self.getCenter())): # if we have moved since the last look, or have never looked
-		#else:
 			# else, look for a new destination
 			#	if something interesting is onscreen
 			self.last_artsearch_position = list(self.getCenter())
@@ -465,13 +465,55 @@ class Shape(pygame.sprite.Sprite):
 					# no path is possible, mark this destination as inaccessible
 					self.last_touched_art[art.id] = None	# adding the key to the dictionary marks this as "seen"
 			# if we finish the for loop, there is no art on screen
-			# ACTIVITY: go to a random unvisited square on screen
-			if not 'movement_destination' in self.auto_status.keys():
-				#TODO: need to keep track of visited (and inaccessible) squares in the grid...
-				pass
 		else:
-			pass
-			#	TODO: if no accessible destination, wander around the map - use an exploratory algorithm ?
+			# ACTIVITY: go to a random accessible square on screen, with preference for unvisited squares
+			# wander around the map - use an exploratory algorithm ?
+			destination = None
+			while(destination is None):
+				path = None
+				#get random destination on screen
+				winRect = self.getWindowRect() # left, top, right, bottom
+				grid_minx = int(winRect[0] / self.map.grid_cellwidth)
+				grid_miny = int(winRect[1] / self.map.grid_cellheight)
+				grid_maxx = int(winRect[2] / self.map.grid_cellwidth)
+				grid_maxy = int(winRect[3] / self.map.grid_cellheight)
+				logging.debug("on-screen grid coords are: {0} (topLeft) to {1} (botRight)".format((grid_minx,grid_miny), (grid_maxx, grid_maxy)))
+				destx = random.randint(grid_minx,grid_maxx)
+				desty = random.randint(grid_miny,grid_maxy)
+				logging.debug("testing grid spot: {0},{1} (x,y)".format(destx, desty))
+				destination = str(destx)+','+str(desty)
+				if(self.map_knowledge[desty][destx] is None):
+					# try and compute path to destination if not already known...
+					start = self.get_gridCoordsYX()
+					goal = (desty, destx) # NOTE: pathfinder takes (y,x) coordinates
+					pf = PathFinder(self.map.world.successors, self.map.world.move_cost, self.map.world.move_cost)
+					path = list(pf.compute_path(start, goal))
+					# keep track of visited (and inaccessible) squares in the grid...
+					if(path):	# if we can get to it, set our destination
+						self.map_knowledge[desty][destx] = 0
+					else:
+						self.map_knowledge[desty][destx] = -1
+						logging.debug("grid spot: {0},{1} (x,y) is INACCESSIBLE".format(destx, desty))
+						# destination is INaccessible
+						destination = None
+				elif(self.map_knowledge[desty][destx] == -1):
+					# known destination, but inaccessible, try again...
+					destination = None
+			# good destination, not inaccessible...
+			#TODO: create preference for unvisited squares
+			# go to destination....
+			logging.debug("wandering to grid spot: {0},{1} (x,y)".format(destx, desty))
+			if(path is None):
+				# going to previously computed destination
+				start = self.get_gridCoordsYX()
+				goal = (desty, destx) # NOTE: pathfinder takes (y,x) coordinates
+				pf = PathFinder(self.map.world.successors, self.map.world.move_cost, self.map.world.move_cost)
+				path = list(pf.compute_path(start, goal))
+			if(len(path) > 1):	# if len(path) <= 1 then we're already there
+				self.auto_status['movement_path'] = path
+				self.auto_status['movement_path_curidx'] = 1	# destination starts at node 1 since node 0 is starting point
+				self.auto_status['movement_destination'] = destination
+			#TODO: update self.map_knowledge when we get to a grid square there
 			
 	# end of autoUpdate()
 

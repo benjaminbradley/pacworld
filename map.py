@@ -307,7 +307,7 @@ class Map(sprite.Sprite):
 			# create new shape, placed randomly
 			num_sides = random.randint(3,6)
 			newShape = Shape(self.displaySize, self, self.character_size, num_sides)
-			#FIXME: re-enable autonomous behavior!!! DISABLED FOR DEBUGGING ONLY:		newShape.autonomous = True	# all new shapes will be autonomous by default
+			newShape.autonomous = True	# all new shapes will be autonomous by default
 			
 			# add shape to the list of objects
 			if(self.world.addObject(newShape)):
