@@ -32,7 +32,8 @@ AUTO_SWIRL_ACTIVATION_CHANCE = 0.05
 AUTO_THOUGHT_CREATION_CHANCE = 0.01
 
 MAX_THOUGHTFORM_ID = 2147483647
-MAX_THOUGHTFORM_COMPLEXITY = 100
+MAX_THOUGHTFORM_COMPLEXITY = 500
+MIN_THOUGHTFORM_COMPLEXITY = 200
 
 # The class for Shapes
 class Shape(pygame.sprite.Sprite):
@@ -367,7 +368,7 @@ class Shape(pygame.sprite.Sprite):
 		return 'movement_destination' in self.auto_status.keys() and self.auto_status['movement_destination'] != None
 
 	def in_head(self):
-		return 'thoughtform_seed' in self.auto_status.keys() and self.auto_status['thoughtform_seed'] != None
+		return 'thoughtform_id' in self.auto_status.keys() and self.auto_status['thoughtform_id'] != None
 	
 	def autoUpdate(self, ticks):
 		"""this is the master update routine for the NPC AI"""
@@ -384,26 +385,38 @@ class Shape(pygame.sprite.Sprite):
 		
 		# ACTIVITY: stop to think
 		# TODO: modify probability based on interesting things in environment
-		if False and random.random() < AUTO_THOUGHT_CREATION_CHANCE:
-			self.auto_status['thoughtform_id'] = random.randint(0, MAX_THOUGHTFORM_ID)
-			self.auto_status['thoughtform_complexity'] = random.randint(0, MAX_THOUGHTFORM_COMPLEXITY)
-			self.auto_status['thoughtform_starttick'] = ticks
-			logging.debug("[Shape {1}] spawning thoughtform[#{2}, c={3}] at {0}".format(ticks, self.id, self.auto_status['thoughtform_id'], self.auto_status['thoughtform_complexity']))
-		if False and self.in_head():
-			if ticks < self.auto_status['thoughtform_starttick'] + self.auto_status['thoughtform_complexity'] * 3:
-				logger.debug("Thoughtform {0} has expired.".format(self.auto_status['thoughtform_id']))
+		if self.in_head():
+			if self.auto_status['thoughtform_starttick'] + self.auto_status['thoughtform_complexity'] * 3 < ticks:
+				logging.debug("Thoughtform {0} has expired at {1}.".format(self.auto_status['thoughtform_id'], ticks))
 				del self.auto_status['thoughtform_id']
 				del self.auto_status['thoughtform_complexity']
 				del self.auto_status['thoughtform_starttick']
-		
-		# #TODO: ACTIVITY: turn to look at something
-		#- using faceTo(targetobj)
-		#if there is another shape or an art piece in my vicinity, (stop and?) turn to look at it
-		
+		elif not self.in_head() and random.random() < AUTO_THOUGHT_CREATION_CHANCE:
+			self.auto_status['thoughtform_id'] = random.randint(0, MAX_THOUGHTFORM_ID)
+			self.auto_status['thoughtform_complexity'] = random.randint(0, (MAX_THOUGHTFORM_COMPLEXITY-MIN_THOUGHTFORM_COMPLEXITY)) + MIN_THOUGHTFORM_COMPLEXITY
+			self.auto_status['thoughtform_starttick'] = ticks
+			logging.debug("[Shape {1}] spawning thoughtform[#{2}, c={3}] at {0}".format(ticks, self.id, self.auto_status['thoughtform_id'], self.auto_status['thoughtform_complexity']))
+			# turn to look at something nearby
+			object_of_interest = None
+			# close people first
+			radius = 2
+			while(object_of_interest is None and radius <= 6):
+				nearby_shapes = self.map.nearShapes(self.getCenter(), self.map.character_size * radius, self)
+				if len(nearby_shapes) > 0:
+					object_of_interest = nearby_shapes[0]
+				radius += 2
+			# then art, if no nearby people found
+			if object_of_interest is None:
+				nearby_art = self.art_onscreen()
+				if len(nearby_art) > 0:
+					object_of_interest = nearby_art[0]
+			if object_of_interest is not None:
+				logging.debug("Found a nearby object of interest, turning to face...")
+				self.faceTo(object_of_interest)
+
 		# ACTIVITY: move in a direction
 		# if we're already moving to a known destination, carry on
-		#TODO: if self.in_move() and not self.in_head():
-		if self.in_move():
+		elif self.in_move():
 			# move along the path
 			# destination in X,Y coords is the next point in the path
 			nextnodeGridYX = self.auto_status['movement_path'][self.auto_status['movement_path_curidx']]
