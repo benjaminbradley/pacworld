@@ -65,6 +65,9 @@ class Shape(pygame.sprite.Sprite):
 
 		# Work out a speed
 		self.setSpeed()
+		self.autoSpeed = int(random.randint(60,120) * self.linearSpeed/2 / 100)
+		# cap autonomous movement at half normal speed
+		# multiplied by a randomizer
 
 		# initialize effects
 		self.effects = {}	# dictionary of Effect.EFFECT_TYPE to Effect class
@@ -692,7 +695,7 @@ class Shape(pygame.sprite.Sprite):
 		(destx, desty) = destination
 		dx = destx - self.getCenter()[0]
 		if self.autonomous:
-			maxspeed = self.linearSpeed/2	# cap autonomous movement at half normal speed
+			maxspeed = self.autoSpeed
 		else:
 			maxspeed = self.linearSpeed
 		if(dx < -maxspeed): dx = -maxspeed
