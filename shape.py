@@ -374,6 +374,12 @@ class Shape(pygame.sprite.Sprite):
 	def in_head(self):
 		return 'thoughtform_id' in self.auto_status.keys() and self.auto_status['thoughtform_id'] != None
 	
+	def spawnThoughtform(self, ticks):
+		self.auto_status['thoughtform_id'] = random.randint(0, MAX_THOUGHTFORM_ID)
+		self.auto_status['thoughtform_complexity'] = random.randint(0, (MAX_THOUGHTFORM_COMPLEXITY-MIN_THOUGHTFORM_COMPLEXITY)) + MIN_THOUGHTFORM_COMPLEXITY
+		self.auto_status['thoughtform_starttick'] = ticks
+		logging.debug("[Shape {1}] spawning thoughtform[#{2}, c={3}] at {0}".format(ticks, self.id, self.auto_status['thoughtform_id'], self.auto_status['thoughtform_complexity']))
+
 	def autoUpdate(self, ticks):
 		"""this is the master update routine for the NPC AI"""
 		# possible random activities:
@@ -396,10 +402,7 @@ class Shape(pygame.sprite.Sprite):
 				del self.auto_status['thoughtform_complexity']
 				del self.auto_status['thoughtform_starttick']
 		elif not self.in_head() and random.random() < AUTO_THOUGHT_CREATION_CHANCE:
-			self.auto_status['thoughtform_id'] = random.randint(0, MAX_THOUGHTFORM_ID)
-			self.auto_status['thoughtform_complexity'] = random.randint(0, (MAX_THOUGHTFORM_COMPLEXITY-MIN_THOUGHTFORM_COMPLEXITY)) + MIN_THOUGHTFORM_COMPLEXITY
-			self.auto_status['thoughtform_starttick'] = ticks
-			logging.debug("[Shape {1}] spawning thoughtform[#{2}, c={3}] at {0}".format(ticks, self.id, self.auto_status['thoughtform_id'], self.auto_status['thoughtform_complexity']))
+			self.spawnThoughtform(ticks)
 			# turn to look at something nearby
 			object_of_interest = None
 			# close people first
@@ -440,6 +443,9 @@ class Shape(pygame.sprite.Sprite):
 				self.auto_status['movement_path_curidx'] += 1
 				if self.auto_status['movement_path_curidx'] == len(self.auto_status['movement_path']):
 					logging.debug("reached destination, clearing path")
+					# if we just finished "wandering", then stop and have a think
+					if type(self.auto_status['movement_destination']) is str:
+						self.spawnThoughtform(ticks)
 					del self.auto_status['movement_destination']
 					del self.auto_status['movement_path']
 					del self.auto_status['movement_path_curidx']
@@ -459,11 +465,12 @@ class Shape(pygame.sprite.Sprite):
 				pf = PathFinder(self.map.world.successors, self.map.world.move_cost, self.map.world.move_cost)
 				path = list(pf.compute_path(start, goal))
 				if(path):	# if we can get to it, set our destination
-					logging.debug("setting destination as art {0}, via path: {1}".format(art,path))
-					self.auto_status['movement_destination'] = art
-					self.auto_status['movement_path'] = path
-					self.auto_status['movement_path_curidx'] = 1	# destination starts at node 1 since node 0 is starting point
-					break
+					if(len(path) > 1):	# but only if it's more than 1 step away
+						logging.debug("setting destination as art {0}, via path: {1}".format(art,path))
+						self.auto_status['movement_destination'] = art
+						self.auto_status['movement_path'] = path
+						self.auto_status['movement_path_curidx'] = 1	# destination starts at node 1 since node 0 is starting point
+						break
 				else:
 					# no path is possible, mark this destination as inaccessible
 					self.last_touched_art[art.id] = None	# adding the key to the dictionary marks this as "seen"
