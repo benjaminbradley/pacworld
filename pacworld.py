@@ -16,6 +16,7 @@ from map import Map
 import world
 from world import World
 from pacsounds import Pacsounds,getPacsound
+from pacdisplay import Pacdisplay
 from player import Player
 
 INPUT_KEYBOARD = 'kb'
@@ -34,9 +35,9 @@ class Pacworld:
 		
 		# Make the display size a member of the class
 		#self.displaySize = (640, 480)
-		self.displaySize = (800,600)
+		self.display = Pacdisplay((800,600))
 		#self.displaySize = (1024, 768)
-		self.character_size = int(self.displaySize[0] / 10)
+		self.character_size = int(self.display.getDisplaySize()[0] / 10)
 		
 		# Initialize pygame
 		pygame.init()
@@ -70,13 +71,13 @@ class Pacworld:
 		pygame.display.set_caption("WORKING NAME: Pacworld")
 		
 		# Create the window
-		self.surface = pygame.display.set_mode(self.displaySize)
+		self.surface = pygame.display.set_mode(self.display.getDisplaySize())
 		font = pygame.font.Font(None, 30)
 		textBitmap = font.render("Generating world...", True, colors.WHITE)
 		#textRect = textBitmap.get_rect().width
 		#print "DEBUG: textRect is: {0}".format(textRect)
 		textWidth = textBitmap.get_rect().width
-		self.surface.blit(textBitmap, [self.displaySize[0]/2 - textWidth/2, self.displaySize[1]/2])
+		self.surface.blit(textBitmap, [self.display.getDisplaySize()[0]/2 - textWidth/2, self.display.getDisplaySize()[1]/2])
 		pygame.display.update()
 		
 		
@@ -95,7 +96,7 @@ class Pacworld:
 
 		random.seed(self.crazySeed)
 
-		mapSize = [SCALE_FACTOR*x for x in self.displaySize]
+		mapSize = [SCALE_FACTOR*x for x in self.display.getDisplaySize()]
 		
 		gridSize = int(self.character_size * 1.5)
 		gridDisplaySize = (int(mapSize[0] / gridSize), int(mapSize[1] / gridSize))	# assumes square grid cells
@@ -105,7 +106,7 @@ class Pacworld:
 		theworld = World(gridDisplaySize)
 		
 		# Create the world map, passing through the display size and world map
-		self.map = Map(mapSize, self.displaySize, self.character_size, theworld)
+		self.map = Map(mapSize, self.display, self.character_size, theworld)
 		art = theworld.addArt(self.map)
 		shapes = self.map.addShapes()
 		self.sprites = sprite.Group(shapes, art)

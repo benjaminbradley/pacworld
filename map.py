@@ -14,6 +14,7 @@ import math
 
 import pacglobal
 import pacdefs
+from pacdisplay import Pacdisplay
 import wall
 from wall import Wall
 import colors
@@ -24,14 +25,13 @@ from effect import *	# Effect, EFFECT_*
 # The class for the background
 class Map(sprite.Sprite):
 	
-	def __init__(self, mapSize, displaySize, character_size, theworld):
+	def __init__(self, mapSize, display, character_size, theworld):
 		# Initialize the sprite base class
 		super(Map, self).__init__()
 		
 		# Set our image to a new surface, the size of the World Map
-		self.displaySize = displaySize
+		self.display = display
 		self.mapSize = mapSize
-		#self.mapSize = list(displaySize)
 		logging.debug ("mapSize is {0}".format(self.mapSize))
 		self.character_size = character_size
 		self.image = Surface(self.mapSize)
@@ -50,7 +50,7 @@ class Map(sprite.Sprite):
 		self.grid_cellheight = grid_cellheight = int(mapSize[1] / theworld.rows)
 		self.grid_cellwidth = grid_cellwidth = int(mapSize[0] / theworld.cols)
 		logging.debug ("cell size is {0} wide x {1} high".format(grid_cellwidth, grid_cellheight))
-		self.displayGridSize = (int(displaySize[0] / grid_cellwidth), int(displaySize[1] / grid_cellheight))
+		self.displayGridSize = (int(display.getDisplaySize()[0] / grid_cellwidth), int(display.getDisplaySize()[1] / grid_cellheight))
 		
 
 		# NEXT: render the world map from the 'world' class argument
@@ -225,20 +225,19 @@ class Map(sprite.Sprite):
 		# holds current effects happening on the map
 		self.effects = []	# array of Effects
 		
-	def draw(self, display):
+	def draw(self, surface):
 		# Draw a subsurface of the world map
 		# with dimensions of the displaySize
 		# centered on the position defined as center (within limits)
 		# to the display that has been passed in
 		
 		#print "DEBUG: Map.draw(): map size is {0}".format(self.image.get_size())
-		#print "DEBUG: Map.draw(): center for drawwindow is at {0}, resulting in a {1}x{2} window with topleft at {3},{4}".format(center, self.displaySize[0], self.displaySize[1], windowLeft, windowTop)
 		windowRect = self.player.shape.getWindowRect()
 		screenImage = self.image.subsurface( windowRect )
-		display.blit(screenImage, (0,0))
+		surface.blit(screenImage, (0,0))
 		for effect in self.effects:
 			if effect.onScreen(windowRect):
-				effect.draw(display, windowRect)	# NOTE: map effects are drawn directly onto the display !!! coordinates must be localized
+				effect.draw(surface, windowRect)	# NOTE: map effects are drawn directly onto the display !!! coordinates must be localized
 
 	def update(self, ticks):
 		# check for current effects to continue
@@ -306,7 +305,7 @@ class Map(sprite.Sprite):
 		# until enough shape generated
 			# create new shape, placed randomly
 			num_sides = random.randint(3,6)
-			newShape = Shape(self.displaySize, self, self.character_size, num_sides)
+			newShape = Shape(self.display.getDisplaySize(), self, self.character_size, num_sides)
 			newShape.autonomous = True	# all new shapes will be autonomous by default
 			
 			# add shape to the list of objects
@@ -348,24 +347,24 @@ class Map(sprite.Sprite):
 
 if __name__ == '__main__':
 	# Make the display size a member of the class
-	displaySize = (640, 480)
+	display = Pacdisplay((640, 480))
 	
 	# Initialize pygame
 	pygame.init()
 
 	# Set the window title
-	display.set_caption("Map Test")
+	pygame.display.set_caption("Map Test")
 	
 	# Create the window
-	window = display.set_mode(displaySize)
+	window = pygame.display.set_mode(display.getDisplaySize())
 		
 	# Create the background, passing through the display size
-	mapSize = [4*x for x in displaySize]
-	map = Map(mapSize, displaySize, displaySize[0]/10, World(mapSize))
+	mapSize = [4*x for x in display.getDisplaySize()]
+	map = Map(mapSize, display, display.getDisplaySize()[0]/10, World(mapSize))
 
 	# Draw the background
 	map.draw(window, (10,10))
-	display.update()
+	pygame.display.update()
 
 	done = False
 	while not done:
