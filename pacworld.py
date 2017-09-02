@@ -67,17 +67,17 @@ class Pacworld:
 				self.button_status.append(self.joystick.get_button(i))
 		
 		# Set the window title
-		display.set_caption("WORKING NAME: Pacworld")
+		pygame.display.set_caption("WORKING NAME: Pacworld")
 		
 		# Create the window
-		self.display = display.set_mode(self.displaySize)
+		self.surface = pygame.display.set_mode(self.displaySize)
 		font = pygame.font.Font(None, 30)
 		textBitmap = font.render("Generating world...", True, colors.WHITE)
 		#textRect = textBitmap.get_rect().width
 		#print "DEBUG: textRect is: {0}".format(textRect)
 		textWidth = textBitmap.get_rect().width
-		self.display.blit(textBitmap, [self.displaySize[0]/2 - textWidth/2, self.displaySize[1]/2])
-		display.update()
+		self.surface.blit(textBitmap, [self.displaySize[0]/2 - textWidth/2, self.displaySize[1]/2])
+		pygame.display.update()
 		
 		
 		# if no random seed was given, make one up:
@@ -141,32 +141,32 @@ class Pacworld:
 			self.sprites.update(curtime)
 
 			# Draw the background
-			self.map.draw(self.display)
+			self.map.draw(self.surface)
 			
 			# draw the sprites
 			#print "DEBUG: drawing shape via sprite group. shape rect is: {0}".format(self.shape.rect)
 			# draw the shape by itself onto the display. it's always there.
-			self.player.shape.draw(self.display)
+			self.player.shape.draw(self.surface)
 			windowRect = self.map.player.shape.getWindowRect()
 			# NOTE: we only want to show the art that is currently onscreen, and it needs to be shifted to its correct position
 			for artpiece in self.player.shape.art_onscreen():
 				# if artpiece is on the screen, we will draw it
 				#logging.debug("drawing art at {0}".format(artpiece.rect))
-				artpiece.draw(self.display, windowRect)
+				artpiece.draw(self.surface, windowRect)
 			
 			# draw any other shapes that are currently onscreen
 			for shape in self.map.shapes:
 				# if artpiece is on the screen, we will draw it
 				if not shape.onScreen(windowRect): continue
 				#logging.debug("drawing shape {0} at {1}".format(shape.id, shape.mapTopLeft))
-				shape.draw(self.display)
+				shape.draw(self.surface)
 			
 			
 			# Update the full display surface to the screen
-			display.update()
+			pygame.display.update()
 			
 			# display debug if enabled
-			display.set_caption("fps: " + str(int(self.clock.get_fps())))
+			pygame.display.set_caption("fps: " + str(int(self.clock.get_fps())))
 
 			# Limit the game to 30 frames per second
 			self.clock.tick(30)
