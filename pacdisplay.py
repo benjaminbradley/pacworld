@@ -18,3 +18,5 @@ class Pacdisplay(object):
 	def getDisplaySize(self):
 		return self.displaySize
 
+	def setDisplaySize(self, displaySize):
+		self.displaySize = displaySize

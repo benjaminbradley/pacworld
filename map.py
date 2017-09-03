@@ -305,7 +305,7 @@ class Map(sprite.Sprite):
 		# until enough shape generated
 			# create new shape, placed randomly
 			num_sides = random.randint(3,6)
-			newShape = Shape(self.display.getDisplaySize(), self, self.character_size, num_sides)
+			newShape = Shape(self.display, self, self.character_size, num_sides)
 			newShape.autonomous = True	# all new shapes will be autonomous by default
 			
 			# add shape to the list of objects

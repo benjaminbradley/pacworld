@@ -35,12 +35,15 @@ class Pacworld:
 		
 		# Make the display size a member of the class
 		#self.displaySize = (640, 480)
-		self.display = Pacdisplay((800,600))
+		self.windowed_resolution = (800,600)
+		self.display = Pacdisplay(self.windowed_resolution)
 		#self.displaySize = (1024, 768)
 		self.character_size = int(self.display.getDisplaySize()[0] / 10)
 		
 		# Initialize pygame
 		pygame.init()
+		# capture current screen res for fullscreen mode
+		self.fullscreen_resolution = (display.Info().current_w, display.Info().current_h)
 		
 		self.sound = getPacsound()
 		
@@ -72,6 +75,7 @@ class Pacworld:
 		
 		# Create the window
 		self.surface = pygame.display.set_mode(self.display.getDisplaySize())
+		self.is_fullscreen = False
 		font = pygame.font.Font(None, 30)
 		textBitmap = font.render("Generating world...", True, colors.WHITE)
 		#textRect = textBitmap.get_rect().width
@@ -91,7 +95,7 @@ class Pacworld:
 			self.crazySeed = random.randint(0, MAX_RANDOM_SEED)
 			logging.info("USING RANDOM SEED: {0}".format(self.crazySeed))
 		
-		SCALE_FACTOR = 2
+		SCALE_FACTOR = 2	# total map is 4x the screen size
 
 
 		random.seed(self.crazySeed)
@@ -174,7 +178,24 @@ class Pacworld:
 			
 			# advance frame counter
 			pacglobal.nextframe()
-			
+
+
+	def toggleFullscreen(self):
+		screen = pygame.display.get_surface()
+		bits = screen.get_bitsize()
+		if self.is_fullscreen:
+			self.is_fullscreen = False
+			flags = screen.get_flags() & ~pygame.FULLSCREEN
+			self.display.setDisplaySize(self.windowed_resolution)
+		else:
+			self.is_fullscreen = True
+			flags = screen.get_flags() | pygame.FULLSCREEN
+			self.display.setDisplaySize(self.fullscreen_resolution)
+		pygame.display.quit()
+		pygame.display.init()
+		self.surface = pygame.display.set_mode(self.display.getDisplaySize(),flags,bits)
+
+
 	def handleEvents(self):
 		
 		# Handle events, starting with the quit event
@@ -236,6 +257,9 @@ class Pacworld:
 						self.player.shape.tryAsk()
 					elif event.key == K_d:	# "right" button
 						self.player.shape.trySwirlRight()
+					elif event.key == K_f:	# toggle fullscreen
+						self.toggleFullscreen()
+						self.player.shape.updatePosition()
 					elif event.key == K_DOWN:
 						self.player.shape.startMove(DIR_DOWN)
 					elif event.key == K_UP:

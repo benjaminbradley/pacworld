@@ -9,6 +9,7 @@ from pathfinder import PathFinder
 import pacdefs
 import pacglobal
 from pacsounds import Pacsounds,getPacsound
+from pacdisplay import Pacdisplay
 import colors
 import effect
 from effect import *	# Effect, EFFECT_*
@@ -38,7 +39,7 @@ MIN_THOUGHTFORM_COMPLEXITY = 200
 # The class for Shapes
 class Shape(pygame.sprite.Sprite):
 	
-	def __init__(self, displaySize, themap, shape_size, num_sides = 3):
+	def __init__(self, display, themap, shape_size, num_sides = 3):
 		# Initialize the sprite base class
 		super(Shape, self).__init__()
 		
@@ -46,7 +47,7 @@ class Shape(pygame.sprite.Sprite):
 		self.map = themap
 		
 		# Get the display size for working out collisions later
-		self.displaySize = displaySize
+		self.display = display
 		
 		self.colorIdx = 0
 		self.setColor()
@@ -551,34 +552,34 @@ class Shape(pygame.sprite.Sprite):
 		"""updates screenTopLeft and sprite.rect's position"""
 		mapTopLeft = self.getMapTopLeft()
 		self.screenTopLeft = list(mapTopLeft)
-		if mapTopLeft[0] < self.displaySize[0]/2:
+		if mapTopLeft[0] < self.display.getDisplaySize()[0]/2:
 			self.screenTopLeft[0] = mapTopLeft[0]
-		elif mapTopLeft[0] > self.map.mapSize[0]-self.displaySize[0]/2:
-			self.screenTopLeft[0] = self.displaySize[0] - (self.map.mapSize[0]-mapTopLeft[0])
+		elif mapTopLeft[0] > self.map.mapSize[0]-self.display.getDisplaySize()[0]/2:
+			self.screenTopLeft[0] = self.display.getDisplaySize()[0] - (self.map.mapSize[0]-mapTopLeft[0])
 		else: 
-			self.screenTopLeft[0] = self.displaySize[0]/2
+			self.screenTopLeft[0] = self.display.getDisplaySize()[0]/2
 
-		if mapTopLeft[1] < self.displaySize[1]/2:
+		if mapTopLeft[1] < self.display.getDisplaySize()[1]/2:
 			self.screenTopLeft[1] = mapTopLeft[1]
-		elif mapTopLeft[1] > self.map.mapSize[1]-self.displaySize[1]/2:
-			self.screenTopLeft[1] = self.displaySize[1] - (self.map.mapSize[1]-mapTopLeft[1])
+		elif mapTopLeft[1] > self.map.mapSize[1]-self.display.getDisplaySize()[1]/2:
+			self.screenTopLeft[1] = self.display.getDisplaySize()[1] - (self.map.mapSize[1]-mapTopLeft[1])
 		else: 
-			self.screenTopLeft[1] = self.displaySize[1]/2
+			self.screenTopLeft[1] = self.display.getDisplaySize()[1]/2
 		
 		self.rect.top = self.screenTopLeft[1]
 		self.rect.left = self.screenTopLeft[0]
 		#logging.debug("rect is: {0}".format(self.rect))
 
-	def draw(self, display):
+	def draw(self, surface):
 		if self.map.player.shape == self:
 			#print "DEBUG: drawing image at {0}".format(self.screenTopLeft)
-			display.blit(self.image, self.screenTopLeft)
+			surface.blit(self.image, self.screenTopLeft)
 		else:
 			windowRect = self.map.player.shape.getWindowRect()
 			mapTopLeft = self.getMapTopLeft()
 			screenx = mapTopLeft[0] - windowRect.left
 			screeny = mapTopLeft[1] - windowRect.top
-			display.blit(self.image, (screenx,screeny))
+			surface.blit(self.image, (screenx,screeny))
 	# end of Shape.draw()
 
 
@@ -852,13 +853,13 @@ class Shape(pygame.sprite.Sprite):
 	def getWindowRect(self):
 		"""get the rect for the display window containing the center point"""
 		center = self.getMapTopLeft()
-		windowLeft = center[0] - self.displaySize[0]/2
-		if windowLeft+self.displaySize[0] >= self.map.mapSize[0]: windowLeft = self.map.mapSize[0]-self.displaySize[0]-1
+		windowLeft = center[0] - self.display.getDisplaySize()[0]/2
+		if windowLeft+self.display.getDisplaySize()[0] >= self.map.mapSize[0]: windowLeft = self.map.mapSize[0]-self.display.getDisplaySize()[0]-1
 		if windowLeft < 0: windowLeft = 0
-		windowTop = center[1] - self.displaySize[1]/2
-		if windowTop+self.displaySize[1] >= self.map.mapSize[1]: windowTop = self.map.mapSize[1]-self.displaySize[1]-1
+		windowTop = center[1] - self.display.getDisplaySize()[1]/2
+		if windowTop+self.display.getDisplaySize()[1] >= self.map.mapSize[1]: windowTop = self.map.mapSize[1]-self.display.getDisplaySize()[1]-1
 		if windowTop < 0: windowTop = 0
-		return pygame.Rect(windowLeft, windowTop, self.displaySize[0], self.displaySize[1])
+		return pygame.Rect(windowLeft, windowTop, self.display.getDisplaySize()[0], self.display.getDisplaySize()[1])
 
 
 class ShapeTest:
@@ -866,7 +867,7 @@ class ShapeTest:
 	def __init__(self):
 
 		# Make the display size a member of the class
-		self.displaySize = (640, 480)
+		self.display = Pacdisplay((640, 480))
 		
 		# Initialize pygame
 		pygame.init()
@@ -875,12 +876,12 @@ class ShapeTest:
 		self.clock = pygame.time.Clock()
 
 		# Set the window title
-		display.set_caption("Shape Test")
+		pygame.display.set_caption("Shape Test")
 
 		# Create the window
-		self.display = display.set_mode(self.displaySize)
+		self.surface = pygame.display.set_mode(self.display.getDisplaySize())
 		
-		self.shape = Shape(self.displaySize, None, int(self.displaySize[0] / 10), 3)
+		self.shape = Shape(self.display.getDisplaySize(), None, int(self.display.getDisplaySize()[0] / 10), 3)
 		self.sprites = sprite.Group(self.shape)
 	# end of __init__
 		
@@ -896,10 +897,10 @@ class ShapeTest:
 
 			# Update and draw the sprites
 			self.sprites.update(pygame.time.get_ticks())
-			self.sprites.draw(self.display)
+			self.sprites.draw(self.surface)
 
 			# Update the full display surface to the screen
-			display.update()
+			pygame.display.update()
 
 			# Limit the game to 30 frames per second
 			self.clock.tick(30)
@@ -927,7 +928,7 @@ class ShapeTest:
 				elif event.key == K_RIGHT:
 					self.shape.rotateRight()
 				elif event.key == K_SPACE:
-					self.display.fill(colors.BLACK)
+					self.surface.fill(colors.BLACK)
 				elif event.key == K_a:
 					self.shape.colorUp()
 				elif event.key == K_z:
