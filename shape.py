@@ -231,7 +231,7 @@ class Shape(pygame.sprite.Sprite):
 		self.angle = 0
 		self.makeSprite()
 		# Start the shape directly in the centre of the screen
-		self.center = self.topLeftToCenter(self.map.gridToScreenCoord(startPos))
+		self.center = self.map.gridToScreenCoordCenter(startPos)
 		self.screenTopLeft = list(self.getMapTopLeft())
 		# reset other attributes as well
 		self.updatePosition()

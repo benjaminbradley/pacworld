@@ -339,8 +339,11 @@ class Map(sprite.Sprite):
 	# end of nearShapes()
 
 
-	def gridToScreenCoord(self, gridCoord):
+	def gridToScreenCoord(self, gridCoord):	#TODO: Rename -- add -TopLeft to end of function name
 		return (gridCoord[0] * self.grid_cellwidth, gridCoord[1] * self.grid_cellheight)
+
+	def gridToScreenCoordCenter(self, gridCoord):
+		return [gridCoord[0] * self.grid_cellwidth + int(self.grid_cellwidth/2), gridCoord[1] * self.grid_cellheight + int(self.grid_cellheight/2)]
 
 # end of class Map
 
