@@ -60,6 +60,7 @@ class Pacworld:
 			logging.warning("no joysticks found, using keyboard for input")
 			self.input_mode = INPUT_KEYBOARD
 		else:
+			logging.info("joystick present, using joystick for input")
 			self.input_mode = INPUT_JOYSTICK
 		
 		if self.input_mode == INPUT_JOYSTICK:
@@ -69,7 +70,11 @@ class Pacworld:
 			self.num_buttons = self.joystick.get_numbuttons()
 			for i in range( self.num_buttons ):
 				self.button_status.append(self.joystick.get_button(i))
-		
+			self.num_axes = self.joystick.get_numaxes()
+			if(self.num_axes == 4):
+				self.joy_axis_x = 2
+				self.joy_axis_y = 3
+
 		# Set the window title
 		pygame.display.set_caption("WORKING NAME: Pacworld")
 		
@@ -95,7 +100,7 @@ class Pacworld:
 			self.crazySeed = random.randint(0, MAX_RANDOM_SEED)
 			logging.info("USING RANDOM SEED: {0}".format(self.crazySeed))
 		
-		SCALE_FACTOR = 2	# total map is 4x the screen size
+		SCALE_FACTOR = 2	# total map is SCALE_FACTOR^2 times the screen size
 
 
 		random.seed(self.crazySeed)
@@ -205,13 +210,33 @@ class Pacworld:
 				sys.exit()
 
 			if(self.input_mode == INPUT_JOYSTICK):
+				# check for joystick movement
+				joy_value_y = round(self.joystick.get_axis( self.joy_axis_y ))
+				joy_value_x = round(self.joystick.get_axis( self.joy_axis_x ))
+				logging.debug("joystick movement = {0},{1}".format(joy_value_x, joy_value_y))
+				# -1 = left, 1 = right
+				if(joy_value_y == 1):	# -1 = up, down = 1
+					self.player.shape.startMove(DIR_DOWN)
+				elif(joy_value_y == -1):
+					self.player.shape.startMove(DIR_UP)
+				else:	# joy_value_y == 0
+					self.player.shape.stopMove(DIR_DOWN)
+					self.player.shape.stopMove(DIR_UP)
+				if(joy_value_x == 1):
+					self.player.shape.startMove(DIR_RIGHT)
+				elif(joy_value_x == -1):
+					self.player.shape.startMove(DIR_LEFT)
+				else:	# joy_value_x == 0
+					self.player.shape.stopMove(DIR_RIGHT)
+					self.player.shape.stopMove(DIR_LEFT)
+				
 				# Possible joystick actions: JOYAXISMOTION JOYBALLMOTION JOYBUTTONDOWN JOYBUTTONUP JOYHATMOTION
 				if event.type == pygame.JOYBUTTONDOWN:
 					#logging.debug("Joystick button pressed.")
 					for i in range( self.num_buttons ):
 						if(self.joystick.get_button(i) and not self.button_status[i]):
 							self.button_status[i] = True
-							logging.debug("Button "+str(i+1)+" pressed.")
+							logging.debug("joystick Button "+str(i+1)+" pressed.")
 							if(i == 0):	# "bottom" button
 								self.player.shape.tryAsk()
 							elif(i == 1):	# "right" button
