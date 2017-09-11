@@ -16,7 +16,7 @@ from effect import *	# Effect, EFFECT_*
 from swirl import Swirl
 
 MAX_SIDES = 10
-SIZE_MINIMUM = 5
+SIZE_MINIMUM = 10
 SIZE_MAXIMUM = 140
 DIR_UP = 'u'
 DIR_DOWN = 'd'
@@ -750,7 +750,7 @@ class Shape(pygame.sprite.Sprite):
 
 	def sizeUp(self):
 		logging.debug("old size="+str(self.side_length))
-		self.side_length *= 1.1
+		self.side_length = int(self.side_length * 1.1)
 		if self.side_length > SIZE_MAXIMUM:
 			self.side_length = SIZE_MAXIMUM
 		self.setSpeed()
@@ -759,7 +759,7 @@ class Shape(pygame.sprite.Sprite):
 
 	def sizeDown(self):
 		logging.debug ("old size="+str(self.side_length))
-		self.side_length *= 0.9
+		self.side_length = int(self.side_length * 0.9)
 		if(self.side_length < SIZE_MINIMUM):
 			self.side_length = SIZE_MINIMUM
 		self.setSpeed()
