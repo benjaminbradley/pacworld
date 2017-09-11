@@ -55,15 +55,14 @@ class Pacworld:
 		
 		# Get count of joysticks
 		joystick_count = pygame.joystick.get_count()
-		self.input_mode = None
+		self.input_mode = [INPUT_KEYBOARD]
 		if joystick_count == 0:
-			logging.warning("no joysticks found, using keyboard for input")
-			self.input_mode = INPUT_KEYBOARD
+			logging.warning("no joysticks found, using only keyboard for input")
 		else:
-			logging.info("joystick present, using joystick for input")
-			self.input_mode = INPUT_JOYSTICK
+			logging.info("joystick present, enabling joystick for input")
+			self.input_mode.append(INPUT_JOYSTICK)
 		
-		if self.input_mode == INPUT_JOYSTICK:
+		if(INPUT_JOYSTICK in self.input_mode):
 			self.joystick = pygame.joystick.Joystick(0)
 			self.joystick.init()
 			self.button_status = []
@@ -209,7 +208,7 @@ class Pacworld:
 				pygame.quit()
 				sys.exit()
 
-			if(self.input_mode == INPUT_JOYSTICK):
+			if(INPUT_JOYSTICK in self.input_mode):
 				# check for joystick movement
 				joy_value_y = round(self.joystick.get_axis( self.joy_axis_y ))
 				joy_value_x = round(self.joystick.get_axis( self.joy_axis_x ))
@@ -269,7 +268,7 @@ class Pacworld:
 							#logging.debug("Button "+str(i+1)+" released.")
 			# end of : input_mode == INPUT_JOYSTICK
 
-			if(self.input_mode == INPUT_KEYBOARD):
+			if(INPUT_KEYBOARD in self.input_mode):
 				if event.type == KEYDOWN:
 					# Find which key was pressed
 					#if event.key == K_s:
@@ -326,7 +325,7 @@ class Pacworld:
 		# end for (events)
 		
 		# movement should be smooth, so not tied to event triggers
-		if(self.input_mode == INPUT_JOYSTICK):
+		if(INPUT_JOYSTICK in self.input_mode):
 			fbAxis = round(self.joystick.get_axis(0), 3)
 			if(abs(fbAxis) > JOYSTICK_NOISE_LEVEL):
 				#print "DEBUG: fbAxis is: "+str(fbAxis)
