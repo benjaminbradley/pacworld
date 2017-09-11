@@ -6,6 +6,7 @@ open questions:
 BUGFIX:
 - occasionally it hangs during world creation. at least once it was during room population. add something to detect repeating cycles and add a break-threshhold.
   example seed: 36987
+- some shapes get stuck in routing? e.g. seed 7834
 - FIXMEs
 
 NEXT STEPS for MVP:

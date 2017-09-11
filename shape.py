@@ -87,7 +87,7 @@ class Shape(pygame.sprite.Sprite):
 		self.last_touched_art = {}	# hash of art.id to ticks
 		self.last_moved_frame = 0	# frame of last character movement
 		self.last_artsearch_position = None # position where we were last time we searched for nearby art
-		self.map_knowledge = [[None for x in range(self.map.world.cols)] for y in range(self.map.world.rows)]	# hash of y,x indices to: -1=inaccessible, 0=accessible, never been there, 1+=times visited; None=unknown
+		self.map_knowledge = [[None for x in range(self.map.world.cols+1)] for y in range(self.map.world.rows+1)]	# hash of y,x indices to: -1=inaccessible, 0=accessible, never been there, 1+=times visited; None=unknown
 		
 		# AI
 		self.autonomous = False
@@ -486,8 +486,8 @@ class Shape(pygame.sprite.Sprite):
 				winRect = self.getWindowRect() # left, top, right, bottom
 				grid_minx = int(winRect[0] / self.map.grid_cellwidth)
 				grid_miny = int(winRect[1] / self.map.grid_cellheight)
-				grid_maxx = int(winRect[2] / self.map.grid_cellwidth)
-				grid_maxy = int(winRect[3] / self.map.grid_cellheight)
+				grid_maxx = int((winRect[0]+winRect[2]) / self.map.grid_cellwidth)
+				grid_maxy = int((winRect[1]+winRect[3]) / self.map.grid_cellheight)
 				logging.debug("on-screen grid coords are: {0} (topLeft) to {1} (botRight)".format((grid_minx,grid_miny), (grid_maxx, grid_maxy)))
 				destx = random.randint(grid_minx,grid_maxx)
 				desty = random.randint(grid_miny,grid_maxy)

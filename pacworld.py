@@ -100,7 +100,7 @@ class Pacworld:
 			self.crazySeed = random.randint(0, MAX_RANDOM_SEED)
 			logging.info("USING RANDOM SEED: {0}".format(self.crazySeed))
 		
-		SCALE_FACTOR = 2	# total map is SCALE_FACTOR^2 times the screen size
+		SCALE_FACTOR = 3	# total map is SCALE_FACTOR^2 times the screen size
 
 
 		random.seed(self.crazySeed)
