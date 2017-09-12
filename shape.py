@@ -33,7 +33,7 @@ AUTO_SWIRL_ACTIVATION_CHANCE = 0.05
 AUTO_THOUGHT_CREATION_CHANCE = 0.01
 
 MAX_THOUGHTFORM_ID = 2147483647
-MAX_THOUGHTFORM_COMPLEXITY = 500
+MAX_THOUGHTFORM_COMPLEXITY = 1000
 MIN_THOUGHTFORM_COMPLEXITY = 200
 
 # The class for Shapes
@@ -402,6 +402,11 @@ class Shape(pygame.sprite.Sprite):
 				del self.auto_status['thoughtform_id']
 				del self.auto_status['thoughtform_complexity']
 				del self.auto_status['thoughtform_starttick']
+				if 'thoughtform_target' in self.auto_status: del self.auto_status['thoughtform_target']
+			else:
+				# still in an ongoing thought
+				if self.turning is None and 'thoughtform_target' in self.auto_status:	# and we're not currently turning
+					self.faceTo(self.auto_status['thoughtform_target'])	# make sure we turn to face the object we're considering
 		elif not self.in_head() and random.random() < AUTO_THOUGHT_CREATION_CHANCE:
 			self.spawnThoughtform(ticks)
 			# turn to look at something nearby
@@ -421,6 +426,7 @@ class Shape(pygame.sprite.Sprite):
 			if object_of_interest is not None:
 				logging.debug("Found a nearby object of interest, turning to face...")
 				self.faceTo(object_of_interest)
+				self.auto_status['thoughtform_target'] = object_of_interest
 
 		# ACTIVITY: move in a direction
 		# if we're already moving to a known destination, carry on
