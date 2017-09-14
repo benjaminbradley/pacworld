@@ -1,6 +1,3 @@
-open questions:
-- why is self.type == TRANSFER_EFFECT code in swirl.py#draw() ?
-
 ---------------------------------------------------- FUTURE TASKS:
 
 BUGFIX:
@@ -11,6 +8,7 @@ BUGFIX:
 
 NEXT STEPS for MVP:
 - add new types of swirls (change size, sides, color, etc - what attributes are fixed, but variable?)
+- add effects when activating a swirl
 - add collision detection for size/side changes
 - only one type of each swirl
 - max # of swirls
