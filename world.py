@@ -142,6 +142,8 @@ class Room():
 		self.area = self.height * self.width
 		self.right = self.left + self.width - 1
 		self.bottom = self.top + self.height - 1
+	def __str__(self):
+		return "<Room#{0}:{1},{2},{3},{4} [{5}]; doors:{6}>".format(self.id, self.left, self.top, self.width, self.height, self.symbol, self.doors)
 	def getInsides(self, cols, rows):
 		"""get an array of room sides which are "inside" the world space"""
 		if hasattr(self, 'insides'): return self.insides
@@ -488,7 +490,9 @@ class World():
 		curTotalRoomArea = 0
 		minRoomArea = int(self.totalArea*pacdefs.ROOM_AREA_MIN/100)
 		
-		while(curTotalRoomArea < minRoomArea):
+		roomPlacementFailures = 0
+		ROOM_PLACEMENT_MAX_FAILURES = 100
+		while(curTotalRoomArea < minRoomArea and roomPlacementFailures < ROOM_PLACEMENT_MAX_FAILURES):
 			#print "DEBUG: World.__init__(): current total room area ({0}, {1}%) hasn't met minimum room area ({2}, {3}%)".format(curTotalRoomArea, int(100*curTotalRoomArea/self.totalArea), int(self.totalArea*ROOM_AREA_MIN/100), ROOM_AREA_MIN)
 			
 			# create a new room & add to the world
@@ -516,7 +520,7 @@ class World():
 			if(newid):
 				curTotalRoomArea += newRoom.area
 			else:
-				#print "DEBUG: World.__init__(): room placement failed due to obstruction"
+				roomPlacementFailures += 1
 				continue
 			
 			# determine orientation (place door(s))
@@ -682,11 +686,14 @@ class World():
 								# check for door compatibility
 								negotiateDoorPlacement(adjacent_square, newRoom, adj_doorpos, adj_doorside)
 			
+			# room completely placed on map
+			roomPlacementFailures = 0
 
 			# DEBUG: show current map
 			#logging.debug ("World.__init__(): world grid is:\n{0}".format(self.to_s()))
 		
-		
+		if(curTotalRoomArea < minRoomArea):
+			logging.debug("Exceeded room placement failure threshhold {0} with only {1} total room area (minimum should be {2})".format(ROOM_PLACEMENT_MAX_FAILURES, curTotalRoomArea, minRoomArea))
 
 		# step 4. place rocks
 		#	- 4 or 5 randomly around the map? maybe skip this step? or it's used to identify inaccessible enclosed spaces?
