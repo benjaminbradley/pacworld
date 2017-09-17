@@ -182,7 +182,8 @@ class Path():
 
 class Intersection():
 	def __init__(self, path1, path2, position):
-		#FIXME: assumes that exactly one path is vertical and one path is horizontal
+		#NOTE: assumes that exactly one path is vertical and one path is horizontal
+		# probably a safe assumption, since INTERSECTION_MIN_OVERLAP prevents intersections near the end of a pathway
 		if path1.direction_h:
 			hpath = path1
 			vpath = path2

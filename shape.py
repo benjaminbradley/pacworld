@@ -596,9 +596,7 @@ class Shape(pygame.sprite.Sprite):
 		self.curSwirl = len(self.swirls) - 1	# change current to the new one
 		logging.debug("got a new swirl effect type {0}, total {1} swirls now".format(swirl.effect_type, len(self.swirls)))
 		self.makeSprite()
-		#FIXME: REMOVE DEBUG HELPER:
-		if self.map.player.shape != self: self.autonomous = True
-	
+
 	def activateSwirl(self):
 		# checks to make sure we do have at least one swirl
 		if self.curSwirl == None or len(self.swirls) == 0: return False

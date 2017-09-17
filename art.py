@@ -33,11 +33,9 @@ class Art(sprite.Sprite):
 		self.map = themap
 		self.top = top
 		self.left = left
-		self.side_length = 60	#FIXME: get this number from somewhere more intelligent, maybe passed in, or calculated?
-		self.width = 1#self.side_length
-		self.height = 1#self.side_length
-#		self.right = self.left + self.width
-#		self.bottom = self.top + self.height
+		self.side_length = themap.character_size
+		self.width = self.side_length
+		self.height = self.side_length
 		self.type = pacdefs.TYPE_ART
 		self.symbol = pacdefs.ART_SYMBOL
 		self.doors = {}	# dictionary of side(int) to (X,Y) tuple of ints

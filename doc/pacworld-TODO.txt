@@ -1,8 +1,7 @@
 ---------------------------------------------------- FUTURE TASKS:
 
 BUGFIX:
-- some shapes get stuck in routing? e.g. seed 7834
-- FIXMEs
+- some shapes get stuck in routing? (if/when reproduced, record example SEED)
 
 NEXT STEPS for MVP:
 - add new types of swirls (change size, sides, color, etc - what attributes are fixed, but variable?)
@@ -16,10 +15,14 @@ NEXT STEPS for MVP:
 - when the world reaches a certain level of swirl "saturation" (e.g. % of characters have # of swirls) then remake the world
 - other TODOs in code
 
+META FEATURES:
+- command-line arguments for map scale, initial mode (fullscreen/windowed), etc.
+- segment logging by e.g. world generation, autonomous behavior, draw/rendering, etc. to easily toggle on/off and/or separate channels
+- add memory profiling to watch for memory leaks
+
 PERFORMANCE:
 - turn drawn swirls into sprites to speed animation
 - change all shape.makeSprite calls to set a dirty flag, collapse into a single makeSprite call :: watch out to preserve in shape.update(): self.changeAngle() followed by self.move() in the same update, and collision test will matter /// maybe a flag that signals mask-only generation or full graphical mode
-
 
 ENHANCEMENTS:
 - allow multiple doors per room side
