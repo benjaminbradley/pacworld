@@ -391,7 +391,7 @@ class Shape(pygame.sprite.Sprite):
 				('last-swirl-activation' not in self.auto_status.keys() or self.auto_status['last-swirl-activation'] + AUTO_SWIRL_ACTIVATION_MINTICKS < ticks) \
 				and random.random() < AUTO_SWIRL_ACTIVATION_CHANCE:
 			#logging.debug("[Shape {1}] self-activating current swirl at {0}".format(ticks, self.id))
-			self.activateSwirl()
+			self.activateSwirl(random.randint(0,1) == 0)
 			self.auto_status['last-swirl-activation'] = ticks
 		
 		# ACTIVITY: stop to think
@@ -591,16 +591,19 @@ class Shape(pygame.sprite.Sprite):
 
 
 	def receiveSwirl(self, swirl):
-		#TODO: prevent duplicate swirls
+		for myswirl in self.swirls:
+			if(swirl.look == myswirl.look):
+				logging.debug("this shape already has this swirl type")
+				return
 		self.swirls.append(swirl)
 		self.curSwirl = len(self.swirls) - 1	# change current to the new one
 		logging.debug("got a new swirl effect type {0}, total {1} swirls now".format(swirl.effect_type, len(self.swirls)))
 		self.makeSprite()
 
-	def activateSwirl(self):
+	def activateSwirl(self, dir_up = True):
 		# checks to make sure we do have at least one swirl
 		if self.curSwirl == None or len(self.swirls) == 0: return False
-		self.swirls[self.curSwirl].activate(self)
+		self.swirls[self.curSwirl].activate(self, dir_up)
 		return True
 	
 	
@@ -613,7 +616,6 @@ class Shape(pygame.sprite.Sprite):
 		logging.debug("tryGive")
 		# checks to make sure we do have at least one swirl
 		if self.curSwirl == None or len(self.swirls) == 0: return False
-		self.activateSwirl()
 		# check for nearby shapes
 		nearby_shapes = self.map.nearShapes(self.getCenter(), self.map.character_size * 1.5, self)
 		if len(nearby_shapes) > 0:

@@ -9,7 +9,8 @@ import colors
 
 LOOK_CIRCLE = 1
 LOOK_LINE = 2
-LOOKS = [LOOK_CIRCLE, LOOK_LINE]
+LOOK_LT = 3
+LOOKS = [LOOK_CIRCLE, LOOK_LINE, LOOK_LT]
 
 class Swirl(sprite.Sprite):
 	
@@ -20,8 +21,17 @@ class Swirl(sprite.Sprite):
 		self.effect_type = effect_type
 		self.look = LOOKS[random.randint(0,len(LOOKS)-1)]
 	
-	def activate(self, shape):
+	def activate(self, shape, dir_up):
 		shape.effects[self.effect_type] = Effect(self.effect_type)
+		if(self.look == LOOK_LINE):
+			if(dir_up): shape.moreSides()
+			else: shape.lessSides()
+		elif(self.look == LOOK_CIRCLE):
+			if(dir_up): shape.sizeUp()
+			else: shape.sizeDown()
+		elif(self.look == LOOK_LT):
+			if(dir_up): shape.colorUp()
+			else: shape.colorDn()
 		shape.makeSprite()
 
 	def draw(self, image, position, active = False):
@@ -42,6 +52,15 @@ class Swirl(sprite.Sprite):
 				end_pos = (position[0] + length/2, position[1])
 				lineWidth = 2
 				pygame.draw.line(image, color, start_pos, end_pos, lineWidth)
+			elif self.look == LOOK_LT:
+				# draw an angle
+				length = 4
+				start1_pos = (position[0] - length/2, position[1]-length)
+				start2_pos = (position[0] - length/2, position[1]+length)
+				end_pos = (position[0] + length/2, position[1])
+				lineWidth = 2
+				pygame.draw.line(image, color, start1_pos, end_pos, lineWidth)
+				pygame.draw.line(image, color, start2_pos, end_pos, lineWidth)
 				
 		else:
 			logger.critical("unknown effect type: {0}".format(self.type))

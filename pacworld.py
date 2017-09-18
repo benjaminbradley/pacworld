@@ -25,6 +25,26 @@ JOYSTICK_NOISE_LEVEL = 0.1
 
 MAX_RANDOM_SEED = 65535
 
+KB_QWERTY = 1
+KB_DVORAK = 2
+KB_MAP = {
+	KB_QWERTY: {
+		'top' : K_w,
+		'left' : K_a,
+		'bottom': K_s,
+		'right': K_d,
+		'Lshoulder': K_q,
+		'Rshoulder': K_e,
+	},
+	KB_DVORAK: {
+		'top' : K_COMMA,
+		'left' : K_a,
+		'bottom': K_o,
+		'right': K_e,
+		'Lshoulder': K_QUOTE,
+		'Rshoulder': K_PERIOD,
+	}
+}
 
 # Our main game class
 class Pacworld:
@@ -49,6 +69,9 @@ class Pacworld:
 		
 		# Create a clock to manage time
 		self.clock = pygame.time.Clock()
+		
+		# Initialize keyboard
+		self.cur_kb_map = KB_MAP[KB_DVORAK]
 		
 		# Initialize the joysticks (if present)
 		pygame.joystick.init()
@@ -198,6 +221,7 @@ class Pacworld:
 		pygame.display.quit()
 		pygame.display.init()
 		self.surface = pygame.display.set_mode(self.display.getDisplaySize(),flags,bits)
+		self.player.shape.updatePosition()
 
 
 	def handleEvents(self):
@@ -244,14 +268,10 @@ class Pacworld:
 								self.player.shape.trySwirlLeft()
 							elif(i == 3):	# "top" button
 								self.player.shape.tryGive()
-							elif(i == 4):
-								self.player.shape.sizeDown()
-							elif(i == 5):
-								self.player.shape.sizeUp()
-							elif(i == 6):
-								self.player.shape.lessSides()
-							elif(i == 7):
-								self.player.shape.moreSides()
+							elif(i in [4,5]):
+								self.player.shape.activateSwirl(True)
+							elif(i in [6,7]):
+								self.player.shape.activateSwirl(False)
 							elif(i == 8):
 								self.player.shape.reset()
 							elif(i == 9):	# button 10 triggers program exit
@@ -271,19 +291,21 @@ class Pacworld:
 			if(INPUT_KEYBOARD in self.input_mode):
 				if event.type == KEYDOWN:
 					# Find which key was pressed
-					#if event.key == K_s:
-					#elif event.key == K_w:
-					if event.key == K_w:	# "top" button
+
+					if event.key == self.cur_kb_map['top']:	# "top" button
 						self.player.shape.tryGive()
-					elif event.key == K_a:	# "left" button
+					elif event.key == self.cur_kb_map['left']:	# "left" button
 						self.player.shape.trySwirlLeft()
-					elif event.key == K_s:	# "bottom" button
+					elif event.key == self.cur_kb_map['bottom']:	# "bottom" button
 						self.player.shape.tryAsk()
-					elif event.key == K_d:	# "right" button
+					elif event.key == self.cur_kb_map['right']:	# "right" button
 						self.player.shape.trySwirlRight()
+					elif event.key == self.cur_kb_map['Lshoulder']:	# "left shoulder" button
+						self.player.shape.activateSwirl(False)
+					elif event.key == self.cur_kb_map['Rshoulder']:	# "right shoulder" button
+						self.player.shape.activateSwirl(True)
 					elif event.key == K_f:	# toggle fullscreen
 						self.toggleFullscreen()
-						self.player.shape.updatePosition()
 					elif event.key == K_DOWN:
 						self.player.shape.startMove(DIR_DOWN)
 					elif event.key == K_UP:
