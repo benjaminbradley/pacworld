@@ -2,13 +2,15 @@
 
 BUGFIX:
 - some shapes get stuck in routing? (e.g. seed 2357 - see top left corner)
+  2 compounding issues:
+    1. routing algorithm (world.py#_successors__check_adjacent__accessible) only checks to see if the current room has a door - should also check to make sure adjacent room has a door there as well
+    2. door placement algorithm (world.py#negotiateDoorPlacement) will coordinate door location with existing door, but if 2 rooms are side-by-side next to the SAME side of one adjacent room, the second one will move the door during ITS 'coordinate door placement'
+
 
 NEXT STEPS for MVP:
-- add new types of swirls (change size, sides, color, etc - what attributes are fixed, but variable?)
+- need to randomize target-selection for art visitation and wandering behaviors
 - add effects when activating a swirl
 - add collision detection for size/side changes
-- only one type of each swirl
-- max # of swirls
 - get a swirl from another character "ask"
 - idle behavior for current character (plays itself)
 - switch between characters (for idle)
