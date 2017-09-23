@@ -18,7 +18,7 @@ NEXT STEPS for MVP:
 - ? AI ability to detect wall collisions and shrink size when needed?  (test with initial size @ 120) otherwise they'll just stay stuck until they randomly activate the right sequence of swirls to get un-stuck
 
 META FEATURES:
-- command-line arguments for map scale, initial mode (fullscreen/windowed), etc.  http://www.diveintopython.net/scripts_and_streams/command_line_arguments.html
+- add command-line arguments initial mode (fullscreen/windowed)
 - segment logging by e.g. world generation, autonomous behavior, draw/rendering, etc. to easily toggle on/off and/or separate channels
 - add memory profiling to watch for memory leaks
 

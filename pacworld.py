@@ -2,6 +2,7 @@
 
 import pygame # Provides what we need to make a game
 import sys # Gives us the sys.exit function to close our program
+import getopt
 import random
 import logging
 
@@ -48,10 +49,43 @@ KB_MAP = {
 
 # Our main game class
 class Pacworld:
+	def usage(self):
+		print('USAGE:')
+		print('{0} [options]'.format(sys.argv[0]))
+		print('options are:')
+		print('	-h --help		print this help')
+		print('	-f				start fullscreen')
+		print('	-w				start windowed')
+		print('	-s --seed=[number]		specify a seed for the random number generator')
+		print('	-c --scale=[number]		create a map which is SCALE times larger than the window')
 	
-	def __init__(self):
+	def __init__(self, argv):
 		logging.basicConfig(format='%(asctime)-15s:%(levelname)s:%(filename)s#%(funcName)s(): %(message)s', level=logging.DEBUG, filename='log/pacworld.log')
 		logging.debug("Initializing Pacworld()...")
+
+		# set defaults for CLI arguments
+		SCALE_FACTOR = 3	# total map is SCALE_FACTOR^2 times the screen size
+		self.crazySeed = None
+		
+		try:
+			opts, args = getopt.getopt(argv, "hs:c:", ["help", "seed=", "scale="])
+		except getopt.GetoptError:
+			self.usage()
+			sys.exit(2)
+		for opt, arg in opts:
+			if opt in ("-h", "--help"):
+				self.usage()
+				sys.exit()
+			elif opt in ("-s", "--seed"):
+				self.crazySeed = arg
+				logging.info("USING CHOSEN SEED: {0}".format(self.crazySeed))
+			elif opt in ("-c", "--scale"):
+				SCALE_FACTOR = int(arg)
+		
+		# if no random seed was given, make one up:
+		if self.crazySeed is None:
+			self.crazySeed = random.randint(0, MAX_RANDOM_SEED)
+			logging.info("USING RANDOM SEED: {0}".format(self.crazySeed))
 		
 		# Make the display size a member of the class
 		#self.displaySize = (640, 480)
@@ -96,7 +130,7 @@ class Pacworld:
 			if(self.num_axes == 4):
 				self.joy_axis_x = 2
 				self.joy_axis_y = 3
-
+		
 		# Set the window title
 		pygame.display.set_caption("WORKING NAME: Pacworld")
 		
@@ -112,21 +146,8 @@ class Pacworld:
 		pygame.display.update()
 		
 		
-		# if no random seed was given, make one up:
-		if(len(sys.argv) > 1):
-			# cool seeds: 24669
-			# ? 36097
-			self.crazySeed = int(sys.argv[1])
-			logging.info("USING CHOSEN SEED: {0}".format(self.crazySeed))
-		else:
-			self.crazySeed = random.randint(0, MAX_RANDOM_SEED)
-			logging.info("USING RANDOM SEED: {0}".format(self.crazySeed))
-		
-		SCALE_FACTOR = 3	# total map is SCALE_FACTOR^2 times the screen size
-
-
 		random.seed(self.crazySeed)
-
+		
 		mapSize = [SCALE_FACTOR*x for x in self.display.getDisplaySize()]
 		
 		gridSize = int(self.character_size * 1.5)
@@ -358,7 +379,7 @@ class Pacworld:
 				#print "DEBUG: lrAxis is: "+str(lrAxis)
 				self.player.shape.move(lrAxis * self.player.shape.linearSpeed, 0)
 
-			
+
 if __name__ == '__main__':
-	game = Pacworld()
+	game = Pacworld(sys.argv[1:])
 	game.run()
