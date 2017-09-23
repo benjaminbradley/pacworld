@@ -55,9 +55,8 @@ class Pacworld:
 		print('options are:')
 		print('	-h --help		print this help')
 		print('	-f				start fullscreen')
-		print('	-w				start windowed')
 		print('	-s --seed=[number]		specify a seed for the random number generator')
-		print('	-c --scale=[number]		create a map which is SCALE times larger than the window')
+		print('	-c --scale=[number]		create a map which is SCALE^2 times larger than the initial display resolution')
 	
 	def __init__(self, argv):
 		logging.basicConfig(format='%(asctime)-15s:%(levelname)s:%(filename)s#%(funcName)s(): %(message)s', level=logging.DEBUG, filename='log/pacworld.log')
@@ -66,9 +65,10 @@ class Pacworld:
 		# set defaults for CLI arguments
 		SCALE_FACTOR = 3	# total map is SCALE_FACTOR^2 times the screen size
 		self.crazySeed = None
+		self.is_fullscreen = False
 		
 		try:
-			opts, args = getopt.getopt(argv, "hs:c:", ["help", "seed=", "scale="])
+			opts, args = getopt.getopt(argv, "hs:c:f", ["help", "seed=", "scale=", "fullscreen"])
 		except getopt.GetoptError:
 			self.usage()
 			sys.exit(2)
@@ -81,23 +81,17 @@ class Pacworld:
 				logging.info("USING CHOSEN SEED: {0}".format(self.crazySeed))
 			elif opt in ("-c", "--scale"):
 				SCALE_FACTOR = int(arg)
+			elif opt in ("-f", "--fullscreen"):
+				self.is_fullscreen = True
 		
 		# if no random seed was given, make one up:
 		if self.crazySeed is None:
 			self.crazySeed = random.randint(0, MAX_RANDOM_SEED)
 			logging.info("USING RANDOM SEED: {0}".format(self.crazySeed))
-		
-		# Make the display size a member of the class
-		#self.displaySize = (640, 480)
-		self.windowed_resolution = (800,600)
-		self.display = Pacdisplay(self.windowed_resolution)
-		#self.displaySize = (1024, 768)
-		self.character_size = int(self.display.getDisplaySize()[0] / 10)
+			print("USING RANDOM SEED: {0}".format(self.crazySeed))
 		
 		# Initialize pygame
 		pygame.init()
-		# capture current screen res for fullscreen mode
-		self.fullscreen_resolution = (display.Info().current_w, display.Info().current_h)
 		
 		self.sound = getPacsound()
 		
@@ -134,9 +128,21 @@ class Pacworld:
 		# Set the window title
 		pygame.display.set_caption("WORKING NAME: Pacworld")
 		
+		# capture current screen res for fullscreen mode
+		self.fullscreen_resolution = (display.Info().current_w, display.Info().current_h)
+		# set window size
+		self.windowed_resolution = (800,600)
+		# initialize display system
+		if self.is_fullscreen:
+			flags = pygame.FULLSCREEN
+			self.display = Pacdisplay(self.fullscreen_resolution)
+		else:
+			flags = 0
+			self.display = Pacdisplay(self.windowed_resolution)
+		self.character_size = 80 #int(self.display.getDisplaySize()[0] / 10)	#TODO: make this a configurable value (CLI arg?)
+		logging.debug("Character size set to {0}".format(self.character_size))
 		# Create the window
-		self.surface = pygame.display.set_mode(self.display.getDisplaySize())
-		self.is_fullscreen = False
+		self.surface = pygame.display.set_mode(self.display.getDisplaySize(), flags)
 		font = pygame.font.Font(None, 30)
 		textBitmap = font.render("Generating world...", True, colors.WHITE)
 		#textRect = textBitmap.get_rect().width
