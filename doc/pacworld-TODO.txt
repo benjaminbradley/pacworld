@@ -8,7 +8,6 @@ BUGFIX:
 
 
 NEXT STEPS for MVP:
-- need to randomize target-selection for art visitation and wandering behaviors
 - add effects when activating a swirl
 - add collision detection for size/side changes
 - get a swirl from another character "ask"

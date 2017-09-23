@@ -422,7 +422,7 @@ class Shape(pygame.sprite.Sprite):
 			if object_of_interest is None:
 				nearby_art = self.art_onscreen()
 				if len(nearby_art) > 0:
-					object_of_interest = nearby_art[0]
+					object_of_interest = random.choice(nearby_art)
 			if object_of_interest is not None:
 				logging.debug("Found a nearby object of interest, turning to face...")
 				self.faceTo(object_of_interest)
@@ -461,7 +461,9 @@ class Shape(pygame.sprite.Sprite):
 			#	if something interesting is onscreen
 			self.last_artsearch_position = list(self.getCenter())
 			logging.debug("Searching for nearby art...")
-			for art in self.art_onscreen():
+			art_on_screen = self.art_onscreen()
+			random.shuffle(art_on_screen)
+			for art in art_on_screen:
 				# if artpiece is on the screen,
 				#	 and we haven't seen it yet
 				if art.id in self.last_touched_art.keys(): continue # skip arts that we've already seen
