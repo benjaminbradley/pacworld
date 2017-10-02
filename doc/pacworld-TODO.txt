@@ -1,11 +1,5 @@
 ---------------------------------------------------- FUTURE TASKS:
 
-BUGFIX:
-- some shapes get stuck in routing? (e.g. seed 2357 - see top left corner)
-  2 compounding issues:
-    1. routing algorithm (world.py#_successors__check_adjacent__accessible) only checks to see if the current room has a door - should also check to make sure adjacent room has a door there as well
-    2. door placement algorithm (world.py#negotiateDoorPlacement) will coordinate door location with existing door, but if 2 rooms are side-by-side next to the SAME side of one adjacent room, the second one will move the door during ITS 'coordinate door placement'
-
 
 NEXT STEPS for MVP:
 - add collision detection for size/side changes
@@ -17,7 +11,11 @@ NEXT STEPS for MVP:
 - when the world reaches a certain level of swirl "saturation" (e.g. % of characters have # of swirls) then remake the world
 - other TODOs in code
 - try and spread art around more - maybe pref against pathways?
+- make more interesting different looking art pieces
 - ? AI ability to detect wall collisions and shrink size when needed?  (test with initial size @ 120) otherwise they'll just stay stuck until they randomly activate the right sequence of swirls to get un-stuck
+
+FIXME:
+door placement algorithm (world.py#negotiateDoorPlacement) will coordinate door location with existing door, but if 2 rooms are side-by-side next to the SAME side of one adjacent room, the second one will move the door during ITS 'coordinate door placement' (see topleft corner of -s 2357 -c 3)
 
 META FEATURES:
 - segment logging by e.g. world generation, autonomous behavior, draw/rendering, etc. to easily toggle on/off and/or separate channels
@@ -29,5 +27,4 @@ PERFORMANCE:
 
 ENHANCEMENTS:
 - allow multiple doors per room side
-- make more interesting different looking art pieces
 - special ability to activate all of your swirls one after another

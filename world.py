@@ -980,7 +980,7 @@ class World():
 				else:
 					logging.error("[FORMAT (y,x)] couldn't determine orientation of current ({0}) vs adjacent ({1}) squares".format(coord_a, (coord_b[0],coord_b[1])))
 				adjsidedir = pacdefs.opposite_side(cursidedir)
-				if((current_square != pacdefs.SYMBOL_CLEAR and current_square.type == pacdefs.TYPE_ROOM and current_square.door_at((coord_a[1],coord_a[0]), cursidedir)) or
+				if((current_square != pacdefs.SYMBOL_CLEAR and current_square.type == pacdefs.TYPE_ROOM and current_square.door_at((coord_a[1],coord_a[0]), cursidedir)) and
 						(adjacent_square != pacdefs.SYMBOL_CLEAR and adjacent_square.type == pacdefs.TYPE_ROOM and adjacent_square.door_at((coord_b[1],coord_b[0]), adjsidedir))):
 					# if there is a door, it's clear
 					return True
