@@ -77,7 +77,7 @@ class Pacworld:
 				self.usage()
 				sys.exit()
 			elif opt in ("-s", "--seed"):
-				self.crazySeed = arg
+				self.crazySeed = int(arg)
 				logging.info("USING CHOSEN SEED: {0}".format(self.crazySeed))
 			elif opt in ("-c", "--scale"):
 				SCALE_FACTOR = int(arg)
