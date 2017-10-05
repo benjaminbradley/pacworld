@@ -100,13 +100,16 @@ class Shape(pygame.sprite.Sprite):
 		# initialize subsystems
 		self.sound = getPacsound()
 
-	
+	def debug(self, msg):
+		if hasattr(self, 'id'): the_id = self.id
+		else: the_id = '-'
+		logging.debug("Shape[{0}]:{1}".format(the_id, msg))
+
 	def setColor(self):
 		self.color = colors.COLORWHEEL[self.colorIdx]
 		self.eye_color = colors.YELLOW
 	
 	def colorUp(self):
-		logging.debug("Shape.colorUp()")
 		self.colorIdx += 1
 		if(self.colorIdx >= len(colors.COLORWHEEL)):
 			self.colorIdx = 0
@@ -114,7 +117,6 @@ class Shape(pygame.sprite.Sprite):
 		self.makeSprite()
 
 	def colorDn(self):
-		logging.debug("Shape.colorDn()")
 		self.colorIdx -= 1
 		if(self.colorIdx < 0):
 			self.colorIdx = len(colors.COLORWHEEL)-1
@@ -125,7 +127,7 @@ class Shape(pygame.sprite.Sprite):
 		''' sets the shape's speed based on its size '''
 		self.linearSpeed = int(self.side_length / 8)
 		self.rotationSpeed = self.linearSpeed
-		logging.debug("linearSpeed is now {0}".format(self.linearSpeed))
+		self.debug("linearSpeed is now {0}".format(self.linearSpeed))
 	
 	def get_swirlpos(self, i):
 		num_swirls = len(self.swirls)
@@ -379,7 +381,7 @@ class Shape(pygame.sprite.Sprite):
 		self.auto_status['thoughtform_id'] = random.randint(0, MAX_THOUGHTFORM_ID)
 		self.auto_status['thoughtform_complexity'] = random.randint(0, (MAX_THOUGHTFORM_COMPLEXITY-MIN_THOUGHTFORM_COMPLEXITY)) + MIN_THOUGHTFORM_COMPLEXITY
 		self.auto_status['thoughtform_starttick'] = ticks
-		logging.debug("[Shape {1}] spawning thoughtform[#{2}, c={3}] at {0}".format(ticks, self.id, self.auto_status['thoughtform_id'], self.auto_status['thoughtform_complexity']))
+		self.debug("spawning thoughtform[#{1}, c={2}] at {0}".format(ticks, self.auto_status['thoughtform_id'], self.auto_status['thoughtform_complexity']))
 
 	def autoUpdate(self, ticks):
 		"""this is the master update routine for the NPC AI"""
@@ -398,7 +400,7 @@ class Shape(pygame.sprite.Sprite):
 		# TODO: modify probability based on interesting things in environment
 		if self.in_head():
 			if self.auto_status['thoughtform_starttick'] + self.auto_status['thoughtform_complexity'] * 3 < ticks:
-				logging.debug("Thoughtform {0} has expired at {1}.".format(self.auto_status['thoughtform_id'], ticks))
+				self.debug("Thoughtform {0} has expired at {1}.".format(self.auto_status['thoughtform_id'], ticks))
 				del self.auto_status['thoughtform_id']
 				del self.auto_status['thoughtform_complexity']
 				del self.auto_status['thoughtform_starttick']
@@ -424,7 +426,7 @@ class Shape(pygame.sprite.Sprite):
 				if len(nearby_art) > 0:
 					object_of_interest = random.choice(nearby_art)
 			if object_of_interest is not None:
-				logging.debug("Found a nearby object of interest, turning to face...")
+				self.debug("Found a nearby object of interest, turning to face...")
 				self.faceTo(object_of_interest)
 				self.auto_status['thoughtform_target'] = object_of_interest
 
@@ -445,11 +447,11 @@ class Shape(pygame.sprite.Sprite):
 
 			# if we're at the node (or close enough), move to the next node
 			if dest_distance < pacdefs.WALL_LINE_WIDTH + self.linearSpeed:
-				logging.debug("reached node {0}, moving to next node in path (out of {1} total nodes)".format(self.auto_status['movement_path_curidx'], len(self.auto_status['movement_path'])))
+				self.debug("reached node {0}, moving to next node in path (out of {1} total nodes)".format(self.auto_status['movement_path_curidx'], len(self.auto_status['movement_path'])))
 				# if we're at our destination, clear the destination & path
 				self.auto_status['movement_path_curidx'] += 1
 				if self.auto_status['movement_path_curidx'] == len(self.auto_status['movement_path']):
-					logging.debug("reached destination, clearing path")
+					self.debug("reached destination, clearing path")
 					# if we just finished "wandering", then stop and have a think
 					if type(self.auto_status['movement_destination']) is str:
 						self.spawnThoughtform(ticks)
@@ -460,7 +462,7 @@ class Shape(pygame.sprite.Sprite):
 			# else, look for a new destination
 			#	if something interesting is onscreen
 			self.last_artsearch_position = list(self.getCenter())
-			logging.debug("Searching for nearby art...")
+			self.debug("Searching for nearby art...")
 			art_on_screen = self.art_onscreen()
 			random.shuffle(art_on_screen)
 			for art in art_on_screen:
@@ -470,12 +472,12 @@ class Shape(pygame.sprite.Sprite):
 				#	then look for a path from current pos to artpiece
 				start = self.get_gridCoordsYX()
 				goal = (art.top, art.left) # grid square of art piece; NOTE: pathfinder takes (y,x) coordinates
-				logging.debug("[FORMAT (y,x)] looking for path from {0} to {1}".format(start, goal))
+				self.debug("[FORMAT (y,x)] looking for path from {0} to {1}".format(start, goal))
 				pf = PathFinder(self.map.world.successors, self.map.world.move_cost, self.map.world.move_cost)
 				path = list(pf.compute_path(start, goal))
 				if(path):	# if we can get to it, set our destination
 					if(len(path) > 1):	# but only if it's more than 1 step away
-						logging.debug("setting destination as art {0}, via path: {1}".format(art,path))
+						self.debug("setting destination as art {0}, via path: {1}".format(art,path))
 						self.auto_status['movement_destination'] = art
 						self.auto_status['movement_path'] = path
 						self.auto_status['movement_path_curidx'] = 1	# destination starts at node 1 since node 0 is starting point
@@ -496,10 +498,10 @@ class Shape(pygame.sprite.Sprite):
 				grid_miny = int(winRect[1] / self.map.grid_cellheight)
 				grid_maxx = int((winRect[0]+winRect[2]) / self.map.grid_cellwidth)
 				grid_maxy = int((winRect[1]+winRect[3]) / self.map.grid_cellheight)
-				logging.debug("on-screen grid coords are: {0} (topLeft) to {1} (botRight)".format((grid_minx,grid_miny), (grid_maxx, grid_maxy)))
+				self.debug("on-screen grid coords are: {0} (topLeft) to {1} (botRight)".format((grid_minx,grid_miny), (grid_maxx, grid_maxy)))
 				destx = random.randint(grid_minx,grid_maxx)
 				desty = random.randint(grid_miny,grid_maxy)
-				logging.debug("testing grid spot: {0},{1} (x,y)".format(destx, desty))
+				self.debug("testing grid spot: {0},{1} (x,y)".format(destx, desty))
 				destination = str(destx)+','+str(desty)
 				if(self.map_knowledge[desty][destx] is None):
 					# try and compute path to destination if not already known...
@@ -512,7 +514,7 @@ class Shape(pygame.sprite.Sprite):
 						self.map_knowledge[desty][destx] = 0
 					else:
 						self.map_knowledge[desty][destx] = -1
-						logging.debug("grid spot: {0},{1} (x,y) is INACCESSIBLE".format(destx, desty))
+						self.debug("grid spot: {0},{1} (x,y) is INACCESSIBLE".format(destx, desty))
 						# destination is INaccessible
 						destination = None
 				elif(self.map_knowledge[desty][destx] == -1):
@@ -521,7 +523,7 @@ class Shape(pygame.sprite.Sprite):
 			# good destination, not inaccessible...
 			#TODO: create preference for unvisited squares
 			# go to destination....
-			logging.debug("wandering to grid spot: {0},{1} (x,y)".format(destx, desty))
+			self.debug("wandering to grid spot: {0},{1} (x,y)".format(destx, desty))
 			if(path is None):
 				# going to previously computed destination
 				start = self.get_gridCoordsYX()
@@ -551,7 +553,7 @@ class Shape(pygame.sprite.Sprite):
 	def get_gridCoordsYX(self):
 		gridY = int(self.center[1] / self.map.grid_cellheight)
 		gridX = int(self.center[0] / self.map.grid_cellwidth)
-		logging.debug("shape #{0} is in grid square {1},{2} (X,Y)".format(self.id, gridX, gridY))
+		self.debug("in grid square {0},{1} (X,Y)".format(gridX, gridY))
 		return (gridY,gridX)
 
 
@@ -595,11 +597,11 @@ class Shape(pygame.sprite.Sprite):
 	def receiveSwirl(self, swirl):
 		for myswirl in self.swirls:
 			if(swirl.look == myswirl.look):
-				logging.debug("this shape already has this swirl type")
+				self.debug("this shape already has this swirl type")
 				return
 		self.swirls.append(swirl)
 		self.curSwirl = len(self.swirls) - 1	# change current to the new one
-		logging.debug("got a new swirl effect type {0}, total {1} swirls now".format(swirl.effect_type, len(self.swirls)))
+		self.debug("got a new swirl effect type {0}, total {1} swirls now".format(swirl.effect_type, len(self.swirls)))
 		self.makeSprite()
 
 	def activateSwirl(self, dir_up = True):
@@ -610,12 +612,12 @@ class Shape(pygame.sprite.Sprite):
 	
 	
 	def tryAsk(self):
-		logging.debug("tryAsk")
+		self.debug("tryAsk")
 		#TODO
 		self.sound.play('ask')
 		
 	def tryGive(self):
-		logging.debug("tryGive")
+		self.debug("tryGive")
 		# checks to make sure we do have at least one swirl
 		if self.curSwirl == None or len(self.swirls) == 0: return False
 		# check for nearby shapes
@@ -624,7 +626,7 @@ class Shape(pygame.sprite.Sprite):
 			#logging.debug("Shapes near to S#{0}: {1}".format(self.id, nearby_shapes))
 			#TODO: be choosy about which shape to give to - is there one in front (closer to my eye?)
 			receiver = nearby_shapes[0]
-			logging.debug("shape #{0} is giving swirl to #{1}...".format(self.id, receiver.id))
+			self.debug("giving swirl to Shape #{1}...".format(receiver.id))
 			receiver.faceTo(self)
 			self.map.startEffect(effect.TRANSFER_EFFECT, 
 					{	EFFECT_SOURCE:self,
@@ -664,12 +666,12 @@ class Shape(pygame.sprite.Sprite):
 				#logging.debug("still mid-touch")
 				return False
 			if last_touched <= frames - 1 and last_touched + ART_TOUCH_JITTER > frames: 
-				logging.debug("art was touched too recentely - at {0}".format(last_touched))
+				self.debug("art was touched too recentely - at {0}".format(last_touched))
 				return False
 		else:
 			self.last_touched_art[art.id] = frames
 		# trigger the art-touch event!
-		logging.debug("shape #{0} is touching art #{1} - triggering event!".format(self.id, art.id))
+		self.debug("touching art #{0} - triggering event!".format(art.id))
 		self.map.startEffect(effect.TRANSFER_EFFECT, 
 				{	EFFECT_SOURCE:art,
 					EFFECT_TARGET:self,
@@ -756,23 +758,29 @@ class Shape(pygame.sprite.Sprite):
 		dx = math.sin(theta)
 		self.move(dx * -self.linearSpeed, dy * -self.linearSpeed)
 
+	''' a wrapper for sizeUp/sizeDown changes that checks collisions'''
+	def changeSize(self, newsize):
+		oldsize = self.side_length
+		self.debug("old size="+str(oldsize))
+		if newsize > SIZE_MAXIMUM: newsize = SIZE_MAXIMUM
+		if(newsize < SIZE_MINIMUM): newsize = SIZE_MINIMUM
+		self.side_length = newsize
+		self.makeSprite()	# re-create the sprite with new attributes
+		if self.map.wallCollision(self):	# attribute changed due to collision, restore old values
+			self.side_length = oldsize
+			self.makeSprite()
+			#TODO: provide user feedback for failure
+			return False
+		else:
+			self.debug("new size="+str(newsize))
+			self.setSpeed()
+			return True
+
 	def sizeUp(self):
-		logging.debug("old size="+str(self.side_length))
-		self.side_length = int(self.side_length * 1.1)
-		if self.side_length > SIZE_MAXIMUM:
-			self.side_length = SIZE_MAXIMUM
-		self.setSpeed()
-		logging.debug("new size="+str(self.side_length))
-		self.makeSprite()
+		return self.changeSize(int(self.side_length * 1.1))
 
 	def sizeDown(self):
-		logging.debug ("old size="+str(self.side_length))
-		self.side_length = int(self.side_length * 0.9)
-		if(self.side_length < SIZE_MINIMUM):
-			self.side_length = SIZE_MINIMUM
-		self.setSpeed()
-		logging.debug ("new size="+str(self.side_length))
-		self.makeSprite()
+		return self.changeSize(int(self.side_length * 0.9))
 	
 	def setAngle(self, angle):
 		startAngle = self.angle
@@ -830,18 +838,28 @@ class Shape(pygame.sprite.Sprite):
 		
 	def rotateRight(self):
 		self.changeAngle(-self.rotationSpeed)
-		
-	def lessSides(self):
-		self.num_sides -= 1
-		if(self.num_sides == 0): self.num_sides = 1
-		logging.debug ("num_sides is now {0}".format(self.num_sides))
+	
+	''' a wrapper for lessSides/moreSides that checks for collissions'''
+	def changeSides(self, newsides):
+		oldsides = self.num_sides
+		if(newsides == 0): newsides = 1
+		if(newsides > MAX_SIDES+1): newsides = MAX_SIDES+1
+		self.num_sides = newsides
 		self.makeSprite()
+		if self.map.wallCollision(self):	# attribute changed due to collision
+			self.num_sides = oldsides
+			self.makeSprite()
+			#TODO: provide user feedback for failure
+			return False
+		else:	# re-create the sprite with new attributes
+			self.debug ("num_sides is now {0}".format(self.num_sides))
+			return True
+	
+	def lessSides(self):
+		return self.changeSides(self.num_sides - 1)
 	
 	def moreSides(self):
-		self.num_sides += 1
-		if(self.num_sides > MAX_SIDES+1): self.num_sides = MAX_SIDES+1
-		logging.debug ("num_sides is now {0}".format(self.num_sides))
-		self.makeSprite()
+		return self.changeSides(self.num_sides + 1)
 
 	def onScreen(self, windowRect):
 		windowRight = windowRect.left + windowRect.width

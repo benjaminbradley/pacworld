@@ -2,7 +2,6 @@
 
 
 NEXT STEPS for MVP:
-- add collision detection for size/side changes
 - autonomous chars should randomly switch between swirls
 - add effects when activating a swirl
 - get a swirl from another character "ask"
