@@ -626,7 +626,7 @@ class Shape(pygame.sprite.Sprite):
 			#logging.debug("Shapes near to S#{0}: {1}".format(self.id, nearby_shapes))
 			#TODO: be choosy about which shape to give to - is there one in front (closer to my eye?)
 			receiver = nearby_shapes[0]
-			self.debug("giving swirl to Shape #{1}...".format(receiver.id))
+			self.debug("giving swirl to Shape #{0}...".format(receiver.id))
 			receiver.faceTo(self)
 			self.map.startEffect(effect.TRANSFER_EFFECT, 
 					{	EFFECT_SOURCE:self,
