@@ -1,7 +1,9 @@
+
 ---------------------------------------------------- FUTURE TASKS:
 
 
 NEXT STEPS for MVP:
+- shrink nearscreen to 1/2 of adjacent screen
 - autonomous chars should randomly switch between swirls
 - add effects when activating a swirl
 - get a swirl from another character "ask"

@@ -140,8 +140,8 @@ class Art(sprite.Sprite):
 			self.lastBurst = t
 			#logging.debug ("Art.update(): triggering burst for art #{0} starting at {1}".format(self.id, t))
 			windowRect = self.map.player.shape.getWindowRect()
-			if self.onScreen(windowRect): soundvolume = 1.0
-			elif self.nearScreen(windowRect): soundvolume = 0.3
+			if self.onScreen(windowRect): soundvolume = pacdefs.ONSCREEN_SOUND_PERCENT
+			elif self.nearScreen(windowRect): soundvolume = pacdefs.NEARBY_SOUND_PERCENT
 			else: soundvolume = 0
 			self.startEffect(effect.BURST_EFFECT, {EFFECT_VOLUME: soundvolume})
 		
@@ -171,9 +171,9 @@ class Art(sprite.Sprite):
 		windowBottom = windowRect.top + windowRect.height
 		# if artpiece is on the screen, we will draw it
 		artLeft = self.left * self.map.grid_cellwidth
-		artRight = artLeft + self.width * self.map.grid_cellwidth
+		artRight = artLeft + self.width
 		artTop = self.top * self.map.grid_cellheight
-		artBottom = artTop + self.height * self.map.grid_cellheight
+		artBottom = artTop + self.height
 		if artLeft > windowRight: return False
 		if artRight < windowRect.left: return False
 		if artBottom < windowRect.top: return False

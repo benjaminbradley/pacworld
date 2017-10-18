@@ -115,6 +115,7 @@ class Shape(pygame.sprite.Sprite):
 			self.colorIdx = 0
 		self.setColor()
 		self.makeSprite()
+		return True	# always successful
 
 	def colorDn(self):
 		self.colorIdx -= 1
@@ -122,6 +123,7 @@ class Shape(pygame.sprite.Sprite):
 			self.colorIdx = len(colors.COLORWHEEL)-1
 		self.setColor()
 		self.makeSprite()
+		return True	# always successful
 
 	def setSpeed(self):
 		''' sets the shape's speed based on its size '''
@@ -593,6 +595,15 @@ class Shape(pygame.sprite.Sprite):
 	# end of Shape.draw()
 
 
+	"""return a float between 0 and 1 based on how close this shape is to the player"""
+	def soundProximity(self):
+		windowRect = self.map.player.shape.getWindowRect()
+		if self==self.map.player.shape: soundvolume = 1.0
+		elif self.onScreen(windowRect): soundvolume = pacdefs.ONSCREEN_SOUND_PERCENT
+		elif self.nearScreen(windowRect): soundvolume = pacdefs.NEARBY_SOUND_PERCENT
+		else: soundvolume = 0
+		return soundvolume
+
 
 	def receiveSwirl(self, swirl):
 		for myswirl in self.swirls:
@@ -603,6 +614,7 @@ class Shape(pygame.sprite.Sprite):
 		self.curSwirl = len(self.swirls) - 1	# change current to the new one
 		self.debug("got a new swirl effect type {0}, total {1} swirls now".format(swirl.effect_type, len(self.swirls)))
 		self.makeSprite()
+		self.sound.play('get', self.soundProximity())
 
 	def activateSwirl(self, dir_up = True):
 		# checks to make sure we do have at least one swirl
@@ -614,7 +626,7 @@ class Shape(pygame.sprite.Sprite):
 	def tryAsk(self):
 		self.debug("tryAsk")
 		#TODO
-		self.sound.play('ask')
+		self.sound.play('ask', self.soundProximity())
 		
 	def tryGive(self):
 		self.debug("tryGive")
@@ -633,7 +645,7 @@ class Shape(pygame.sprite.Sprite):
 						EFFECT_TARGET:receiver,
 						EFFECT_ONCOMPLETE: lambda: receiver.receiveSwirl(self.copySwirl())
 					})
-		self.sound.play('give')
+		self.sound.play('give', self.soundProximity())
 
 	def copySwirl(self):
 		if self.curSwirl == None or len(self.swirls) == 0: return False
@@ -769,7 +781,7 @@ class Shape(pygame.sprite.Sprite):
 		if self.map.wallCollision(self):	# attribute changed due to collision, restore old values
 			self.side_length = oldsize
 			self.makeSprite()
-			#TODO: provide user feedback for failure
+			self.sound.play('error')	# provide user feedback for failure
 			return False
 		else:
 			self.debug("new size="+str(newsize))
@@ -839,7 +851,9 @@ class Shape(pygame.sprite.Sprite):
 	def rotateRight(self):
 		self.changeAngle(-self.rotationSpeed)
 	
-	''' a wrapper for lessSides/moreSides that checks for collissions'''
+	''' a wrapper for lessSides/moreSides that checks for collissions
+			return true on success
+	'''
 	def changeSides(self, newsides):
 		oldsides = self.num_sides
 		if(newsides == 0): newsides = 1
@@ -849,7 +863,7 @@ class Shape(pygame.sprite.Sprite):
 		if self.map.wallCollision(self):	# attribute changed due to collision
 			self.num_sides = oldsides
 			self.makeSprite()
-			#TODO: provide user feedback for failure
+			self.sound.play('error')	# provide user feedback for failure
 			return False
 		else:	# re-create the sprite with new attributes
 			self.debug ("num_sides is now {0}".format(self.num_sides))
@@ -875,6 +889,27 @@ class Shape(pygame.sprite.Sprite):
 		if objBottom < windowRect.top: return False
 		if objTop > windowBottom: return False
 		return True	# obj IS on the screen
+
+	#TODO: refactor onScreen and nearScreen into a common subclass of Shape and Art
+	def nearScreen(self, windowRect):
+		"""This function assumes that onScreen has already failed.
+		This function checks to see if the sprite is on a screen adjacent to the visible one"""
+		adjWindowLeft = windowRect.left - windowRect.width
+		adjWindowRight = windowRect.left + windowRect.width * 2
+		adjWindowTop = windowRect.top - windowRect.height
+		adjWindowBottom = windowRect.top + windowRect.height * 2
+		# if sprite is within this extended window, return true
+		mapTopLeft = self.getMapTopLeft()
+		objLeft = mapTopLeft[0]
+		objRight = mapTopLeft[0]+self.rect.width
+		objTop = mapTopLeft[1]
+		objBottom = mapTopLeft[1]+self.rect.height
+		if objLeft < adjWindowLeft: return False
+		if objTop < adjWindowTop: return False
+		if objRight > adjWindowRight: return False
+		if objBottom > adjWindowBottom: return False
+		return True	# sprite IS near the screen
+
 
 	def getWindowRect(self):
 		"""get the rect for the display window containing the center point"""

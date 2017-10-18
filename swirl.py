@@ -3,6 +3,7 @@ from pygame import *
 import logging
 import random
 
+from pacsounds import getPacsound
 import effect
 from effect import Effect
 import colors
@@ -17,21 +18,25 @@ class Swirl(sprite.Sprite):
 	def __init__(self, effect_type):
 		# Initialize the sprite base class
 		super(Swirl, self).__init__()
+		self.sound = getPacsound()
 		
 		self.effect_type = effect_type
 		self.look = LOOKS[random.randint(0,len(LOOKS)-1)]
 	
 	def activate(self, shape, dir_up):
-		shape.effects[self.effect_type] = Effect(self.effect_type)
+		shape.effects[self.effect_type] = Effect(self.effect_type, {effect.EFFECT_VOLUME: shape.soundProximity()})
 		if(self.look == LOOK_LINE):
-			if(dir_up): shape.moreSides()
-			else: shape.lessSides()
+			if(dir_up): result = shape.moreSides()
+			else: result = shape.lessSides()
+			if(result): self.sound.play('sideChange', shape.soundProximity())
 		elif(self.look == LOOK_CIRCLE):
-			if(dir_up): shape.sizeUp()
-			else: shape.sizeDown()
+			if(dir_up): result = shape.sizeUp()
+			else: result = shape.sizeDown()
+			if(result): self.sound.play('sizeChange', shape.soundProximity())
 		elif(self.look == LOOK_LT):
-			if(dir_up): shape.colorUp()
-			else: shape.colorDn()
+			if(dir_up): result = shape.colorUp()
+			else: result = shape.colorDn()
+			if(result): self.sound.play('colorChange', shape.soundProximity())
 		shape.makeSprite()
 
 	def draw(self, image, position, active = False):

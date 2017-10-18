@@ -8,8 +8,12 @@ SOUNDS = {
 	'get' : 'sounds/111689__blackie666__equip.wav',					# "get a swirl" (from an art piece)
 	'ask' : 'sounds/111693__blackie666__load.wav',					# "ask" (another character)
 	'give' : 'sounds/118687__blackie666__fx3.wav',					# "give" (to another character)
-	#  ("activate" a swirl) -> the sound for that effect
+	'error' : 'sounds/135371__blackie666__thathurts.wav',		# "error" feedback (can't do something)
 	'3roboditzfade' : 'sounds/135377__blackie666__nomnomnom.wav',	# burst sound
+	#  ("activate" a swirl) -> the sound for that effect
+	'sizeChange' : 'sounds/135375__blackie666__resonance.wav',		# activate size
+	'sideChange' : 'sounds/135376__blackie666__oowh.wav',					# activate sides
+	'colorChange': 'sounds/102217__blackie666__rancidreverbtriangle.wav',		# activate color
 }
 
 pacsounds_instance = None
@@ -50,6 +54,9 @@ class Pacsounds(object):
 		logging.debug("sound_channels.len = {0}".format(len(self.sound_channels)))
 	
 	def play(self, soundName, volume = 1.0):
+		if soundName not in self.sound_data:
+			logging.error("Sound key '{0}' is missing".format(soundName))
+			return
 		if self.sound_data[soundName] != None and volume > 0:
 			# check for recent plays of the same sound
 			cur_time = pygame.time.get_ticks()
@@ -67,4 +74,13 @@ class Pacsounds(object):
 				channel.set_volume(volume)
 				channel.play(self.sound_data[soundName])
 				self.last_play[soundName] = cur_time
-				
+
+# tester
+if __name__ == '__main__':
+	logging.basicConfig(format='%(asctime)-15s:%(levelname)s:%(filename)s#%(funcName)s(): %(message)s', level=logging.DEBUG)
+	import time
+	sounds = Pacsounds()
+	for key in SOUNDS:
+		print('playing '+key)
+		sounds.play(key)
+		time.sleep(sounds.sound_data[key].get_length())
