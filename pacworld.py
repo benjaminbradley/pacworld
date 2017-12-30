@@ -162,7 +162,7 @@ class Pacworld:
 
     # Create the world, passing through the grid size
     theworld = World(gridDisplaySize)
-    
+  
     # Create the world map, passing through the display size and world map
     self.map = Map(mapSize, self.display, self.character_size, theworld)
     art = theworld.addArt(self.map)
@@ -387,5 +387,9 @@ class Pacworld:
 
 
 if __name__ == '__main__':
-  game = Pacworld(sys.argv[1:])
-  game.run()
+  try:
+    game = Pacworld(sys.argv[1:])
+    game.run()
+  except Exception:
+    logging.debug("Aborted by user during startup.")
+    print("Aborted by user during startup.")

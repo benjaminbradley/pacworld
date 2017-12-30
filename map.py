@@ -56,6 +56,7 @@ class Map(sprite.Sprite):
 		# NEXT: render the world map from the 'world' class argument
 		
 		for worldObj in sorted(theworld.objects, key=lambda obj: pacdefs.RENDER_ORDER[obj.type]):
+			pacglobal.checkAbort()
 			logging.debug ("rendering the next world object: {0}".format(worldObj))
 			if worldObj.type == pacdefs.TYPE_PATH:
 				left = worldObj.left * grid_cellwidth

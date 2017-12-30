@@ -9,7 +9,7 @@ import logging
 import math	# for sqrt in move_cost
 
 import pacdefs
-#from pacdefs import *
+import pacglobal
 from art import Art
 
 
@@ -378,6 +378,7 @@ class World():
 		#while(curTotalPaths < minTotalPaths):
 		#	print "DEBUG: World.__init__(): current total paths ({0}) not in range {1}..{2}".format(curTotalPaths, minTotalPaths, maxTotalPaths)
 		while(curTotalPathArea < minPathArea):
+			pacglobal.checkAbort()
 			#print "DEBUG: World.__init__(): current total path area ({0}, {1}%) hasn't met minimum path area ({2}, {3}%)".format(curTotalPathArea, int(100*curTotalPathArea/self.totalArea), int(self.totalArea*PATH_AREA_MIN/100), PATH_AREA_MIN)
 			
 			# create a new path & add to the world
@@ -447,6 +448,7 @@ class World():
 		minFieldArea = int(self.totalArea*pacdefs.FIELD_AREA_MIN/100)
 
 		while(curTotalFieldArea < minFieldArea):
+			pacglobal.checkAbort()
 			#print "DEBUG: World.__init__(): current total field area ({0}, {1}%) hasn't met minimum ({2}, {3}%)".format(curTotalFieldArea, int(100*curTotalFieldArea/self.totalArea), int(self.totalArea*FIELD_AREA_MIN/100), PATH_AREA_MIN)
 			
 			# create a new field & add to the world
@@ -494,6 +496,7 @@ class World():
 		roomPlacementFailures = 0
 		ROOM_PLACEMENT_MAX_FAILURES = 100
 		while(curTotalRoomArea < minRoomArea and roomPlacementFailures < ROOM_PLACEMENT_MAX_FAILURES):
+			pacglobal.checkAbort()
 			#print "DEBUG: World.__init__(): current total room area ({0}, {1}%) hasn't met minimum room area ({2}, {3}%)".format(curTotalRoomArea, int(100*curTotalRoomArea/self.totalArea), int(self.totalArea*ROOM_AREA_MIN/100), ROOM_AREA_MIN)
 			
 			# create a new room & add to the world
@@ -713,6 +716,7 @@ class World():
 		arts = []
 		while curTotalArts < minTotalArts:
 		# until enough art generated
+			pacglobal.checkAbort()
 			# create new art
 			artx = random.randint(0, self.cols-1)
 			arty = random.randint(0, self.rows-1)
