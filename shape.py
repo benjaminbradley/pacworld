@@ -10,6 +10,7 @@ import pacdefs
 import pacglobal
 from pacsounds import Pacsounds,getPacsound
 from pacdisplay import Pacdisplay
+from pacsprite import Pacsprite
 import colors
 import effect
 from effect import *	# Effect, EFFECT_*
@@ -37,7 +38,7 @@ MAX_THOUGHTFORM_COMPLEXITY = 1000
 MIN_THOUGHTFORM_COMPLEXITY = 200
 
 # The class for Shapes
-class Shape(pygame.sprite.Sprite):
+class Shape(Pacsprite):
 	
 	def __init__(self, display, themap, shape_size, num_sides = 3):
 		# Initialize the sprite base class
@@ -198,6 +199,12 @@ class Shape(pygame.sprite.Sprite):
 		radius = self.outlineWidth + self.outlineWidth
 		center = int(float(self.side_length) / 2)
 		pygame.draw.circle(self.image, self.eye_color, (self.side_length-radius, center), radius, self.outlineWidth)
+		
+		# add DEBUG info if enabled
+		if pacdefs.DEBUG_SHAPE_SHOWID and hasattr(self, 'id'):
+			font = pygame.font.Font(None, 26)
+			textBitmap = font.render(str(self.id), True, colors.PINK)
+			self.image.blit(textBitmap, (int(self.image.get_width()/2), int(self.image.get_height()/2)))
 		
 		# save the old sprite location before generating new rect
 		oldrectpos = None
@@ -500,10 +507,10 @@ class Shape(pygame.sprite.Sprite):
 				grid_miny = int(winRect[1] / self.map.grid_cellheight)
 				grid_maxx = int((winRect[0]+winRect[2]) / self.map.grid_cellwidth)
 				grid_maxy = int((winRect[1]+winRect[3]) / self.map.grid_cellheight)
-				self.debug("on-screen grid coords are: {0} (topLeft) to {1} (botRight)".format((grid_minx,grid_miny), (grid_maxx, grid_maxy)))
+				#self.debug("on-screen grid coords are: {0} (topLeft) to {1} (botRight)".format((grid_minx,grid_miny), (grid_maxx, grid_maxy)))
 				destx = random.randint(grid_minx,grid_maxx)
 				desty = random.randint(grid_miny,grid_maxy)
-				self.debug("testing grid spot: {0},{1} (x,y)".format(destx, desty))
+				#self.debug("testing grid spot: {0},{1} (x,y)".format(destx, desty))
 				destination = str(destx)+','+str(desty)
 				if(self.map_knowledge[desty][destx] is None):
 					# try and compute path to destination if not already known...
@@ -516,7 +523,7 @@ class Shape(pygame.sprite.Sprite):
 						self.map_knowledge[desty][destx] = 0
 					else:
 						self.map_knowledge[desty][destx] = -1
-						self.debug("grid spot: {0},{1} (x,y) is INACCESSIBLE".format(destx, desty))
+						#self.debug("grid spot: {0},{1} (x,y) is INACCESSIBLE".format(destx, desty))
 						# destination is INaccessible
 						destination = None
 				elif(self.map_knowledge[desty][destx] == -1):
@@ -874,42 +881,6 @@ class Shape(pygame.sprite.Sprite):
 	
 	def moreSides(self):
 		return self.changeSides(self.num_sides + 1)
-
-	def onScreen(self, windowRect):
-		windowRight = windowRect.left + windowRect.width
-		windowBottom = windowRect.top + windowRect.height
-		# if shape is on the screen, we will draw it
-		mapTopLeft = self.getMapTopLeft()
-		objLeft = mapTopLeft[0]
-		objRight = mapTopLeft[0]+self.rect.width
-		objTop = mapTopLeft[1]
-		objBottom = mapTopLeft[1]+self.rect.height
-		if objLeft > windowRight: return False
-		if objRight < windowRect.left: return False
-		if objBottom < windowRect.top: return False
-		if objTop > windowBottom: return False
-		return True	# obj IS on the screen
-
-	#TODO: refactor onScreen and nearScreen into a common subclass of Shape and Art
-	def nearScreen(self, windowRect):
-		"""This function assumes that onScreen has already failed.
-		This function checks to see if the sprite is on a screen adjacent to the visible one"""
-		adjWindowLeft = windowRect.left - windowRect.width
-		adjWindowRight = windowRect.left + windowRect.width * 2
-		adjWindowTop = windowRect.top - windowRect.height
-		adjWindowBottom = windowRect.top + windowRect.height * 2
-		# if sprite is within this extended window, return true
-		mapTopLeft = self.getMapTopLeft()
-		objLeft = mapTopLeft[0]
-		objRight = mapTopLeft[0]+self.rect.width
-		objTop = mapTopLeft[1]
-		objBottom = mapTopLeft[1]+self.rect.height
-		if objLeft < adjWindowLeft: return False
-		if objTop < adjWindowTop: return False
-		if objRight > adjWindowRight: return False
-		if objBottom > adjWindowBottom: return False
-		return True	# sprite IS near the screen
-
 
 	def getWindowRect(self):
 		"""get the rect for the display window containing the center point"""

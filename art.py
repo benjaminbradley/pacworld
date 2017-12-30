@@ -9,6 +9,7 @@ sys.path.append('art')
 from DrawSpiral import DrawSpiral
 
 import pacdefs
+from pacsprite import Pacsprite
 import colors
 import effect
 from effect import *	# Effect, EFFECT_*
@@ -25,7 +26,7 @@ BURST_FREQUENCY = 3000
 #example art: a spiral which rotates
 #example art: an animated mandala
 
-class Art(sprite.Sprite):
+class Art(Pacsprite):
 	def __init__(self, themap, left, top):
 		# Initialize the sprite base class
 		super(Art, self).__init__()
@@ -74,7 +75,12 @@ class Art(sprite.Sprite):
 	
 	def __str__(self):
 		return '<Art #'+str(self.id)+'>'
-	
+
+	def debug(self, msg):
+		if hasattr(self, 'id'): the_id = self.id
+		else: the_id = '-'
+		logging.debug("Art[{0}]:{1}".format(the_id, msg))
+
 	def makeSprite(self):
 		# Create an image for the sprite
 		self.image = Surface((self.side_length, self.side_length))
@@ -90,8 +96,6 @@ class Art(sprite.Sprite):
 		elif self.style == STYLE_SPIRAL:
 			#DrawSpiral(self.image, [radius,radius], radius = curRad, rotation = curRot, numSpokes = 5, clockwise = True, startAngle = startAngle)
 			DrawSpiral(self.image, [self.spiral_maxRad,self.spiral_maxRad], self.spiral_curRad, self.spiral_curRot, 3, True, self.spiral_startAngle)
-
-		
 		
 		for effect in self.effects.values():
 			effect.draw(self.image)	# TODO: if it's the transfer effect, it should be drawn on the world map, right? where...
@@ -99,6 +103,12 @@ class Art(sprite.Sprite):
 		# rotate image, if applicable
 		if(self.angle != 0):
 			self.image = pygame.transform.rotate(self.image, self.angle)
+
+		# add DEBUG info if enabled
+		if pacdefs.DEBUG_ART_SHOWID and hasattr(self, 'id'):
+			font = pygame.font.Font(None, 26)
+			textBitmap = font.render(str(self.id), True, colors.PINK)
+			self.image.blit(textBitmap, (int(self.image.get_width()/2), int(self.image.get_height()/2)))
 
 		# Create the sprites rectangle from the image, maintaining rect position if set
 		oldrectpos = None
@@ -166,37 +176,9 @@ class Art(sprite.Sprite):
 		display.blit(self.image, screenpos)
 	# end of Art.draw()
 	
-	def onScreen(self, windowRect):
-		windowRight = windowRect.left + windowRect.width
-		windowBottom = windowRect.top + windowRect.height
-		# if artpiece is on the screen, we will draw it
-		artLeft = self.left * self.map.grid_cellwidth
-		artRight = artLeft + self.width
-		artTop = self.top * self.map.grid_cellheight
-		artBottom = artTop + self.height
-		if artLeft > windowRight: return False
-		if artRight < windowRect.left: return False
-		if artBottom < windowRect.top: return False
-		if artTop > windowBottom: return False
-		return True	# art IS on the screen
-		
-	def nearScreen(self, windowRect):
-		"""This function assumes that onScreen has already failed.
-		This function checks to see if the art is on a screen adjacent to this one"""
-		adjWindowLeft = windowRect.left - windowRect.width
-		adjWindowRight = windowRect.left + windowRect.width * 2
-		adjWindowTop = windowRect.top - windowRect.height
-		adjWindowBottom = windowRect.top + windowRect.height * 2
-		# if artpiece is within this extended window, return true
-		artLeft = self.left * self.map.grid_cellwidth
-		artRight = artLeft + self.width * self.map.grid_cellwidth
-		artTop = self.top * self.map.grid_cellheight
-		artBottom = artTop + self.height * self.map.grid_cellheight
-		if artLeft < adjWindowLeft: return False
-		if artTop < adjWindowTop: return False
-		if artRight > adjWindowRight: return False
-		if artBottom > adjWindowBottom: return False
-		return True	# art IS near the screen
-	
 	def getCenter(self):
 		return self.rect.center
+
+	def getMapTopLeft(self):
+		"""returns an (x,y) tuple for the top-left of this art on the map"""
+		return (self.left * self.map.grid_cellwidth, self.top * self.map.grid_cellheight)

@@ -53,3 +53,6 @@ def opposite_side(side):
 	opposite = (side + (len(SIDES)/2)) % len(SIDES)
 	#logging.debug("opposite side of {0} is {1}".format(side, opposite))
 	return opposite
+
+DEBUG_SHAPE_SHOWID = False
+DEBUG_ART_SHOWID = False
