@@ -2,7 +2,6 @@
 
 
 NEXT STEPS for MVP:
-- autonomous chars should randomly switch between swirls
 - add effects when activating a swirl
 - get a swirl from another character "ask"
 - idle behavior for current character (plays itself)

@@ -31,6 +31,8 @@ MOVE_HISTORY_SIZE = 5  # number of movements to use to calculating average movem
 
 AUTO_SWIRL_ACTIVATION_MINTICKS = 5000
 AUTO_SWIRL_ACTIVATION_CHANCE = 0.05
+AUTO_SWIRL_CHANGE_MINTICKS = 20000
+AUTO_SWIRL_CHANGE_CHANCE = 0.02
 AUTO_THOUGHT_CREATION_CHANCE = 0.01
 
 MAX_THOUGHTFORM_ID = 2147483647
@@ -395,12 +397,23 @@ class Shape(Pacsprite):
   def autoUpdate(self, ticks):
     """this is the master update routine for the NPC AI"""
     # possible random activities:
-    # #TODO: ACTIVITY: switch to a different swirl (if more than one & haven't switched in a while - picks a random trg and cycles through intermediaries)
+    swirl_activation_chance = AUTO_SWIRL_ACTIVATION_CHANCE
+    
+    # ACTIVITY: change swirls
+    if len(self.swirls) > 0 and \
+        ('last-swirl-change' not in self.auto_status.keys() or self.auto_status['last-swirl-change'] + AUTO_SWIRL_CHANGE_MINTICKS < ticks) \
+        and random.random() < AUTO_SWIRL_CHANGE_CHANCE:
+      if(random.randint(0,1) == 0):
+        self.trySwirlLeft()
+      else:
+        self.trySwirlRight()
+      self.auto_status['last-swirl-change'] = ticks
+      swirl_activation_chance = 0.5   # if we've just changed swirls, there's a high chance that we'll immediately activate it
     
     # ACTIVITY: activate a swirl
     if len(self.swirls) > 0 and \
         ('last-swirl-activation' not in self.auto_status.keys() or self.auto_status['last-swirl-activation'] + AUTO_SWIRL_ACTIVATION_MINTICKS < ticks) \
-        and random.random() < AUTO_SWIRL_ACTIVATION_CHANCE:
+        and random.random() < swirl_activation_chance:
       #logging.debug("[Shape {1}] self-activating current swirl at {0}".format(ticks, self.id))
       self.activateSwirl(random.randint(0,1) == 0)
       self.auto_status['last-swirl-activation'] = ticks
