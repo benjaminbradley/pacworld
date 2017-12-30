@@ -1,8 +1,8 @@
 import logging
-import random	# for test
+import random  # for test
 
 from priorityqueueset import PriorityQueueSet
-from world import World	# for testing
+from world import World  # for testing
 
 class PathFinder(object):
     """ Computes a path in a graph using the A* algorithm.
@@ -156,38 +156,38 @@ class PathFinder(object):
 
 
 if __name__ == "__main__":
-	logging.basicConfig(format='%(asctime)-15s:%(levelname)s:%(filename)s#%(funcName)s(): %(message)s', level=logging.DEBUG, filename='debug.log')
+  logging.basicConfig(format='%(asctime)-15s:%(levelname)s:%(filename)s#%(funcName)s(): %(message)s', level=logging.DEBUG, filename='debug.log')
 
-	crazySeed = random.randint(0, 65535)
-	#crazySeed = 38849
-	print("USING RANDOM SEED: {0}".format(crazySeed))
-	random.seed(crazySeed)
-	#gridDisplaySize = (20, 10)
-	gridDisplaySize = (40, 20)
-	#gridDisplaySize = (100, 35)
-	# Create the world, passing through the display size
-	theworld = World(gridDisplaySize)
+  crazySeed = random.randint(0, 65535)
+  #crazySeed = 38849
+  print("USING RANDOM SEED: {0}".format(crazySeed))
+  random.seed(crazySeed)
+  #gridDisplaySize = (20, 10)
+  gridDisplaySize = (40, 20)
+  #gridDisplaySize = (100, 35)
+  # Create the world, passing through the display size
+  theworld = World(gridDisplaySize)
 
-	start = 0, 0
-	goal = gridDisplaySize[1]-1, gridDisplaySize[0]-1
+  start = 0, 0
+  goal = gridDisplaySize[1]-1, gridDisplaySize[0]-1
 
-	pf = PathFinder(theworld.successors, theworld.move_cost, theworld.move_cost)
+  pf = PathFinder(theworld.successors, theworld.move_cost, theworld.move_cost)
 
-	import time
-	t = time.clock()
-	logging.debug("Computing path for world map:\n"+theworld.to_s())
-	path = list(pf.compute_path(start, goal))
-	print("Elapsed: %s" % (time.clock() - t))
-	if(path):
-		print("Path from {0} to {1} is: {2}".format(start,goal,path))
+  import time
+  t = time.clock()
+  logging.debug("Computing path for world map:\n"+theworld.to_s())
+  path = list(pf.compute_path(start, goal))
+  print("Elapsed: %s" % (time.clock() - t))
+  if(path):
+    print("Path from {0} to {1} is: {2}".format(start,goal,path))
 
-		# show the final product
-		print("world map with path:")
-		print(theworld.to_s(path))
-	else:
-		print("Path could not be found from {0} to {1}".format(start,goal))
-		print("world map is:")
-		print(theworld.to_s())
+    # show the final product
+    print("world map with path:")
+    print(theworld.to_s(path))
+  else:
+    print("Path could not be found from {0} to {1}".format(start,goal))
+    print("world map is:")
+    print(theworld.to_s())
     
     
 
