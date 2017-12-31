@@ -2,12 +2,12 @@
 
 
 NEXT STEPS for MVP:
-- add effects when activating a swirl
+- add different effects when activating each swirl
+  -- or maybe instead, get rid of activate-able swirls, and instead have the art pieces change the shapes directly. swirls would just be a mark of having been changed.
 - get a swirl from another character "ask"
-- switch between characters (for idle)
 - when the world reaches a certain level of swirl "saturation" (e.g. % of characters have # of swirls) then remake the world
 - other TODOs in code
-- try and spread art around more - maybe pref against pathways?
+- spread art around more
 - make more interesting different looking art pieces
 - ? AI ability to detect wall collisions and shrink size when needed?  (test with initial size @ 120) otherwise they'll just stay stuck until they randomly activate the right sequence of swirls to get un-stuck
 - special interactions when 2 shapes w/ same # of sizes interact
@@ -15,6 +15,7 @@ NEXT STEPS for MVP:
 - show progress during world generation
 
 FIXME:
+- intersections should override pathways, suppress path outlines
 - giveSwirl should give a swirl of the type that is currently selected (looks like a random one is getting assigned?)
 - door placement algorithm (world.py#negotiateDoorPlacement) will coordinate door location with existing door, but if 2 rooms are side-by-side next to the SAME side of one adjacent room, the second one will move the door during ITS 'coordinate door placement' (see topleft corner of -s 2357 -c 3)
 
@@ -28,6 +29,7 @@ PERFORMANCE:
 - change all shape.makeSprite calls to set a dirty flag, collapse into a single makeSprite call :: watch out to preserve in shape.update(): self.changeAngle() followed by self.move() in the same update, and collision test will matter /// maybe a flag that signals mask-only generation or full graphical mode
 
 ENHANCEMENTS:
+- once map is finished, do a polishing pass to extend pathways to whatever is at the logical end (i.e. don't stop just short of a room/field/path)
 - different backgrounds for each room
 - allow multiple doors per room side
 - special ability to activate all of your swirls one after another

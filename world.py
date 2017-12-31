@@ -717,11 +717,18 @@ class World():
     while curTotalArts < minTotalArts:
     # until enough art generated
       pacglobal.checkAbort()
+      placement_ok = False
+      while not placement_ok:
+        artx = random.randint(0, self.cols-1)
+        arty = random.randint(0, self.rows-1)
+        # check art placement
+        # what is at this location?
+        current_contents = self.grid[arty][artx]
+        if current_contents is not None and current_contents.type in [pacdefs.TYPE_FIELD, pacdefs.TYPE_ROOM]:
+          #only place art in rooms or fields (not on pathways)
+          placement_ok = True
       # create new art
-      artx = random.randint(0, self.cols-1)
-      arty = random.randint(0, self.rows-1)
       newArt = Art(themap, artx, arty)
-      
       # add art to the list of objects
       if(self.addObject(newArt)):
         curTotalArts += 1
@@ -730,7 +737,6 @@ class World():
     # now there's enough art in the world
     themap.arts = arts
     return arts
-    
   # end of World.addArt()
   
   def copyGrid(self):
