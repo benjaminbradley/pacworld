@@ -707,18 +707,22 @@ class World():
   def addArt(self, themap):
     """adds random art to the world"""
     # how much art to generate
-    # we want roughly one piece per screen
+    # we want roughly one piece per 2 screens
     screenArea = themap.displayGridSize[0] * themap.displayGridSize[1]
     worldArea = self.cols * self.rows
-    minTotalArts = 1 + int(worldArea / screenArea)
+    minTotalArts = 1 + int(worldArea / (screenArea * 2))
     #logging.debug("generating {0} art pieces...".format(minTotalArts))
     curTotalArts = 0
-    arts = []
+    themap.arts = []
     while curTotalArts < minTotalArts:
     # until enough art generated
       pacglobal.checkAbort()
       placement_ok = False
+      # create new art
+      newArt = Art(themap, 0, 0)  # use dummy position (0,0) until placement is finalized
+      placement_attempts = 0
       while not placement_ok:
+        placement_attempts += 1
         artx = random.randint(0, self.cols-1)
         arty = random.randint(0, self.rows-1)
         # check art placement
@@ -726,17 +730,19 @@ class World():
         current_contents = self.grid[arty][artx]
         if current_contents is not None and current_contents.type in [pacdefs.TYPE_FIELD, pacdefs.TYPE_ROOM]:
           #only place art in rooms or fields (not on pathways)
-          placement_ok = True
-      # create new art
-      newArt = Art(themap, artx, arty)
+          newArt.setPos(artx, arty)
+          # check density
+          if len(newArt.art_onscreen()) < int(float(placement_attempts) / 10) + 1:  # limit of arts on the same screen
+            placement_ok = True
+          else:
+            logging.debug("Art #{0} - placement attempt {1} failed, threshold is {2}".format(curTotalArts+1, placement_attempts, int(placement_attempts / 10) + 1))
       # add art to the list of objects
       if(self.addObject(newArt)):
         curTotalArts += 1
-        arts.append(newArt)
-        logging.debug ("art #{0} added to the map at {1}".format(curTotalArts, (artx,arty)))
+        themap.arts.append(newArt)
+        logging.debug ("art #{0} added to the map at {1}".format(newArt.id, (artx,arty)))
     # now there's enough art in the world
-    themap.arts = arts
-    return arts
+    return themap.arts
   # end of World.addArt()
   
   def copyGrid(self):

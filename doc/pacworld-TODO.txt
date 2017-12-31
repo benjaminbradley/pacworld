@@ -1,13 +1,11 @@
 ---------------------------------------------------- FUTURE TASKS:
 
-
 NEXT STEPS for MVP:
 - add different effects when activating each swirl
   -- or maybe instead, get rid of activate-able swirls, and instead have the art pieces change the shapes directly. swirls would just be a mark of having been changed.
 - get a swirl from another character "ask"
 - when the world reaches a certain level of swirl "saturation" (e.g. % of characters have # of swirls) then remake the world
 - other TODOs in code
-- spread art around more
 - make more interesting different looking art pieces
 - ? AI ability to detect wall collisions and shrink size when needed?  (test with initial size @ 120) otherwise they'll just stay stuck until they randomly activate the right sequence of swirls to get un-stuck
 - special interactions when 2 shapes w/ same # of sizes interact

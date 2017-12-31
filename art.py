@@ -32,8 +32,6 @@ class Art(Pacsprite):
     super(Art, self).__init__()
     # initialize art variables
     self.map = themap
-    self.top = top
-    self.left = left
     self.side_length = themap.character_size
     self.width = self.side_length
     self.height = self.side_length
@@ -58,21 +56,26 @@ class Art(Pacsprite):
     # make & capture the initial image for the art
     self.makeSprite()
     
-    # calculated variables
-    # x,y is the art piece's location on the map (left,top corner)
-    xmargin = int((themap.grid_cellwidth - self.rect.width ) / 2)
-    ymargin = int((themap.grid_cellheight - self.rect.height ) / 2)
-    self.x = self.left * themap.grid_cellwidth + xmargin
-    self.y = self.top * themap.grid_cellheight + ymargin
-    #self.rect.top = (self.top - 0.5 )* self.map.grid_cellheight
-    #self.rect.left = (self.left - 0.5) * self.map.grid_cellwidth
-    self.rect.left = self.x
-    self.rect.top = self.y
+    self.setPos(left,top)
     
     # aspects particular to this type of art
     self.burstFrequency = BURST_FREQUENCY  # pull this from somewhere ?
     self.lastBurst = 0
-  
+
+  def setPos(self, left, top):
+    self.top = top
+    self.left = left
+    # calculated variables
+    # x,y is the art piece's location on the map (left,top corner)
+    xmargin = int((self.map.grid_cellwidth - self.rect.width ) / 2)
+    ymargin = int((self.map.grid_cellheight - self.rect.height ) / 2)
+    self.x = self.left * self.map.grid_cellwidth + xmargin
+    self.y = self.top * self.map.grid_cellheight + ymargin
+    #self.rect.top = (self.top - 0.5 )* self.map.grid_cellheight
+    #self.rect.left = (self.left - 0.5) * self.map.grid_cellwidth
+    self.rect.left = self.x
+    self.rect.top = self.y
+
   def __str__(self):
     return '<Art #'+str(self.id)+'>'
 

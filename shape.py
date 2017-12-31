@@ -96,10 +96,6 @@ class Shape(Pacsprite):
     self.autonomous = False
     self.auto_status = {}  # dictionary of key/value pairs for autonomous activity
 
-    # cache for list of arts currently on screen, should be calculated only once per cycle
-    self.onscreen_art_lastupdated = None
-    self.onscreen_art = []
-    
     # initialize subsystems
     self.sound = getPacsound()
 
@@ -361,25 +357,6 @@ class Shape(Pacsprite):
     
     if(self.dirty_sprite): self.makeSprite()
   # end of update()
-  
-  
-  def art_onscreen(self):
-    """returns an array of all arts currently on the screen
-    caches data for multiple calls in each game frame
-    """
-    windowRect = self.getWindowRect()
-    cur_frame = pacglobal.get_frames()
-    if self.onscreen_art_lastupdated != None and self.onscreen_art_lastupdated == cur_frame:
-      #logging.debug("returning cached art_onscreen")
-      return self.onscreen_art
-    #logging.debug("Re-calculating on-screen art for shape {1} at F#{0}...".format(cur_frame, self.id))
-    self.onscreen_art_lastupdated = cur_frame
-    self.onscreen_art = []
-    for artpiece in self.map.arts:
-      if artpiece.onScreen(windowRect): self.onscreen_art.append(artpiece)
-    #logging.debug("returning new onscreen_art: {0}".format(self.onscreen_art))
-    return self.onscreen_art
-  # end of art_onscreen()
   
   
   def in_move(self):
@@ -895,17 +872,6 @@ class Shape(Pacsprite):
   
   def moreSides(self):
     return self.changeSides(self.num_sides + 1)
-
-  def getWindowRect(self):
-    """get the rect for the display window containing the center point"""
-    center = self.getMapTopLeft()
-    windowLeft = center[0] - self.display.getDisplaySize()[0]/2
-    if windowLeft+self.display.getDisplaySize()[0] >= self.map.mapSize[0]: windowLeft = self.map.mapSize[0]-self.display.getDisplaySize()[0]-1
-    if windowLeft < 0: windowLeft = 0
-    windowTop = center[1] - self.display.getDisplaySize()[1]/2
-    if windowTop+self.display.getDisplaySize()[1] >= self.map.mapSize[1]: windowTop = self.map.mapSize[1]-self.display.getDisplaySize()[1]-1
-    if windowTop < 0: windowTop = 0
-    return pygame.Rect(windowLeft, windowTop, self.display.getDisplaySize()[0], self.display.getDisplaySize()[1])
 
 
 class ShapeTest:
