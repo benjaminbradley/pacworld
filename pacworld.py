@@ -390,6 +390,6 @@ if __name__ == '__main__':
   try:
     game = Pacworld(sys.argv[1:])
     game.run()
-  except Exception:
+  except pacglobal.UserAbort:
     logging.debug("Aborted by user during startup.")
     print("Aborted by user during startup.")

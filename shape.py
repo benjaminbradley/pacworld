@@ -670,7 +670,7 @@ class Shape(Pacsprite):
   def copySwirl(self):
     if self.curSwirl == None or len(self.swirls) == 0: return False
     cur_swirl = self.swirls[self.curSwirl]
-    return Swirl(cur_swirl.effect_type)
+    return Swirl(cur_swirl.look)
 
   
   def trySwirlRight(self):

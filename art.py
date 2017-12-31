@@ -3,7 +3,7 @@ import random
 import pygame
 from pygame import *
 import logging
-import math
+from math import pi
 
 sys.path.append('art')
 from DrawSpiral import DrawSpiral
@@ -13,7 +13,7 @@ from pacsprite import Pacsprite
 import colors
 import effect
 from effect import *  # Effect, EFFECT_*
-from swirl import Swirl
+from swirl import *
 
 
 STYLE_DEFAULT = 0
@@ -51,7 +51,7 @@ class Art(Pacsprite):
     if self.style == STYLE_SPIRAL:
       self.spiral_minRad = 3
       self.spiral_maxRad = self.spiral_curRad = int(float(self.side_length) / 2)
-      self.spiral_curRot = math.pi
+      self.spiral_curRot = pi
       self.spiral_startAngle = 0.0
       self.spiral_radStep = 2.0
 
@@ -131,7 +131,7 @@ class Art(Pacsprite):
   def getSwirl(self):
     # return the type of swirl that this art gives
     #TODO: make this variable depending on art type - coordinate with effect type used in .update() below?
-    return Swirl(effect.BURST_EFFECT)
+    return Swirl()
 
 
   def update(self, t):

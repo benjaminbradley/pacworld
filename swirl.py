@@ -15,13 +15,15 @@ LOOKS = [LOOK_CIRCLE, LOOK_LINE, LOOK_LT]
 
 class Swirl(sprite.Sprite):
   
-  def __init__(self, effect_type):
+  def __init__(self, look_type = None):
     # Initialize the sprite base class
     super(Swirl, self).__init__()
     self.sound = getPacsound()
     
-    self.effect_type = effect_type
-    self.look = LOOKS[random.randint(0,len(LOOKS)-1)]
+    self.effect_type = effect.BURST_EFFECT
+    if(look_type is None):
+      look_type = LOOKS[random.randint(0,len(LOOKS)-1)]
+    self.look = look_type
   
   def activate(self, shape, dir_up):
     shape.effects[self.effect_type] = Effect(self.effect_type, {effect.EFFECT_VOLUME: shape.soundProximity()})
