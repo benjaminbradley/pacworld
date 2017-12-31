@@ -34,7 +34,6 @@ AUTO_SWIRL_ACTIVATION_CHANCE = 0.05
 AUTO_SWIRL_CHANGE_MINTICKS = 20000
 AUTO_SWIRL_CHANGE_CHANCE = 0.02
 AUTO_THOUGHT_CREATION_CHANCE = 0.01
-AUTO_MODE_ACTIVATION_IDLETICKS = 100000
 
 MAX_THOUGHTFORM_ID = 2147483647
 MAX_THOUGHTFORM_COMPLEXITY = 1000
@@ -395,21 +394,6 @@ class Shape(Pacsprite):
     self.auto_status['thoughtform_starttick'] = ticks
     self.debug("spawning thoughtform[#{1}, c={2}] at {0}".format(ticks, self.auto_status['thoughtform_id'], self.auto_status['thoughtform_complexity']))
 
-  def checkIdle(self, ticks):
-    """if player's shape has been idle too long, activate autonomous behavion"""
-    if('last_activity' not in self.auto_status.keys()):
-      # initialize
-      self.auto_status['last_activity'] = ticks
-    elif(self.auto_status['last_activity'] + AUTO_MODE_ACTIVATION_IDLETICKS < ticks and not self.autonomous):
-      self.debug("Shape idle, triggering autonomous behavior.")
-      self.autonomous = True
-
-  def notIdle(self, ticks):
-    """register player input, cancel autonomous behavior if enabled"""
-    self.auto_status['last_activity'] = ticks
-    if(self.autonomous):
-      self.debug("Player not idle, cancelling autonomous behavior.")
-      self.autonomous = False
 
   def autoUpdate(self, ticks):
     """this is the master update routine for the NPC AI"""
