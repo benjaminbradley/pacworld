@@ -191,7 +191,7 @@ class Pacworld:
       #print "looping"
       
       # Handle Events
-      self.handleEvents()
+      self.handleEvents(curtime)
       
       # update the map
       self.map.update(curtime)
@@ -251,7 +251,7 @@ class Pacworld:
     self.player.shape.updatePosition()
 
 
-  def handleEvents(self):
+  def handleEvents(self, ticks):
     
     # Handle events, starting with the quit event
     for event in pygame.event.get():
@@ -264,6 +264,8 @@ class Pacworld:
         joy_value_y = round(self.joystick.get_axis( self.joy_axis_y ))
         joy_value_x = round(self.joystick.get_axis( self.joy_axis_x ))
         logging.debug("joystick movement = {0},{1}".format(joy_value_x, joy_value_y))
+        if(joy_value_y != 0 or joy_value_x != 0):
+          self.player.shape.notIdle(ticks)
         # -1 = left, 1 = right
         if(joy_value_y == 1):  # -1 = up, down = 1
           self.player.shape.startMove(DIR_DOWN)
@@ -283,6 +285,7 @@ class Pacworld:
         # Possible joystick actions: JOYAXISMOTION JOYBALLMOTION JOYBUTTONDOWN JOYBUTTONUP JOYHATMOTION
         if event.type == pygame.JOYBUTTONDOWN:
           #logging.debug("Joystick button pressed.")
+          self.player.shape.notIdle(ticks)
           for i in range( self.num_buttons ):
             if(self.joystick.get_button(i) and not self.button_status[i]):
               self.button_status[i] = True
@@ -317,6 +320,7 @@ class Pacworld:
 
       if(INPUT_KEYBOARD in self.input_mode):
         if event.type == KEYDOWN:
+          self.player.shape.notIdle(ticks)
           # Find which key was pressed
 
           if event.key == self.cur_kb_map['top']:  # "top" button
@@ -384,6 +388,10 @@ class Pacworld:
       if(abs(lrAxis) > JOYSTICK_NOISE_LEVEL):
         #print "DEBUG: lrAxis is: "+str(lrAxis)
         self.player.shape.move(lrAxis * self.player.shape.linearSpeed, 0)
+
+    # after processing any pending user events, check for idle condition
+    self.player.shape.checkIdle(ticks)
+
 
 
 if __name__ == '__main__':
