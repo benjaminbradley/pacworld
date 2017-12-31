@@ -27,9 +27,9 @@ TYPE_ROOM = 'room'
 TYPE_ART = 'art'
 TYPE_CHARACTER = 'char'  # NOTE: NOT in RENDER_ORDER, not rendered on world map
 RENDER_ORDER = {
-  TYPE_PATH : 1,
-  TYPE_INTERSECTION : 2,
-  TYPE_FIELD : 3,
+  TYPE_FIELD : 1,
+  TYPE_PATH : 2,
+  TYPE_INTERSECTION : 3,
   TYPE_ROOM : 4,
   TYPE_ART : 5,
 }
