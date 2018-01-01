@@ -136,6 +136,7 @@ class Pacworld:
     if self.is_fullscreen:
       flags = pygame.FULLSCREEN
       self.display = Pacdisplay(self.fullscreen_resolution)
+      pygame.mouse.set_visible(False)
     else:
       flags = 0
       self.display = Pacdisplay(self.windowed_resolution)
@@ -248,6 +249,7 @@ class Pacworld:
     pygame.display.quit()
     pygame.display.init()
     self.surface = pygame.display.set_mode(self.display.getDisplaySize(),flags,bits)
+    pygame.mouse.set_visible(not self.is_fullscreen)
     self.player.shape.updatePosition()
 
 
