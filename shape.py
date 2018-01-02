@@ -137,7 +137,7 @@ class Shape(Pacsprite):
     if num_swirls == 1:
       return (base_x,base_y)
     else:
-      SWIRL_ROTATE_RADIUS = 2 + num_swirls
+      SWIRL_ROTATE_RADIUS = max(4, int(self.side_length / 15))  #2 + num_swirls
       theta = 2 * math.pi * float(i) / float(num_swirls)
       theta = theta + self.swirlRotationAngle_rad;
       if(theta > 2*math.pi): theta -= 2*math.pi
@@ -175,22 +175,18 @@ class Shape(Pacsprite):
       radius = int(float(self.side_length) / 2)
       pygame.draw.circle(self.image, self.color, (radius,radius), radius, self.outlineWidth)
     else:
-      # todo: generate points around the outside of the circle
       pointlist = []
       for i in range(self.num_sides):
         r = int(float(self.side_length-self.outlineWidth)/2)
         theta = 2 * math.pi * float(i) / float(self.num_sides)
         x = r + int(r * math.cos(theta))
         y = r + int(r * math.sin(theta))
-        #print "adding point at {0},{1}".format(x,y)
         pointlist.append((x,y))
       pygame.draw.polygon(self.image, self.color, pointlist, self.outlineWidth)
     
     # add the swirls
     for i,swirl in enumerate(self.swirls):
-      # TODO: add special display for self.curSwirl
       swirlpos = self.get_swirlpos(i)
-      #logging.debug("drawing swirl #{0} at {1}".format(i, swirlpos))
       swirl.draw(self.image, swirlpos, i == self.curSwirl)
 
     # draw the "eye" direction indicator
