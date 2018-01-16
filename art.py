@@ -8,6 +8,7 @@ from math import pi
 sys.path.append('art')
 from DrawSpiral import DrawSpiral
 from FractalTree import DrawFractalTree
+from Mandala import DrawMandala
 
 import pacdefs
 from pacsprite import Pacsprite
@@ -19,7 +20,8 @@ from swirl import *
 
 STYLE_TREE = 0
 STYLE_SPIRAL = 1
-STYLES = [STYLE_TREE, STYLE_SPIRAL]
+STYLE_MANDALA = 2
+STYLES = [STYLE_TREE, STYLE_SPIRAL, STYLE_MANDALA]
 
 BURST_FREQUENCY = 3000
 
@@ -68,6 +70,14 @@ class Art(Pacsprite):
       self.fractaltree_maxd_chgdir = 1
       self.fractaltree_spread_chgdir = 1
       self.fractaltree_pause = 0
+    elif self.style == STYLE_MANDALA:
+      self.mandala_angle = 0
+      self.mandala_inner_radius_ratio_chg = 0.03
+      self.mandala_inner_radius_ratio_max = 0.6
+      self.mandala_inner_radius_ratio_min = 0.2
+      self.mandala_inner_radius_ratio = self.mandala_inner_radius_ratio_min
+      self.mandala_inner_radius_ratio2 = self.mandala_inner_radius_ratio + 0.2
+      self.mandala_wait = 0
 
     # make & capture the initial image for the art
     self.makeSprite()
@@ -95,6 +105,7 @@ class Art(Pacsprite):
   def __str__(self):
     if self.style == STYLE_TREE: stylestr = 'tr'
     elif self.style == STYLE_SPIRAL: stylestr = 'sp'
+    elif self.style == STYLE_MANDALA: stylestr = 'ma'
     return '<Art #'+str(self.id)+'['+stylestr+']>'
 
   def debug(self, msg):
@@ -109,11 +120,14 @@ class Art(Pacsprite):
     self.image.set_colorkey(colors.BLACK, RLEACCEL)  # set the background to transparent
     
     # draw the base sprite, in it's current state
+    half = int(self.side_length/2)
     if self.style == STYLE_TREE:
-      DrawFractalTree(self.image, (self.side_length/2, self.side_length), FRACTALTREE_base_angle, self.fractaltree_maxd, self.fractaltree_spread, FRACTALTREE_branch_ratio, FRANTALTREE_color)
+      DrawFractalTree(self.image, (half, self.side_length), FRACTALTREE_base_angle, self.fractaltree_maxd, self.fractaltree_spread, FRACTALTREE_branch_ratio, FRANTALTREE_color)
     elif self.style == STYLE_SPIRAL:
-      #DrawSpiral(self.image, [radius,radius], radius = curRad, rotation = curRot, numSpokes = 5, clockwise = True, startAngle = startAngle)
       DrawSpiral(self.image, [self.spiral_maxRad,self.spiral_maxRad], self.spiral_curRad, self.spiral_curRot, 3, True, self.spiral_startAngle)
+    elif self.style == STYLE_MANDALA:
+      DrawMandala(self.image, (half, half), (255,128,128), half, self.mandala_angle, 12, self.mandala_inner_radius_ratio, self.mandala_inner_radius_ratio2)
+      
     
     for effect in self.effects.values():
       effect.draw(self.image)  # TODO: if it's the transfer effect, it should be drawn on the world map, right? where...
@@ -182,6 +196,24 @@ class Art(Pacsprite):
           self.fractaltree_spread_chgdir = 1
           self.fractaltree_pause = 20
         remakeSprite = True
+    elif self.style == STYLE_MANDALA:
+      # spin it around
+      self.mandala_angle -= 1
+      if self.mandala_angle == 360: self.mandala_angle = 0
+      remakeSprite = True
+      # timing
+      if self.mandala_wait > 0:
+        self.mandala_wait -= 1
+      else:
+        # grow/shrink
+        self.mandala_inner_radius_ratio += self.mandala_inner_radius_ratio_chg
+        inner_radius_percent = (self.mandala_inner_radius_ratio - self.mandala_inner_radius_ratio_min) / (self.mandala_inner_radius_ratio_max - self.mandala_inner_radius_ratio_min)
+        self.mandala_inner_radius_ratio2 = self.mandala_inner_radius_ratio + (0.3 - 0.2 * inner_radius_percent)
+        self.mandala_wait = 4*(abs(0.5 - inner_radius_percent) * 2)
+        if(self.mandala_inner_radius_ratio_chg > 0 and self.mandala_inner_radius_ratio >= self.mandala_inner_radius_ratio_max):
+          self.mandala_inner_radius_ratio_chg *= -1
+        elif(self.mandala_inner_radius_ratio_chg < 0 and self.mandala_inner_radius_ratio <= self.mandala_inner_radius_ratio_min):
+          self.mandala_inner_radius_ratio_chg *= -1
     
     # check for periodic effects to start
     if self.lastBurst + self.burstFrequency < t and self.jitter < t:
