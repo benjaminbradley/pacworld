@@ -57,6 +57,7 @@ class Pacworld:
     print('  -f        start fullscreen')
     print('  -s --seed=[number]    specify a seed for the random number generator')
     print('  -c --scale=[number]    create a map which is SCALE^2 times larger than the initial display resolution')
+    print('  -a        begin in autonomous (self-playing) mode')
   
   def __init__(self, argv):
     logging.basicConfig(format='%(asctime)-15s:%(levelname)s:%(filename)s#%(funcName)s(): %(message)s', level=logging.DEBUG, filename='log/pacworld.log')
@@ -66,9 +67,10 @@ class Pacworld:
     SCALE_FACTOR = 3  # total map is SCALE_FACTOR^2 times the screen size
     self.crazySeed = None
     self.is_fullscreen = False
+    self.start_autonomous = False
     
     try:
-      opts, args = getopt.getopt(argv, "hs:c:f", ["help", "seed=", "scale=", "fullscreen"])
+      opts, args = getopt.getopt(argv, "hs:c:fa", ["help", "seed=", "scale=", "fullscreen", "autonomous"])
     except getopt.GetoptError:
       self.usage()
       sys.exit(2)
@@ -83,6 +85,8 @@ class Pacworld:
         SCALE_FACTOR = int(arg)
       elif opt in ("-f", "--fullscreen"):
         self.is_fullscreen = True
+      elif opt in ("-a", "--autonomous"):
+        self.start_autonomous = True
     
     # if no random seed was given, make one up:
     if self.crazySeed is None:
@@ -173,6 +177,7 @@ class Pacworld:
     # Create the player object and add it's shape to a sprite group
     self.player = Player()
     self.player.selectShape(self.map.shapes[0])  # just grab the first shape for the player
+    self.player.shape.autonomous = self.start_autonomous
 
     self.map.player = self.player
     #self.player.shape.mapTopLeft = [int(5.5*self.map.grid_cellwidth-self.shape.side_length/2), int(5.5*self.map.grid_cellheight-self.shape.side_length/2)]
