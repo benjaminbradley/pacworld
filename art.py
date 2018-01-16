@@ -7,6 +7,7 @@ from math import pi
 
 sys.path.append('art')
 from DrawSpiral import DrawSpiral
+from FractalTree import DrawFractalTree
 
 import pacdefs
 from pacsprite import Pacsprite
@@ -16,11 +17,20 @@ from effect import *  # Effect, EFFECT_*
 from swirl import *
 
 
-STYLE_DEFAULT = 0
+STYLE_TREE = 0
 STYLE_SPIRAL = 1
-STYLES = [STYLE_DEFAULT, STYLE_SPIRAL]
+STYLES = [STYLE_TREE, STYLE_SPIRAL]
 
 BURST_FREQUENCY = 3000
+
+FRACTALTREE_branch_ratio = 1.5
+FRACTALTREE_base_angle = -90
+FRACTALTREE_steps = 8
+FRACTALTREE_maxd_beg = 2
+FRACTALTREE_maxd_end = 8
+FRACTALTREE_spread_beg = 12
+FRACTALTREE_spread_end = 30
+FRANTALTREE_color = (128, 255, 128)
 
 #example art: a fractal tree which grows and withers
 #example art: a spiral which rotates
@@ -41,8 +51,7 @@ class Art(Pacsprite):
     self.effects = {}  # dictionary of Effect.EFFECT_TYPE to Effect class
     self.angle = 0
     self.color = colors.PINK2
-    #self.style = random.randint(0, len(STYLES))
-    self.style = STYLE_SPIRAL  # testing
+    self.style = random.choice(STYLES)
     self.jitter = pygame.time.get_ticks() + random.randint(0, BURST_FREQUENCY)
     #print "DEBUG: Art.__init__(): jitter={0}".format(self.jitter)
     
@@ -52,6 +61,13 @@ class Art(Pacsprite):
       self.spiral_curRot = pi
       self.spiral_startAngle = 0.0
       self.spiral_radStep = 2.0
+    elif self.style == STYLE_TREE:
+      # initialize state vars for tree animation
+      self.fractaltree_maxd = FRACTALTREE_maxd_beg
+      self.fractaltree_spread = FRACTALTREE_spread_beg
+      self.fractaltree_maxd_chgdir = 1
+      self.fractaltree_spread_chgdir = 1
+      self.fractaltree_pause = 0
 
     # make & capture the initial image for the art
     self.makeSprite()
@@ -77,7 +93,9 @@ class Art(Pacsprite):
     self.rect.top = self.y
 
   def __str__(self):
-    return '<Art #'+str(self.id)+'>'
+    if self.style == STYLE_TREE: stylestr = 'tr'
+    elif self.style == STYLE_SPIRAL: stylestr = 'sp'
+    return '<Art #'+str(self.id)+'['+stylestr+']>'
 
   def debug(self, msg):
     if hasattr(self, 'id'): the_id = self.id
@@ -91,11 +109,8 @@ class Art(Pacsprite):
     self.image.set_colorkey(colors.BLACK, RLEACCEL)  # set the background to transparent
     
     # draw the base sprite, in it's current state
-    if self.style == STYLE_DEFAULT:
-      radius = int(float(self.side_length) / 2)
-      pygame.draw.circle(self.image, colors.BLACK, (radius,radius), radius+4)
-      pygame.draw.circle(self.image, colors.WHITE, (radius,radius), radius+2)
-      pygame.draw.circle(self.image, self.color, (radius,radius), radius, 2)
+    if self.style == STYLE_TREE:
+      DrawFractalTree(self.image, (self.side_length/2, self.side_length), FRACTALTREE_base_angle, self.fractaltree_maxd, self.fractaltree_spread, FRACTALTREE_branch_ratio, FRANTALTREE_color)
     elif self.style == STYLE_SPIRAL:
       #DrawSpiral(self.image, [radius,radius], radius = curRad, rotation = curRot, numSpokes = 5, clockwise = True, startAngle = startAngle)
       DrawSpiral(self.image, [self.spiral_maxRad,self.spiral_maxRad], self.spiral_curRad, self.spiral_curRot, 3, True, self.spiral_startAngle)
@@ -146,7 +161,27 @@ class Art(Pacsprite):
       self.spiral_curRot += 0.1
       self.spiral_startAngle -= 0.05
       remakeSprite = True
-      
+    elif self.style == STYLE_TREE:
+      if self.fractaltree_pause > 0:
+        self.fractaltree_pause -= 1
+      else:
+        maxdchg = max(1,int((FRACTALTREE_maxd_end - FRACTALTREE_maxd_beg) / FRACTALTREE_steps))
+        self.fractaltree_maxd += self.fractaltree_maxd_chgdir * maxdchg
+        if(self.fractaltree_maxd > FRACTALTREE_maxd_end):
+          self.fractaltree_maxd_chgdir = 0
+          spreadchg = max(1,int((FRACTALTREE_spread_end - FRACTALTREE_spread_beg) / FRACTALTREE_steps))
+          self.fractaltree_spread += self.fractaltree_spread_chgdir * spreadchg
+          if(self.fractaltree_spread > FRACTALTREE_spread_end):
+            self.fractaltree_spread_chgdir = -1
+            self.fractaltree_pause = 20
+          elif(self.fractaltree_spread < FRACTALTREE_spread_beg):
+            self.fractaltree_maxd_chgdir = -1
+            self.fractaltree_spread_chgdir = 0
+        elif(self.fractaltree_maxd < FRACTALTREE_maxd_beg):
+          self.fractaltree_maxd_chgdir = 1
+          self.fractaltree_spread_chgdir = 1
+          self.fractaltree_pause = 20
+        remakeSprite = True
     
     # check for periodic effects to start
     if self.lastBurst + self.burstFrequency < t and self.jitter < t:

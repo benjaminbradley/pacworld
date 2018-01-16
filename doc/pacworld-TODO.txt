@@ -6,7 +6,7 @@ NEXT STEPS for MVP:
 - get a swirl from another character "ask"
 - when the world reaches a certain level of swirl "saturation" (e.g. % of characters have # of swirls) then remake the world
 - other TODOs in code
-- make more interesting different looking art pieces
+- make more interesting different looking art pieces : add support for different colors to DrawSpiral()
 - ? AI ability to detect wall collisions and shrink size when needed?  (test with initial size @ 120) otherwise they'll just stay stuck until they randomly activate the right sequence of swirls to get un-stuck
 - special interactions when 2 shapes w/ same # of sizes interact
 - show progress during world generation

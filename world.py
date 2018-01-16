@@ -740,7 +740,7 @@ class World():
       if(self.addObject(newArt)):
         curTotalArts += 1
         themap.arts.append(newArt)
-        logging.debug ("art #{0} added to the map at {1}".format(newArt.id, (artx,arty)))
+        logging.debug ("added {0} to the map at {1}".format(str(newArt), (artx,arty)))
     # now there's enough art in the world
     return themap.arts
   # end of World.addArt()
