@@ -1,6 +1,7 @@
 ---------------------------------------------------- FUTURE TASKS:
 
 NEXT STEPS for MVP:
+- link each swirl to a specific art type; preference to generate balanced # of each art type
 - add different effects when activating each swirl
   -- or maybe instead, get rid of activate-able swirls, and instead have the art pieces change the shapes directly. swirls would just be a mark of having been changed.
 - get a swirl from another character "ask"
@@ -11,6 +12,7 @@ NEXT STEPS for MVP:
 - show progress during world generation
 
 FIXME:
+- stuck shape? #43 in seed 21300 - lower-right corner. can't escape room even though it has a door?
 - intersections should override pathways, suppress path outlines
 - giveSwirl should give a swirl of the type that is currently selected (looks like a random one is getting assigned?)
 - door placement algorithm (world.py#negotiateDoorPlacement) will coordinate door location with existing door, but if 2 rooms are side-by-side next to the SAME side of one adjacent room, the second one will move the door during ITS 'coordinate door placement' (see topleft corner of -s 2357 -c 3)
