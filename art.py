@@ -182,6 +182,7 @@ class Art(Pacsprite):
         maxdchg = max(1,int((FRACTALTREE_maxd_end - FRACTALTREE_maxd_beg) / FRACTALTREE_steps))
         self.fractaltree_maxd += self.fractaltree_maxd_chgdir * maxdchg
         if(self.fractaltree_maxd > FRACTALTREE_maxd_end):
+          self.fractaltree_pause = 1
           self.fractaltree_maxd_chgdir = 0
           spreadchg = max(1,int((FRACTALTREE_spread_end - FRACTALTREE_spread_beg) / FRACTALTREE_steps))
           self.fractaltree_spread += self.fractaltree_spread_chgdir * spreadchg
