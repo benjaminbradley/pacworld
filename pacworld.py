@@ -266,6 +266,12 @@ class Pacworld:
         pygame.quit()
         sys.exit()
 
+      if(INPUT_KEYBOARD in self.input_mode and event.type == KEYDOWN and event.key == K_ESCAPE):
+        pygame.quit()
+        sys.exit()
+
+      if self.player.shape.in_dance(): continue # ignore all player input while in dance
+
       if(INPUT_JOYSTICK in self.input_mode):
         # check for joystick movement
         joy_value_y = round(self.joystick.get_axis( self.joy_axis_y ))
@@ -354,9 +360,6 @@ class Pacworld:
             self.player.shape.startMove(DIR_LEFT)
           elif event.key == K_t:  # NOTE: "teleport" effect - FOR DEBUG ONLY ??
             self.player.shape.reset()
-          elif event.key == K_ESCAPE:
-            pygame.quit()
-            sys.exit()
           elif event.key == K_SPACE:
             # DEBUG - activate autonomosity
             nearby_shapes = self.map.nearShapes(self.player.shape.getCenter(), self.map.character_size * 1.5, self.player.shape)

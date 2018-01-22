@@ -27,6 +27,7 @@ DIRECTIONS = [DIR_UP, DIR_DOWN, DIR_LEFT, DIR_RIGHT]
 
 BURST_EFFECT_NUMFRAMES = 6
 ART_TOUCH_JITTER = 15  # time in game frames that re-touching the same art piece will not trigger a re-touch effect
+SHAPE_TOUCH_JITTER = 100   # time in game frames that re-touching the same shape will not trigger a re-touch effect
 MOVE_HISTORY_SIZE = 5  # number of movements to use to calculating average movement over time to set character angle
 
 AUTO_SWIRL_ACTIVATION_MINTICKS = 5000
@@ -38,6 +39,11 @@ AUTO_THOUGHT_CREATION_CHANCE = 0.01
 MAX_THOUGHTFORM_ID = 2147483647
 MAX_THOUGHTFORM_COMPLEXITY = 1000
 MIN_THOUGHTFORM_COMPLEXITY = 200
+
+DANCE_STEPS = 30  # number of steps to complete a single dance
+DANCE_PHASE1_MAXFRAMES = 30
+DANCE_PHASE2_MAXFRAMES = 60
+DANCE_PHASE3_MAXFRAMES = 90
 
 # The class for Shapes
 class Shape(Pacsprite):
@@ -87,7 +93,8 @@ class Shape(Pacsprite):
     self.reset()  # also initializes some location-based variables
     
     # experience variables
-    self.last_touched_art = {}  # hash of art.id to ticks
+    self.last_touched_art = {}  # hash of art.id to frames
+    self.last_touched_shapes = {} # hash of shape.id to frames
     self.last_moved_frame = 0  # frame of last character movement
     self.last_artsearch_position = None # position where we were last time we searched for nearby art
     self.map_knowledge = [[None for x in range(self.map.world.cols+1)] for y in range(self.map.world.rows+1)]  # hash of y,x indices to: -1=inaccessible, 0=accessible, never been there, 1+=times visited; None=unknown
@@ -242,7 +249,7 @@ class Shape(Pacsprite):
     self.updatePosition()
     self.moveHistory = [list(self.getCenter())]  # must happen after self.rect is set in makeSprite()
 
-  def update(self, t):
+  def update(self, ticks):
     # check for on-going movement (for kb input)
     if self.going_in_dir[DIR_DOWN]:
       self.moveDown()
@@ -253,7 +260,6 @@ class Shape(Pacsprite):
       self.moveLeft()
     elif self.going_in_dir[DIR_RIGHT]:
       self.moveRight()
-
 
     # angle changes...
 
@@ -299,7 +305,7 @@ class Shape(Pacsprite):
               self.recordMove()
 
     # no on-going rotation, what about movement?
-    elif self.moveHistory[-1] != list(self.getCenter()):
+    elif self.moveHistory[-1] != list(self.getCenter()) and not self.in_dance():
       # check movement during this update cycle and update angle appropriately
       newAngle = None
       oldestPosition = self.moveHistory[0]
@@ -322,7 +328,7 @@ class Shape(Pacsprite):
         newAngle = theta / (2 * math.pi) * 360
       #print "DEBUG: Shape.update(): self.theta={0}, deg={1}".format(theta, newDeg)
       #logging.debug("mapCenter={1}, dx={2}, dy={3}; newAngle={4}".format(None, self.getMapTopLeft(), dx, dy, newAngle))
-    
+
       # record move history for future angle calculation
       self.recordMove()
       
@@ -332,10 +338,52 @@ class Shape(Pacsprite):
         #logging.debug("new angle set by movement")
     # end checks for ongoing rotation or movement
     
+    # advance dancing!
+    if self.in_dance():
+      frames = pacglobal.get_frames()
+      center = self.auto_status['dancing']['center']
+      startAngleDeg = self.auto_status['dancing']['startAngleDeg']
+      curStep = self.auto_status['dancing']['step']
+      radius = self.auto_status['dancing']['radius']
+      dir = self.auto_status['dancing']['direction']
+      if (self.auto_status['dancing']['phase'] == 1) and ((self.turning is None and self.auto_status['dancing']['partner'].turning is None) or ((frames - self.auto_status['dancing']['startFrames']) > DANCE_PHASE1_MAXFRAMES)):
+        # "turn to center" is complete
+        # move on to phase 2
+        self.auto_status['dancing']['phase'] = 2
+      
+      if self.auto_status['dancing']['phase'] == 2:
+        # move to next position in dance
+        curAngleDeg = int((startAngleDeg + dir*360*curStep/DANCE_STEPS) % 360)
+        curAngleRad = math.radians(curAngleDeg)
+        dx = int(math.cos(curAngleRad)*radius)
+        dy = int(math.sin(curAngleRad)*radius)
+        newx = center[0]+dx
+        newy = center[1]+dy
+        mycenter = self.getCenter()
+        self.move(newx - mycenter[0], newy - mycenter[1])
+        # continue looking at center
+        dx = mycenter[0] - center[0]
+        dy = mycenter[1] - center[1]
+        facingAngle = int(math.degrees(math.atan2(dy, dx)))
+        self.setAngle(180-facingAngle)
+        #self.debug("shape touch phase {}: step {}; dancing cur angle={}; relativePos={}; moving to newpos={}; facingAngle={}".format(self.auto_status['dancing']['phase'], curStep, curAngleDeg, (dx,dy), (newx,newy), facingAngle))
+        # advance to next step
+        curStep += 1
+        self.auto_status['dancing']['step'] = curStep
+        if((curStep > DANCE_STEPS) or ((frames - self.auto_status['dancing']['startFrames']) > DANCE_PHASE2_MAXFRAMES)):
+          # one rotation of dance is complete
+          # move on to phase 3
+          self.auto_status['dancing']['phase'] = 3
+          self.animateToAngle(self.auto_status['dancing']['origAngle'])
+      
+      if (self.auto_status['dancing']['phase'] == 3) and (self.turning is None or ((frames - self.auto_status['dancing']['startFrames']) > DANCE_PHASE3_MAXFRAMES)):
+        # "return to original angle" is complete
+        self.auto_status['dancing'] = None  # stop dancing
+    
     
     # advance self play, if enabled
     if self.autonomous:
-      self.autoUpdate(t)
+      self.autoUpdate(ticks)
     
     if len(self.swirls) > 1:  # rotate swirls inside the character
       self.swirlRotationAngle_rad = (self.swirlRotationAngle_rad + self.swirlRotationAngle_delta_rad)
@@ -347,7 +395,7 @@ class Shape(Pacsprite):
     
     # check for and update sprite animations
     if effect.BURST_EFFECT in self.effects.keys():
-      if not self.effects[effect.BURST_EFFECT].update(t):
+      if not self.effects[effect.BURST_EFFECT].update(ticks):
         del self.effects[effect.BURST_EFFECT]  # FIXME: is more explicit garbage collection needed here?
       self.dirty_sprite = True
     
@@ -360,7 +408,10 @@ class Shape(Pacsprite):
 
   def in_head(self):
     return 'thoughtform_id' in self.auto_status.keys() and self.auto_status['thoughtform_id'] != None
-  
+
+  def in_dance(self):
+    return 'dancing' in self.auto_status.keys() and self.auto_status['dancing'] != None
+
   def spawnThoughtform(self, ticks):
     self.auto_status['thoughtform_id'] = random.randint(0, MAX_THOUGHTFORM_ID)
     self.auto_status['thoughtform_complexity'] = random.randint(0, (MAX_THOUGHTFORM_COMPLEXITY-MIN_THOUGHTFORM_COMPLEXITY)) + MIN_THOUGHTFORM_COMPLEXITY
@@ -372,6 +423,10 @@ class Shape(Pacsprite):
     """this is the master update routine for the NPC AI"""
     # possible random activities:
     swirl_activation_chance = AUTO_SWIRL_ACTIVATION_CHANCE
+    
+    if self.in_dance():
+      # ignore everything else while dancing
+      return
     
     # ACTIVITY: change swirls
     if len(self.swirls) > 0 and \
@@ -671,8 +726,8 @@ class Shape(Pacsprite):
       if self.last_moved_frame == last_touched:
         #logging.debug("still mid-touch")
         return False
-      if last_touched <= frames - 1 and last_touched + ART_TOUCH_JITTER > frames: 
-        self.debug("art was touched too recentely - at {0}".format(last_touched))
+      if last_touched is not None and last_touched <= frames - 1 and last_touched + ART_TOUCH_JITTER > frames:
+        self.debug("art was touched too recently - at {0}".format(last_touched))
         return False
     else:
       self.last_touched_art[art.id] = frames
@@ -685,6 +740,59 @@ class Shape(Pacsprite):
         })
 
 
+  def touchShape(self, shape):
+    frames = pacglobal.get_frames()
+    # check the last time we touched this shape
+    if shape.id in self.last_touched_shapes.keys():
+      last_touched = self.last_touched_shapes[shape.id]
+      self.last_touched_shapes[shape.id] = frames
+      if self.last_moved_frame == last_touched:
+        return False
+      if last_touched <= frames - 1 and last_touched + SHAPE_TOUCH_JITTER > frames:
+        #self.debug("shape touched too recently - at {0} ticks".format(last_touched))
+        return False
+    else:
+      self.last_touched_shapes[shape.id] = frames
+    if shape.num_sides == self.num_sides:
+      # trigger the shape-touch event!
+      self.debug("triggering shape touching from #{0} to {1} at {2} ticks".format(self.id, shape.id, frames))
+      direction = random.choice([-1, 1])
+      self.danceWith(shape, direction)
+      shape.danceWith(self, direction)
+
+
+  def danceWith(self, partner, direction):
+    """initiate dance animation with partner shape"""
+    # Phase 1: turn to "center"
+    # phase 2: dance around in a circle
+    # phase 3: turn back to pre-dance angle
+    frames = pacglobal.get_frames()
+    self.last_touched_shapes[partner.id] = frames
+    self.stopAllMovement()
+    center = pacglobal.centerBetween(self.getCenter(), partner.getCenter())
+    self.debug("shape touch init me={}, partner={}, ctr={}".format(self.getCenter(), partner.getCenter(), center))
+    #pygame.draw.circle(self.map.image, (255,0,0), center, 4, 2)
+    #pygame.draw.line(self.map.image, (255,0,0), self.getCenter(), partner.getCenter(), 1)
+    dx = self.getCenter()[0] - center[0]
+    dy = self.getCenter()[1] - center[1]
+    startAngleDeg = int(math.degrees(math.atan2(dy, dx)))
+    #self.debug("shape touch dancing radius = {0}, center = {2}, startAngle = {1} degrees".format(radius, startAngleDeg, center))
+    self.auto_status['dancing'] = {
+      'partner': partner,
+      'phase': 1,
+      'center': center,
+      'direction': direction,
+      'radius': int(self.side_length/2),
+      'startAngleDeg': startAngleDeg,
+      'step': 0,
+      'origAngle': self.angle,
+      'startFrames': pacglobal.get_frames(),
+    }
+    self.debug("shape touch beginning dance: " + str(self.auto_status['dancing']))
+    # begin phase 1: turn to "center"
+    self.faceToPoint(center)
+
+
   def move(self, dx, dy):
     # Move each axis separately. Note that this checks for collisions both times.
     movedx = movedy = False
@@ -692,9 +800,10 @@ class Shape(Pacsprite):
       movedx = self.move_single_axis(dx, 0)
     if dy != 0:
       movedy = self.move_single_axis(0, dy)
-    if movedx or movedy:
+    if (movedx or movedy) and not self.in_dance():
       # check for other map effects that happen based on movement
       self.map.checkTriggers(self)
+      self.checkShapeCollisions()
     self.last_moved_frame = pacglobal.get_frames()
     return movedx or movedy
 
@@ -746,7 +855,11 @@ class Shape(Pacsprite):
   
   def stopMove(self, direction):
     self.going_in_dir[direction] = False
-  
+
+  def stopAllMovement(self):
+    for direction in DIRECTIONS:
+      self.stopMove(direction)
+
   def moveFwd(self):
     # Move in the direction we're pointing
     theta = 2 * math.pi * ((float(self.angle)+90)%360 / 360)
@@ -821,8 +934,11 @@ class Shape(Pacsprite):
   
   def faceTo(self, target):
     """change shape's angle to face towards the passed target"""
+    self.faceToPoint(target.getCenter())
+
+  def faceToPoint(self, trg):
+    """change shape's angle to face towards the passed point(x,y)"""
     slf = self.getCenter()
-    trg = target.getCenter()
     dx = -1* (slf[0] - trg[0])
     dy = slf[1] - trg[1]
     GRAPHIC_BASE_ANGLE = 90
@@ -868,6 +984,22 @@ class Shape(Pacsprite):
   
   def moreSides(self):
     return self.changeSides(self.num_sides + 1)
+
+  def checkShapeCollisions(self):
+    """check for collisions with other shapes"""
+    for other_shape in self.map.shapes:
+      if other_shape.id == self.id: continue
+      a = self
+      b = other_shape
+      # calculate the offset of the second mask relative to the first mask.
+      a_mapTopLeft = a.getMapTopLeft()
+      b_mapTopLeft = b.getMapTopLeft()
+      offset_x = b_mapTopLeft[0] - a_mapTopLeft[0]
+      offset_y = b_mapTopLeft[1] - a_mapTopLeft[1]
+      # See if the two masks at the offset are overlapping.
+      if a.mask.overlap(b.mask, (offset_x, offset_y)):
+        # handle collision
+        self.touchShape(other_shape)
 
 
 class ShapeTest:
