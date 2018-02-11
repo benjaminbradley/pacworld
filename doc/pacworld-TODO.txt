@@ -1,7 +1,8 @@
 ---------------------------------------------------- FUTURE TASKS:
 
 NEXT STEPS for MVP:
-- link each swirl to a specific art type; preference to generate balanced # of each art type
+- preference to generate balanced # of each art type
+- make 2 different effect types and match with art type
 - add different effects when activating each swirl
   -- or maybe instead, get rid of activate-able swirls, and instead have the art pieces change the shapes directly. swirls would just be a mark of having been changed.
 - get a swirl from another character "ask"

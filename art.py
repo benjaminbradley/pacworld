@@ -162,8 +162,13 @@ class Art(Pacsprite):
   
   def getSwirl(self):
     # return the type of swirl that this art gives
-    #TODO: make this variable depending on art type - coordinate with effect type used in .update() below?
-    return Swirl()
+    if self.style == STYLE_TREE: swirl_type = LOOK_LT
+    elif self.style == STYLE_SPIRAL: swirl_type = LOOK_LINE
+    elif self.style == STYLE_MANDALA: swirl_type = LOOK_CIRCLE
+    else:
+      logging.error("Unhandled Art Style in Art.getSwirl(): {}".format(self.style))
+      swirl_type = None # pick one randomly
+    return Swirl(swirl_type)
 
 
   def update(self, t):
