@@ -1,15 +1,15 @@
 ---------------------------------------------------- FUTURE TASKS:
 
 NEXT STEPS for MVP:
-- preference to generate balanced # of each art type
-- make 2 different effect types and match with art type
+- make 2 more effect types (to supplement burst) and match with art type
 - add different effects when activating each swirl
   -- or maybe instead, get rid of activate-able swirls, and instead have the art pieces change the shapes directly. swirls would just be a mark of having been changed.
-- get a swirl from another character "ask"
 - when the world reaches a certain level of swirl "saturation" (e.g. % of characters have # of swirls) then remake the world
+- get a swirl from another character "ask"
 - other TODOs in code
 - ? AI ability to detect wall collisions and shrink size when needed?  (test with initial size @ 120) otherwise they'll just stay stuck until they randomly activate the right sequence of swirls to get un-stuck
 - show progress during world generation
+- max time before forced reset - in case some art types or players are inaccessible, etc.
 
 FIXME:
 - calculate newAngle based on lastPosition not oldestPosition (see stash)

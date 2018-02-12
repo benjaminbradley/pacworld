@@ -36,7 +36,7 @@ transition easily back and forth between user-controlled and self-play mode.
 
 
 INSTALLATION REQUIREMENTS
-* Python
+* Python 3.6+
 * Pygame  https://www.pygame.org/
 
 OPERATION

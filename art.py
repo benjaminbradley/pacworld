@@ -39,7 +39,7 @@ FRANTALTREE_color = (128, 255, 128)
 #example art: an animated mandala
 
 class Art(Pacsprite):
-  def __init__(self, themap, left, top):
+  def __init__(self, themap, left, top, style = None):
     # Initialize the sprite base class
     super(Art, self).__init__()
     # initialize art variables
@@ -53,7 +53,9 @@ class Art(Pacsprite):
     self.effects = {}  # dictionary of Effect.EFFECT_TYPE to Effect class
     self.angle = 0
     self.color = colors.PINK2
-    self.style = random.choice(STYLES)
+    self.style = style
+    if self.style is None:
+      self.style = random.choice(STYLES)
     self.jitter = pygame.time.get_ticks() + random.randint(0, BURST_FREQUENCY)
     #print "DEBUG: Art.__init__(): jitter={0}".format(self.jitter)
     
