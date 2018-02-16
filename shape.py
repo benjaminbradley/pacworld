@@ -1,3 +1,4 @@
+import copy
 import random
 import pygame # Provides what we need to make a game
 import sys # Gives us the sys.exit function to close our program
@@ -394,9 +395,9 @@ class Shape(Pacsprite):
       self.dirty_sprite = True
     
     # check for and update sprite animations
-    if effect.BURST_EFFECT in self.effects.keys():
-      if not self.effects[effect.BURST_EFFECT].update(ticks):
-        del self.effects[effect.BURST_EFFECT]  # FIXME: is more explicit garbage collection needed here?
+    for effect_key in list(self.effects.keys()):
+      if not self.effects[effect_key].update(ticks):
+        del self.effects[effect_key]
       self.dirty_sprite = True
     
     if(self.dirty_sprite): self.makeSprite()
@@ -665,13 +666,14 @@ class Shape(Pacsprite):
     self.makeSprite()
     self.sound.play('get', self.soundProximity())
 
+
   def activateSwirl(self, dir_up = True):
     # checks to make sure we do have at least one swirl
     if self.curSwirl == None or len(self.swirls) == 0: return False
     self.swirls[self.curSwirl].activate(self, dir_up)
     return True
-  
-  
+
+
   def tryAsk(self):
     self.debug("tryAsk")
     #TODO
@@ -699,7 +701,7 @@ class Shape(Pacsprite):
   def copySwirl(self):
     if self.curSwirl == None or len(self.swirls) == 0: return False
     cur_swirl = self.swirls[self.curSwirl]
-    return Swirl(cur_swirl.look)
+    return copy.copy(cur_swirl)
 
   
   def trySwirlRight(self):

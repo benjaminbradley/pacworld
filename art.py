@@ -60,12 +60,14 @@ class Art(Pacsprite):
     #print "DEBUG: Art.__init__(): jitter={0}".format(self.jitter)
     
     if self.style == STYLE_SPIRAL:
+      self.effect_type = effect.SPIRAL_EFFECT
       self.spiral_minRad = 3
       self.spiral_maxRad = self.spiral_curRad = int(float(self.side_length) / 2)
       self.spiral_curRot = pi
       self.spiral_startAngle = 0.0
       self.spiral_radStep = 2.0
     elif self.style == STYLE_TREE:
+      self.effect_type = effect.TREE_EFFECT
       # initialize state vars for tree animation
       self.fractaltree_maxd = FRACTALTREE_maxd_beg
       self.fractaltree_spread = FRACTALTREE_spread_beg
@@ -73,6 +75,7 @@ class Art(Pacsprite):
       self.fractaltree_spread_chgdir = 1
       self.fractaltree_pause = 0
     elif self.style == STYLE_MANDALA:
+      self.effect_type = effect.BURST_EFFECT
       self.mandala_angle = 0
       self.mandala_inner_radius_ratio_chg = 0.03
       self.mandala_inner_radius_ratio_max = 0.6
@@ -80,6 +83,7 @@ class Art(Pacsprite):
       self.mandala_inner_radius_ratio = self.mandala_inner_radius_ratio_min
       self.mandala_inner_radius_ratio2 = self.mandala_inner_radius_ratio + 0.2
       self.mandala_wait = 0
+
 
     # make & capture the initial image for the art
     self.makeSprite()
@@ -170,7 +174,7 @@ class Art(Pacsprite):
     else:
       logging.error("Unhandled Art Style in Art.getSwirl(): {}".format(self.style))
       swirl_type = None # pick one randomly
-    return Swirl(swirl_type)
+    return Swirl(swirl_type, self.effect_type)
 
 
   def update(self, t):
@@ -231,7 +235,7 @@ class Art(Pacsprite):
       if self.onScreen(windowRect): soundvolume = pacdefs.ONSCREEN_SOUND_PERCENT
       elif self.nearScreen(windowRect): soundvolume = pacdefs.NEARBY_SOUND_PERCENT
       else: soundvolume = 0
-      self.startEffect(effect.BURST_EFFECT, {EFFECT_VOLUME: soundvolume})
+      self.startEffect(self.effect_type, {EFFECT_VOLUME: soundvolume})
     
     # check for current effects to continue
     completed_effects = []

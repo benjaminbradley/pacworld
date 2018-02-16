@@ -15,15 +15,23 @@ LOOKS = [LOOK_CIRCLE, LOOK_LINE, LOOK_LT]
 
 class Swirl(sprite.Sprite):
   
-  def __init__(self, look_type = None):
+  def __init__(self, look_type = None, effect_type = None):
     # Initialize the sprite base class
     super(Swirl, self).__init__()
     self.sound = getPacsound()
     
-    self.effect_type = effect.BURST_EFFECT
     if(look_type is None):
       look_type = LOOKS[random.randint(0,len(LOOKS)-1)]
     self.look = look_type
+    
+    if(effect_type is None):
+      if(look_type == LOOK_CIRCLE):
+        effect_type = effect.BURST_EFFECT
+      elif(look_type == LOOK_LINE):
+        effect_type = effect.SPIRAL_EFFECT
+      elif(look_type == LOOK_LT):
+        effect_type = effect.TREE_EFFECT
+    self.effect_type = effect_type
   
   def activate(self, shape, dir_up):
     shape.effects[self.effect_type] = Effect(self.effect_type, {effect.EFFECT_VOLUME: shape.soundProximity()})
@@ -47,28 +55,26 @@ class Swirl(sprite.Sprite):
       color = colors.PINK2
     else:
       color = colors.WHITE
-    if self.effect_type == effect.BURST_EFFECT:
-      if self.look == LOOK_CIRCLE:
-        # draw a tiny circle
-        radius = 3
-        pygame.draw.circle(image, color, position, radius, lineWidth)
-      elif self.look == LOOK_LINE:
-        # draw a straight line
-        length = 4
-        start_pos = (position[0] - length/2, position[1])
-        end_pos = (position[0] + length/2, position[1])
-        lineWidth = 2
-        pygame.draw.line(image, color, start_pos, end_pos, lineWidth)
-      elif self.look == LOOK_LT:
-        # draw an angle
-        length = 4
-        start1_pos = (position[0] - length/2, position[1]-length)
-        start2_pos = (position[0] - length/2, position[1]+length)
-        end_pos = (position[0] + length/2, position[1])
-        lineWidth = 2
-        pygame.draw.line(image, color, start1_pos, end_pos, lineWidth)
-        pygame.draw.line(image, color, start2_pos, end_pos, lineWidth)
-        
+    if self.look == LOOK_CIRCLE:
+      # draw a tiny circle
+      radius = 3
+      pygame.draw.circle(image, color, position, radius, lineWidth)
+    elif self.look == LOOK_LINE:
+      # draw a straight line
+      length = 4
+      start_pos = (position[0] - length/2, position[1])
+      end_pos = (position[0] + length/2, position[1])
+      lineWidth = 2
+      pygame.draw.line(image, color, start_pos, end_pos, lineWidth)
+    elif self.look == LOOK_LT:
+      # draw an angle
+      length = 4
+      start1_pos = (position[0] - length/2, position[1]-length)
+      start2_pos = (position[0] - length/2, position[1]+length)
+      end_pos = (position[0] + length/2, position[1])
+      lineWidth = 2
+      pygame.draw.line(image, color, start1_pos, end_pos, lineWidth)
+      pygame.draw.line(image, color, start2_pos, end_pos, lineWidth)
     else:
-      logger.critical("unknown effect type: {0}".format(self.type))
+      logging.critical("unknown effect look: {0}".format(self.look))
 

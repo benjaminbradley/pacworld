@@ -10,6 +10,8 @@ SOUNDS = {
   'give' : 'sounds/118687__blackie666__fx3.wav',          # "give" (to another character)
   'error' : 'sounds/135371__blackie666__thathurts.wav',    # "error" feedback (can't do something)
   '3roboditzfade' : 'sounds/135377__blackie666__nomnomnom.wav',  # burst sound
+  'glitchsaw' : 'sounds/132391__blackie666__glitchsaw.wav',      # spiral effect sound
+  'wassaw' : 'sounds/132393__blackie666__was-saw.wav',           # tree effect sound
   #  ("activate" a swirl) -> the sound for that effect
   'sizeChange' : 'sounds/135375__blackie666__resonance.wav',    # activate size
   'sideChange' : 'sounds/135376__blackie666__oowh.wav',          # activate sides

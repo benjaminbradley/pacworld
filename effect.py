@@ -1,11 +1,17 @@
 import pygame
 import logging
+import math
+import sys
 
 from pacsounds import Pacsounds,getPacsound
 import colors
+sys.path.append('art')
+from DrawSpiral import DrawSpiral
 
 BURST_EFFECT = 1  # solo sprite effect
 TRANSFER_EFFECT = 2  # sprite to sprite effect
+SPIRAL_EFFECT = 3  # solo sprite effect
+TREE_EFFECT = 4  # solo sprite effect
 
 # enumerated constants for effect options parameters
 EFFECT_VOLUME = 1
@@ -14,6 +20,8 @@ EFFECT_SOURCE = 3
 EFFECT_ONCOMPLETE = 4
 
 BURST_EFFECT_NUMFRAMES = 6
+SPIRAL_EFFECT_NUMFRAMES = 8
+TREE_EFFECT_NUMFRAMES = 8
 TRANSFER_EFFECT_NUMFRAMES = 14
 
 
@@ -30,15 +38,24 @@ class Effect():
     self.animate_last_update = 0
     self.animate_frame = 0
     
-    # initialize animation timer
-    if self.type == BURST_EFFECT:
+    # init sound volume, if applicable
+    if self.type in [BURST_EFFECT, SPIRAL_EFFECT, TREE_EFFECT]:
       if EFFECT_VOLUME not in option_dict.keys() or option_dict[EFFECT_VOLUME] == None:
         sound_volume = 1.0
       else:
         sound_volume = option_dict[EFFECT_VOLUME]
+    
+    # initialize animation timer
+    if self.type == BURST_EFFECT:
       self.animate_numframes = BURST_EFFECT_NUMFRAMES
       # play burst sound
       if self.sound != None and sound_volume > 0: self.sound.play('3roboditzfade', sound_volume)
+    elif self.type == SPIRAL_EFFECT:
+      self.animate_numframes = SPIRAL_EFFECT_NUMFRAMES
+      if self.sound != None and sound_volume > 0: self.sound.play('glitchsaw', sound_volume)
+    elif self.type == TREE_EFFECT:
+      self.animate_numframes = TREE_EFFECT_NUMFRAMES
+      if self.sound != None and sound_volume > 0: self.sound.play('wassaw', sound_volume)
     elif self.type == TRANSFER_EFFECT:
       if option_dict[EFFECT_TARGET] == None:  ## REQUIRED PARAMETER!
         logger.critical("can't call a TRANSFER effect with no target!")
@@ -86,19 +103,43 @@ class Effect():
 
   def draw(self, image, windowRect = None):
     lineWidth = 2  # default, may be adjusted later
+    frame_percent = float(self.animate_frame) / float(self.animate_numframes)
     if self.type == BURST_EFFECT:
       final_radius = int(image.get_width() / 2)
+      grad_color = [int(frame_percent*c) for c in colors.WHITE]
       #print "DEBUG: Effect.draw(): frame={0}, numframe={1}, radius={2}".format(self.animate_frame, self.animate_numframes, final_radius)
       burst_radius = int(float(self.animate_frame) / float(self.animate_numframes) * final_radius)
       if burst_radius < lineWidth: lineWidth = burst_radius
-      gradpercent = float(self.animate_frame) / float(self.animate_numframes)
-      grad_color = [int(gradpercent*c) for c in colors.WHITE]
-      #print "DEBUG: Effect.draw() in burstEffect: burst_radius = {0}, gradpercent = {1}, grad_color={2}".format(burst_radius, gradpercent, grad_color)
+      #print("DEBUG: Effect.draw() in burstEffect: burst_radius = {0}, frame_percent = {1}, grad_color={2}".format(burst_radius, frame_percent, grad_color))
       pygame.draw.circle(image, grad_color, (final_radius,final_radius), burst_radius, lineWidth)
+    elif self.type == SPIRAL_EFFECT:
+      final_radius = int(image.get_width() / 2)
+      grad_color = [int(frame_percent*c) for c in colors.WHITE]
+      frame_radius = int(float(self.animate_frame+1) / float(self.animate_numframes) * final_radius)
+      frame_angle = frame_percent * math.pi
+      DrawSpiral(image, (final_radius,final_radius), frame_radius, math.pi, 3, False, frame_angle, grad_color, 2)
+    elif self.type == TREE_EFFECT:
+      grad_color = [int(frame_percent*c) for c in colors.WHITE]
+      nonzero_percent = min(1,float(self.animate_frame+1) / float(self.animate_numframes))
+      rect_height = nonzero_percent*image.get_height()
+      rect_width = int(rect_height * 0.6)
+      centerx = int(image.get_width() / 2)
+      for side in [-1, 1]:
+        if side == -1:
+          rect_left = int(centerx - rect_width*0.77)
+          start_angle = -1
+          stop_angle = 1.05
+        else:
+          rect_left = int(centerx - rect_width*0.23)
+          start_angle = math.pi-1
+          stop_angle = math.pi+1
+        elipse_rect = pygame.Rect(rect_left, image.get_height()-rect_height, rect_width, rect_height)
+        line_width = min(2, int(rect_width/2))
+        pygame.draw.arc(image, grad_color, elipse_rect, start_angle, stop_angle, line_width)
     elif self.type == TRANSFER_EFFECT:
       self.calcFrame()
       #logging.debug("drawing transfer effect with burst_radius {0} at {1}".format(self.frame_burst_radius, (self.frame_origin_x, self.frame_origin_y)))
-      grad_color = [int(self.frame_gradpercent*c) for c in colors.PINK]
+      grad_color = [int(frame_percent*c) for c in colors.PINK]
       # NOTE: map effects are drawn directly onto the display !!! coordinates must be localized to the screen
       # calculate frame screen position from map position
       screenpos = (self.frame_origin_x - windowRect[0], self.frame_origin_y - windowRect[1])
@@ -136,3 +177,52 @@ class Effect():
 
     return None #unhandled, should not be called in this case
 
+
+
+if __name__ == '__main__':  # Begin demo code
+  demo_width = 640
+  demo_height = 480
+  demo_effects = [BURST_EFFECT, SPIRAL_EFFECT, TREE_EFFECT]
+  num_demos = len(demo_effects)
+  section_width = int(demo_width / num_demos)
+  screen = pygame.display.set_mode((demo_width,demo_height))
+  pygame.display.set_caption("Effect Demo")
+  pygame.font.init()
+  font = pygame.font.Font(None, 30)
+
+  clock = pygame.time.Clock()
+  
+  effects = {}
+
+  while True:
+    clock.tick(30)
+    for event in pygame.event.get():
+      if event.type == pygame.QUIT: sys.exit()
+      elif event.type == pygame.KEYDOWN:
+        if event.key == pygame.K_ESCAPE: sys.exit()
+        elif event.key >= pygame.K_0 and event.key <= pygame.K_0 + num_demos:
+          demoIdx = event.key - pygame.K_0
+          effects[demoIdx] = Effect(demo_effects[demoIdx], {EFFECT_VOLUME: 1})
+
+    # reconstruct display image
+    screen.fill((0, 0, 0))
+    # place labels
+    for i in range(num_demos):
+      x = int(section_width/2 + i*section_width)
+      y = 50
+      if demo_effects[i] == BURST_EFFECT: text = "{}. burst".format(i)
+      elif demo_effects[i] == SPIRAL_EFFECT: text = "{}. spiral".format(i)
+      elif demo_effects[i] == TREE_EFFECT: text = "{}. tree".format(i)
+      else: text = '???'
+      textBitmap = font.render(text, True, colors.WHITE)
+      textWidth = textBitmap.get_rect().width
+      screen.blit(textBitmap, [x - textWidth/2, y])
+    # draw effects
+    
+    for key in list(effects.keys()):
+      active_effect = effects[key]
+      active_effect.draw(screen)
+      if not active_effect.update(pygame.time.get_ticks()):
+        del effects[key]
+
+    pygame.display.update()  # update screen

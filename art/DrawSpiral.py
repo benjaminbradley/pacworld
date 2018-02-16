@@ -6,7 +6,7 @@
 import pygame, sys, math
 
 
-def DrawSpiral(display, pos, radius, rotation = math.pi, numSpokes = 1, clockwise = True, startAngle = 0.0):
+def DrawSpiral(display, pos, radius, rotation = math.pi, numSpokes = 1, clockwise = True, startAngle = 0.0, color = (243, 243, 21), lineWidth = 1):
     """DrawSpiral(display, pos, radius, rotation = math.pi, numSpokes = 1, clockwise = True, startAngle = 0): return None
     Draws a spiral at the given position.
     Arguments:
@@ -17,6 +17,7 @@ def DrawSpiral(display, pos, radius, rotation = math.pi, numSpokes = 1, clockwis
         -numSpokes: the number of spokes to draw
         -clockwise: a boolean variable specifying which direction the spiral should turn in
         -startAngle: the starting angle of the first spoke
+        -lineWidth: width of spiral lines
     """
     resolution = radius / 2.0
     radiusIncrement = radius / resolution
@@ -44,7 +45,8 @@ def DrawSpiral(display, pos, radius, rotation = math.pi, numSpokes = 1, clockwis
             curRadius += radiusIncrement
             curAngle += rotationIncrement
 
-        pygame.draw.aalines(display, (243, 243, 21), False, spoke)
+        #FIXME: use lines instead of aalines until issue 395 is resolved: https://github.com/pygame/pygame/issues/395
+        pygame.draw.lines(display, color, False, spoke, lineWidth)
         
         spokeRotation += spokeRotationIncrement
 

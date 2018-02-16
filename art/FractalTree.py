@@ -34,7 +34,7 @@ if __name__ == '__main__':  # Begin demo code
     pygame.display.set_caption("Fractal Trees!")
 
     clock = pygame.time.Clock()
-    branch_ratio = 2.0                   # branch length factor
+    branch_ratio = 10.0                   # branch length factor
     base_angle = -90
     steps = 8
     maxd_beg = 2
