@@ -655,6 +655,14 @@ class Shape(Pacsprite):
     return soundvolume
 
 
+  def playerError(self):
+    """provide feedback to user that something went wrong"""
+    # only follow through with this signal if triggered by the player's current shape, and shape is NOT autonomous
+    if self.map.player.shape == self and not self.autonomous:
+      self.sound.play('error')
+    else:
+      logging.debug("PlayerError suppressed")
+
   def receiveSwirl(self, swirl):
     for myswirl in self.swirls:
       if(swirl.look == myswirl.look):
@@ -890,7 +898,7 @@ class Shape(Pacsprite):
     if self.map.wallCollision(self):  # attribute changed due to collision, restore old values
       self.side_length = oldsize
       self.makeSprite()
-      self.sound.play('error')  # provide user feedback for failure
+      self.playerError()  # provide user feedback for failure
       return False
     else:
       self.debug("new size="+str(newsize))
@@ -975,7 +983,7 @@ class Shape(Pacsprite):
     if self.map.wallCollision(self):  # attribute changed due to collision
       self.num_sides = oldsides
       self.makeSprite()
-      self.sound.play('error')  # provide user feedback for failure
+      self.playerError()  # provide user feedback for failure
       return False
     else:  # re-create the sprite with new attributes
       self.debug ("num_sides is now {0}".format(self.num_sides))

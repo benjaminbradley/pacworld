@@ -1,8 +1,8 @@
 ---------------------------------------------------- FUTURE TASKS:
 
 NEXT STEPS for MVP:
-- only play error sound if triggered by player shape, and shape is autonomous
 - reduce sound level for non-player shapes (more than offscreen, but below player's sounds)
+- rotate tree effect to line up with shape's eye (other effects are radially symmetrical)
 - when the world reaches a certain level of swirl "saturation" (e.g. % of characters have # of swirls) then remake the world
 - get a swirl from another character "ask"
 - other TODOs in code
