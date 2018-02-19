@@ -222,7 +222,7 @@ class Shape(Pacsprite):
 
     # draw any effects
     for effect in self.effects.values():
-      effect.draw(self.image)
+      effect.draw(self.image, shape = self)
 
     # Create the sprites rectangle from the image, maintaining rect position if set
     #pygame.draw.rect(self.image, (255,0,0), self.image.get_rect(), 3)  # DEBUG RED BORDER

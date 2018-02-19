@@ -101,7 +101,7 @@ class Effect():
     self.frame_origin_y = int(source_y + (self.frame_gradpercent * (target_y - source_y)))
 
 
-  def draw(self, image, windowRect = None):
+  def draw(self, image, windowRect = None, shape = None):
     lineWidth = 2  # default, may be adjusted later
     frame_percent = float(self.animate_frame) / float(self.animate_numframes)
     if self.type == BURST_EFFECT:
@@ -119,11 +119,19 @@ class Effect():
       frame_angle = frame_percent * math.pi
       DrawSpiral(image, (final_radius,final_radius), frame_radius, math.pi, 3, False, frame_angle, grad_color, 2)
     elif self.type == TREE_EFFECT:
+      if shape is not None:
+        effect_size = (shape.side_length,shape.side_length)
+      else:
+        effect_size = image.get_size()
+      effect_image = pygame.Surface(effect_size)
+      effect_image.set_colorkey((9,0,0))
+      effect_image.fill((9,0,0))
+      # draw the effect image onto a separate layer
       grad_color = [int(frame_percent*c) for c in colors.WHITE]
       nonzero_percent = min(1,float(self.animate_frame+1) / float(self.animate_numframes))
-      rect_height = nonzero_percent*image.get_height()
+      rect_height = nonzero_percent*effect_image.get_height()
       rect_width = int(rect_height * 0.6)
-      centerx = int(image.get_width() / 2)
+      centerx = int(effect_image.get_width() / 2)
       for side in [-1, 1]:
         if side == -1:
           rect_left = int(centerx - rect_width*0.77)
@@ -133,9 +141,14 @@ class Effect():
           rect_left = int(centerx - rect_width*0.23)
           start_angle = math.pi-1
           stop_angle = math.pi+1
-        elipse_rect = pygame.Rect(rect_left, image.get_height()-rect_height, rect_width, rect_height)
+        elipse_rect = pygame.Rect(rect_left, effect_image.get_height()-rect_height, rect_width, rect_height)
         line_width = min(2, int(rect_width/2))
-        pygame.draw.arc(image, grad_color, elipse_rect, start_angle, stop_angle, line_width)
+        pygame.draw.arc(effect_image, grad_color, elipse_rect, start_angle, stop_angle, line_width)
+      # rotate the effect image to match the shape's current rotation
+      if shape is not None:
+        effect_image = pygame.transform.rotate(effect_image, shape.angle+90)
+      # blit the effect onto the target
+      image.blit(effect_image, (0,0))
     elif self.type == TRANSFER_EFFECT:
       self.calcFrame()
       #logging.debug("drawing transfer effect with burst_radius {0} at {1}".format(self.frame_burst_radius, (self.frame_origin_x, self.frame_origin_y)))

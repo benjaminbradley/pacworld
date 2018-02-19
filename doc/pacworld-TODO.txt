@@ -1,7 +1,6 @@
 ---------------------------------------------------- FUTURE TASKS:
 
 NEXT STEPS for MVP:
-- rotate tree effect to line up with shape's eye (other effects are radially symmetrical)
 - when the world reaches a certain level of swirl "saturation" (e.g. % of characters have # of swirls) then remake the world
 - get a swirl from another character "ask"
 - other TODOs in code
