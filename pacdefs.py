@@ -46,7 +46,7 @@ WALL_LINE_WIDTH = 8  # pixel width for drawing
 
 #sound
 NEARBY_SOUND_PERCENT = 0.2
-ONSCREEN_SOUND_PERCENT = 0.8
+ONSCREEN_SOUND_PERCENT = 0.5
 
 def opposite_side(side):
   # assumes an even number of sides
