@@ -339,26 +339,7 @@ class World():
     
     self.objects = [] # List to hold the objects generated in the world (pathways, fields, etc)
     self.objectId_autoIncrement = 0
-    
-    # test intersection code
-    #print self.addObject({
-    #  'type' : pacdefs.TYPE_PATH,
-    #  'top' : 1,
-    #  'left' : 10,
-    #  'direction_h' : False,
-    #  'width' : 1,
-    #  'length' : 15
-    #})
-    #print self.addObject({
-    #  'type' : pacdefs.TYPE_PATH,
-    #  'top' : 5,
-    #  'left' : 1,
-    #  'direction_h' : True,
-    #  'width' : 1,
-    #  'length' : 15
-    #})
-    #print "DEBUG: World.__init__(): world grid is:\n{0}".format(self.to_s())
-    #exit()
+
 
     # step 1: generate pathways
     
@@ -375,8 +356,6 @@ class World():
     numPaths_shortWays = 0
 
 
-    #while(curTotalPaths < minTotalPaths):
-    #  print "DEBUG: World.__init__(): current total paths ({0}) not in range {1}..{2}".format(curTotalPaths, minTotalPaths, maxTotalPaths)
     while(curTotalPathArea < minPathArea):
       pacglobal.checkAbort()
       #print "DEBUG: World.__init__(): current total path area ({0}, {1}%) hasn't met minimum path area ({2}, {3}%)".format(curTotalPathArea, int(100*curTotalPathArea/self.totalArea), int(self.totalArea*PATH_AREA_MIN/100), PATH_AREA_MIN)
@@ -393,10 +372,6 @@ class World():
         #print "DEBUG: World.__init__(): too many shortWays ({0}) paths, forcing longways".format(numPaths_shortWays)
         pathDir_h = longdir_is_h
             
-      #if(pathDir_h): pathName='horizontal'
-      #else: pathName='vertical'
-      #print "DEBUG: World.__init__(): pathway direction will be {0}".format(pathName)
-      
       path_width = get_random_value('small')
       # path length
       #minPath = int(shortside)  #  minimum length o/2 (where o is the longest of h or w)
@@ -404,10 +379,6 @@ class World():
       #  maximum length s (where s is the shortest of h or w)
       maxPath = int(longside)
       path_len = random.randint(minPath,maxPath)
-      #while(path_len < minPath or maxPath < path_len):
-      #  path_len = get_random_value('small')
-      #path_len = get_random_value(['medium','large'])
-      #print "DEBUG: World.__init__(): pathway size is {0} long by {1} wide".format(path_len, path_width)
       
       # placement
       if(pathDir_h):  # horizontal placement
@@ -428,7 +399,6 @@ class World():
       # check for obustructions, correct if possible
       newid = self.addObject(newPath)
       if(newid):
-        #curTotalPaths += newPath['length']
         curTotalPathArea += newPath.area
         if pathDir_h == longdir_is_h:
           numPaths_longWays += 1
