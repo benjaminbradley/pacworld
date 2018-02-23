@@ -1014,9 +1014,10 @@ class World():
         else:
           logging.error("[FORMAT (y,x)] couldn't determine orientation of current ({0}) vs adjacent ({1}) squares".format(coord_a, (coord_b[0],coord_b[1])))
         adjsidedir = pacdefs.opposite_side(cursidedir)
-        if((current_square != pacdefs.SYMBOL_CLEAR and current_square.type == pacdefs.TYPE_ROOM and current_square.door_at((coord_a[1],coord_a[0]), cursidedir)) and
-            (adjacent_square != pacdefs.SYMBOL_CLEAR and adjacent_square.type == pacdefs.TYPE_ROOM and adjacent_square.door_at((coord_b[1],coord_b[0]), adjsidedir))):
-          # if there is a door, it's clear
+        # each square is accessible if: not a room OR room with a door in the right place
+        current_square_accessible = not current_room or (current_square != pacdefs.SYMBOL_CLEAR and current_square.type == pacdefs.TYPE_ROOM and current_square.door_at((coord_a[1],coord_a[0]), cursidedir))
+        adjacent_square_accessible = not adjacent_room or (adjacent_square != pacdefs.SYMBOL_CLEAR and adjacent_square.type == pacdefs.TYPE_ROOM and adjacent_square.door_at((coord_b[1],coord_b[0]), adjsidedir))
+        if(current_square_accessible and adjacent_square_accessible):
           return True
         else:
           return False
