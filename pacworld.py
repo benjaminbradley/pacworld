@@ -46,6 +46,65 @@ KB_MAP = {
     'Rshoulder': K_PERIOD,
   }
 }
+INPUT_GAMEPAD = 'USB Gamepad'
+INPUT_JOYSTICK = 'USB Joystick'
+GAMEPAD_BUTTON_MAP = {
+  INPUT_GAMEPAD: {  # 8-button, SNES-like
+    'top': 0,
+    'left': 3,
+    'bottom': 2,
+    'right': 1,
+    'Lshoulder': 4,
+    'Rshoulder': 5,
+    'Lcenter': 8,
+    'Rcenter': 9,
+    'joy_axis_y': 4,
+    'joy_axis_x': 3,
+  },
+  INPUT_JOYSTICK: {  # 10-button, Playstation-like
+    'top': 3,
+    'left': 2,
+    'bottom': 0,
+    'right': 1,
+    'Lshoulder': 4,
+    'Rshoulder': 5,
+    'Lshoulder2': 6,
+    'Rshoulder2': 7,
+    'Lcenter': 8,
+    'Rcenter': 9,
+    'joy_axis_y': 3,
+    'joy_axis_x': 2,
+    'analog_axis_y': 0,
+    'analog_axis_x': 1,
+  }
+}
+GAMEPAD_FUNCTION_MAP = {
+  INPUT_GAMEPAD: {  # 8-button, SNES-like
+    'move_y': GAMEPAD_BUTTON_MAP[INPUT_GAMEPAD]['joy_axis_y'],
+    'move_x': GAMEPAD_BUTTON_MAP[INPUT_GAMEPAD]['joy_axis_x'],
+    'ask':          [],
+    'give':         [GAMEPAD_BUTTON_MAP[INPUT_GAMEPAD]['top']],
+    'swirl_right':  [],
+    'swirl_left':   [GAMEPAD_BUTTON_MAP[INPUT_GAMEPAD]['left']],
+    'doswirl_up':   [GAMEPAD_BUTTON_MAP[INPUT_GAMEPAD]['right']],
+    'doswirl_dn':   [GAMEPAD_BUTTON_MAP[INPUT_GAMEPAD]['bottom']],
+    'reset':        [GAMEPAD_BUTTON_MAP[INPUT_GAMEPAD]['Lcenter']],
+    'quit':         [GAMEPAD_BUTTON_MAP[INPUT_GAMEPAD]['Rcenter']],
+  },
+  INPUT_JOYSTICK: {  # 10-button, Playstation-like
+    'move_y':       GAMEPAD_BUTTON_MAP[INPUT_JOYSTICK]['joy_axis_y'],
+    'move_x':       GAMEPAD_BUTTON_MAP[INPUT_JOYSTICK]['joy_axis_x'],
+    'ask':          [GAMEPAD_BUTTON_MAP[INPUT_JOYSTICK]['bottom']],
+    'give':         [GAMEPAD_BUTTON_MAP[INPUT_JOYSTICK]['top']],
+    'swirl_right':  [GAMEPAD_BUTTON_MAP[INPUT_JOYSTICK]['right']],
+    'swirl_left':   [GAMEPAD_BUTTON_MAP[INPUT_JOYSTICK]['left']],
+    'doswirl_up':   [GAMEPAD_BUTTON_MAP[INPUT_JOYSTICK]['Rshoulder'],GAMEPAD_BUTTON_MAP[INPUT_JOYSTICK]['Rshoulder2']],
+    'doswirl_dn':   [GAMEPAD_BUTTON_MAP[INPUT_JOYSTICK]['Lshoulder'],GAMEPAD_BUTTON_MAP[INPUT_JOYSTICK]['Lshoulder2']],
+    'reset':        [GAMEPAD_BUTTON_MAP[INPUT_JOYSTICK]['Lcenter']],
+    'quit':         [GAMEPAD_BUTTON_MAP[INPUT_JOYSTICK]['Rcenter']],
+  }
+}
+
 
 # Our main game class
 class Pacworld:
@@ -104,18 +163,24 @@ class Pacworld:
     
     # Initialize keyboard
     self.cur_kb_map = KB_MAP[KB_DVORAK]
+    self.input_mode = [INPUT_KEYBOARD]
     
     # Initialize the joysticks (if present)
     pygame.joystick.init()
     
     # Get count of joysticks
     joystick_count = pygame.joystick.get_count()
-    self.input_mode = [INPUT_KEYBOARD]
     if joystick_count == 0:
       logging.warning("no joysticks found, using only keyboard for input")
     else:
-      logging.info("joystick present, enabling joystick for input")
-      self.input_mode.append(INPUT_JOYSTICK)
+      joy_name = pygame.joystick.Joystick(0).get_name().strip()
+      if(joy_name in GAMEPAD_BUTTON_MAP.keys()):
+        logging.info("{} present, enabling joystick for input".format(joy_name))
+        self.cur_pad_map = GAMEPAD_FUNCTION_MAP[joy_name]
+        self.input_mode.append(INPUT_JOYSTICK)
+      else:
+        logging.error("Joystick present, but not currently mapped, name='{}'".format(joy_name))
+    
     
     if(INPUT_JOYSTICK in self.input_mode):
       self.joystick = pygame.joystick.Joystick(0)
@@ -124,10 +189,9 @@ class Pacworld:
       self.num_buttons = self.joystick.get_numbuttons()
       for i in range( self.num_buttons ):
         self.button_status.append(self.joystick.get_button(i))
-      self.num_axes = self.joystick.get_numaxes()
-      if(self.num_axes == 4):
-        self.joy_axis_x = 2
-        self.joy_axis_y = 3
+      self.joy_axis_x = self.cur_pad_map['move_x']
+      self.joy_axis_y = self.cur_pad_map['move_y']
+    
     
     # Set the window title
     pygame.display.set_caption("WORKING NAME: Pacworld")
@@ -303,21 +367,21 @@ class Pacworld:
             if(self.joystick.get_button(i) and not self.button_status[i]):
               self.button_status[i] = True
               logging.debug("joystick Button "+str(i+1)+" pressed.")
-              if(i == 0):  # "bottom" button
+              if(i in self.cur_pad_map['ask']):
                 self.player.shape.tryAsk()
-              elif(i == 1):  # "right" button
+              elif(i in self.cur_pad_map['swirl_right']):
                 self.player.shape.trySwirlRight()
-              elif(i == 2):  # "left" button
+              elif(i in self.cur_pad_map['swirl_left']):
                 self.player.shape.trySwirlLeft()
-              elif(i == 3):  # "top" button
+              elif(i in self.cur_pad_map['give']):
                 self.player.shape.tryGive()
-              elif(i in [4,5]):
+              elif(i in self.cur_pad_map['doswirl_up']):
                 self.player.shape.activateSwirl(True)
-              elif(i in [6,7]):
+              elif(i in self.cur_pad_map['doswirl_dn']):
                 self.player.shape.activateSwirl(False)
-              elif(i == 8):
+              elif(i in self.cur_pad_map['reset']):
                 self.player.shape.reset()
-              elif(i == 9):  # button 10 triggers program exit
+              elif(i in self.cur_pad_map['quit']):
                 logging.info("That was RANDOM SEED {0}. Hope you had fun.".format(self.crazySeed))
                 logging.debug("Quitting program.")
                 pygame.quit()
@@ -380,23 +444,17 @@ class Pacworld:
             self.player.shape.stopMove(DIR_RIGHT)
           elif event.key == K_LEFT:
             self.player.shape.stopMove(DIR_LEFT)
-          #if event.key == K_s or event.key == K_w:
-          #  self.player1Bat.stopMove()
-          #elif event.key == K_DOWN or event.key == K_UP:
-          #  self.player2Bat.stopMove()
       # end of (INPUT_KEYBOARD)
     # end for (events)
     
     # movement should be smooth, so not tied to event triggers
-    if(INPUT_JOYSTICK in self.input_mode):
-      fbAxis = round(self.joystick.get_axis(0), 3)
+    if(INPUT_JOYSTICK in self.input_mode and \
+      ('analog_axis_y' in self.cur_pad_map.keys() and 'analog_axis_x' in self.cur_pad_map.keys())):
+      fbAxis = round(self.joystick.get_axis(self.cur_pad_map['analog_axis_y']), 3)
       if(abs(fbAxis) > JOYSTICK_NOISE_LEVEL):
-        #print "DEBUG: fbAxis is: "+str(fbAxis)
         self.player.shape.move(0, fbAxis * self.player.shape.linearSpeed)
-    
-      lrAxis = round(self.joystick.get_axis(1), 3)
+      lrAxis = round(self.joystick.get_axis(self.cur_pad_map['analog_axis_x']), 3)
       if(abs(lrAxis) > JOYSTICK_NOISE_LEVEL):
-        #print "DEBUG: lrAxis is: "+str(lrAxis)
         self.player.shape.move(lrAxis * self.player.shape.linearSpeed, 0)
 
     # after processing any pending user events, check for idle condition
