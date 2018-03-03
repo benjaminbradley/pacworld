@@ -684,6 +684,7 @@ class World():
     #logging.debug("generating {0} art pieces...".format(minTotalArts))
     curTotalArts = 0
     themap.arts = []
+    art_locations = []  # list of (x,y) tuples, locations of placed art
     artStyleCount = {}
     while curTotalArts < minTotalArts:
     # until enough art generated
@@ -713,7 +714,12 @@ class World():
         placement_attempts += 1
         artx = random.randint(0, self.cols-1)
         arty = random.randint(0, self.rows-1)
+        newart_location = (artx,arty)
         # check art placement
+        # make sure there is not already art in this square...
+        if newart_location in art_locations:
+          # collision with existing art, try again
+          continue
         # what is at this location?
         current_contents = self.grid[arty][artx]
         if current_contents is not None and current_contents.type in [pacdefs.TYPE_FIELD, pacdefs.TYPE_ROOM]:
@@ -728,7 +734,8 @@ class World():
       if(self.addObject(newArt)):
         curTotalArts += 1
         themap.arts.append(newArt)
-        logging.debug ("added {0} to the map at {1}".format(str(newArt), (artx,arty)))
+        art_locations.append(newart_location)
+        logging.debug ("added {0} to the map at {1}".format(str(newArt), newart_location))
     # now there's enough art in the world
     return themap.arts
   # end of World.addArt()
@@ -781,7 +788,6 @@ class World():
       elif(newObject.type == pacdefs.TYPE_ART):
         curSquare = newGrid[newObject.top][newObject.left]
         if curSquare == None:  return False  # won't place art in no-mans-land
-        if curSquare.type == pacdefs.TYPE_ART:  return False  # won't place overlapping art
         # otherwise, proceed
         # object is added to the world and granted a unique ID via code below
         # do not add to world grid as background structure must be preserved  -- newGrid[newObject.top][newObject.left] = newObject
