@@ -290,6 +290,15 @@ class Pacworld:
         #logging.debug("drawing shape {0} at {1}".format(shape.id, shape.mapTopLeft))
         shape.draw(self.surface)
       
+      if pacdefs.DEBUG_NUMSWIRLS:
+        # debug number of swirls
+        num_shapes = len(self.map.shapes)
+        total_swirls = 0
+        for shape in self.map.shapes:
+          total_swirls += len(shape.swirls)
+        font = pygame.font.Font(None, 30)
+        textBitmap = font.render("{} swirls / {} shapes / {} %".format(total_swirls, num_shapes, int(100*total_swirls/(num_shapes*3))), True, colors.WHITE)
+        self.surface.blit(textBitmap, (10,10))
       
       # Update the full display surface to the screen
       pygame.display.update()

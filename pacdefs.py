@@ -56,3 +56,4 @@ def opposite_side(side):
 
 DEBUG_SHAPE_SHOWID = False
 DEBUG_ART_SHOWID = False
+DEBUG_NUMSWIRLS = False
