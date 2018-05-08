@@ -39,10 +39,11 @@ class Map(sprite.Sprite):
     # Fill the image with a green colour (specified as R,G,B)
     self.image.fill(colors.BLACK)
     
+    self.world = theworld
     self.walls = [] # List to hold the walls
+    self.wallgrid = [[[] for x in range(self.world.cols)] for y in range(self.world.rows)]  # [y][x] grid of arrays of walls in that grid square
     self.arts = []  # list to hold the arts
     self.shapes = []  # list to hold the shapes
-    self.world = theworld
     
     
     
@@ -196,12 +197,9 @@ class Map(sprite.Sprite):
             # create the wall def
             newwall = Wall(self.mapSize, wallPoints[0], wallPoints[1])
             # add to walls array
-            self.walls.append( newwall )
+            self.addWall( newwall )
             # draw on image
             newwall.draw(self.image)
-        
-    logging.debug ("rendered world:\n{0}".format(theworld.to_s()))
-    
 
     # draw a border, registering each line as a wall
     topLt = (0, 0)
@@ -216,16 +214,51 @@ class Map(sprite.Sprite):
     ]
     for wallPoints in wallDefs:
       newwall = Wall(self.mapSize, wallPoints[0], wallPoints[1])  # create the wall def
-      self.walls.append( newwall )  # add to walls array
+      self.addWall( newwall )  # add to walls array and index
       newwall.draw(self.image)  # draw on image
-
     
     # Create the sprite rectangle from the image
     self.rect = self.image.get_rect()
     
     # holds current effects happening on the map
     self.effects = []  # array of Effects
-    
+
+
+  def addWall(self, new_wall):
+    # add to array of walls
+    self.walls.append( new_wall )
+    # add to grid-based index
+    (x1,y1) = new_wall.p1
+    (x2,y2) = new_wall.p2
+    # ensure that x1 <= x2 and y1 <= y2
+    if(x1 > x2 or y1 > y2): (x1,y1,x2,y2) = (x2,y2,x1,y1)
+    if(x1 == x2): #wall is horizontal
+      gridx = min(int(x1 / self.grid_cellwidth), self.world.cols-1)
+      yi = y1
+      while(yi < y2):
+        gridy = min(int(yi / self.grid_cellheight), self.world.rows-1)
+        if new_wall not in self.wallgrid[gridy][gridx]: self.wallgrid[gridy][gridx].append(new_wall)
+        yi += self.grid_cellheight
+    else: # wall is vertical
+      gridy = min(int(y1 / self.grid_cellheight), self.world.rows-1)
+      xi = x1
+      while(xi < x2):
+        gridx = min(int(xi / self.grid_cellwidth), self.world.cols - 1)
+        if new_wall not in self.wallgrid[gridy][gridx]: self.wallgrid[gridy][gridx].append(new_wall)
+        xi += self.grid_cellwidth
+
+
+  def get_nearby_walls(self, coordsYX):
+    nearby_walls = []
+    for dy in range(-1,2):
+      for dx in range(-1,2):
+        y = min(max(coordsYX[0]+dy,0), self.world.rows-1)
+        x = min(max(coordsYX[1]+dx,0), self.world.cols-1)
+        nearby_walls += self.wallgrid[y][x]
+    nearby_walls = list(set(nearby_walls))
+    return nearby_walls
+
+
   def draw(self, surface):
     # Draw a subsurface of the world map
     # with dimensions of the displaySize
@@ -254,7 +287,9 @@ class Map(sprite.Sprite):
 
 
   def wallCollision(self, target):
-    for wall in self.walls:
+    target_coords = target.get_gridCoordsYX()
+    nearby_walls = self.get_nearby_walls(target_coords)
+    for wall in nearby_walls:
       a = wall
       b = target
       #We calculate the offset of the second mask relative to the first mask.

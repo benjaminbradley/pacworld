@@ -235,7 +235,8 @@ class Pacworld:
 
     # Create the world, passing through the grid size
     theworld = World(gridDisplaySize)
-  
+    logging.debug ("rendered world:\n{0}".format(theworld.to_s()))
+
     # Create the world map, passing through the display size and world map
     self.map = Map(mapSize, self.display, self.character_size, theworld)
     art = theworld.addArt(self.map)
