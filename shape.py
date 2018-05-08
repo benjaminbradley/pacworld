@@ -158,11 +158,16 @@ class Shape(Pacsprite):
   def getCenter(self):
     return self.center
 
-  def getMapTopLeft(self):
-    """returns an (x,y) tuple for the top-left of this shape on the map"""
+  def calcMapTopLeft(self):
+    """calculates and returns the (x,y) tuple for the top-left of this shape on the map"""
     x = self.center[0] - int(self.rect.width/2)
     y = self.center[1] - int(self.rect.height/2)
-    return (x,y)
+    self.mapTopLeft = (x,y)
+    return self.mapTopLeft
+
+  def getMapTopLeft(self):
+    """returns an (x,y) tuple for the top-left of this shape on the map"""
+    return self.mapTopLeft
 
   def makeSprite(self):
     # Create an image for the sprite
@@ -229,7 +234,7 @@ class Shape(Pacsprite):
     self.rect = self.image.get_rect()
     if oldrectpos != None:
       self.rect.center = oldrectpos
-    
+    self.calcMapTopLeft()
     self.dirty_sprite = False
 
   def topLeftToCenter(self, xy):
@@ -242,9 +247,9 @@ class Shape(Pacsprite):
     startPos = (startCol, startRow)
     # reset sprite
     self.angle = 0
-    self.makeSprite()
     # Start the shape directly in the centre of the screen
     self.center = self.map.gridToScreenCoordCenter(startPos)
+    self.makeSprite()
     self.screenTopLeft = list(self.getMapTopLeft())
     # reset other attributes as well
     self.updatePosition()
@@ -612,7 +617,7 @@ class Shape(Pacsprite):
   def updatePosition(self):
     """place the shape's sprite on the screen based on it's current position on the map"""
     """updates screenTopLeft and sprite.rect's position"""
-    mapTopLeft = self.getMapTopLeft()
+    mapTopLeft = self.calcMapTopLeft()
     self.screenTopLeft = list(mapTopLeft)
     if mapTopLeft[0] < self.display.getDisplaySize()[0]/2:
       self.screenTopLeft[0] = mapTopLeft[0]
@@ -828,6 +833,7 @@ class Shape(Pacsprite):
     if self.map.wallCollision(self):
       #logging.debug("move aborted due to collision")
       self.center = startpos
+      self.calcMapTopLeft()
       return False
     else:
       #logging.debug("shape moved to %s from %s", self.center, startpos)

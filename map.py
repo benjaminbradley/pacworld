@@ -258,7 +258,7 @@ class Map(sprite.Sprite):
       a = wall
       b = target
       #We calculate the offset of the second mask relative to the first mask.
-      mapTopLeft = b.getMapTopLeft()
+      mapTopLeft = b.calcMapTopLeft()
       offset_x = mapTopLeft[0]
       offset_y = mapTopLeft[1]
       # See if the two masks at the offset are overlapping.
