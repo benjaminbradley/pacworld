@@ -160,6 +160,10 @@ class Pacworld:
     
     # Create a clock to manage time
     self.clock = pygame.time.Clock()
+    self.frametime = [] # array of recent frametimes, to calculate a rolling average
+    self.frametime_idx = 0
+    self.min_frametime = 1000
+    self.max_frametime = 0
     
     # Initialize keyboard
     self.cur_kb_map = KB_MAP[KB_DVORAK]
@@ -252,6 +256,20 @@ class Pacworld:
     self.sound.play('3robobeat')
   
 
+
+  def get_framespeed_info(self, clock):
+    rawtime = clock.get_rawtime()
+    if(len(self.frametime) < 30):
+      self.frametime.append(rawtime)
+    else:
+      self.frametime[self.frametime_idx] = rawtime
+    self.frametime_idx = (self.frametime_idx + 1) % 30
+    average_frametime = int(sum(self.frametime) / len(self.frametime))
+    if(average_frametime < self.min_frametime): self.min_frametime = average_frametime
+    if(50 < pacglobal.get_frames() and average_frametime > self.max_frametime): self.max_frametime = average_frametime
+    return str(self.min_frametime) + ' < ' + str(average_frametime) + ' < ' + str(self.max_frametime)
+
+
   def run(self):
     # Runs the game loop
     
@@ -303,12 +321,12 @@ class Pacworld:
       # Update the full display surface to the screen
       pygame.display.update()
       
-      # display debug if enabled
-      pygame.display.set_caption("fps: " + str(int(self.clock.get_fps())))
-
       # Limit the game to 30 frames per second
       self.clock.tick(30)
-      
+
+      # display debug if enabled
+      pygame.display.set_caption("fps: " + str(int(self.clock.get_fps())) + " | framespeed: " + self.get_framespeed_info(self.clock))
+
       # advance frame counter
       pacglobal.nextframe()
 
