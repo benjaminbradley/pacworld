@@ -608,10 +608,7 @@ class Shape(Pacsprite):
     }
 
   def get_gridCoordsYX(self):
-    gridY = int(self.center[1] / self.map.grid_cellheight)
-    gridX = int(self.center[0] / self.map.grid_cellwidth)
-    self.debug("in grid square {0},{1} (X,Y)".format(gridX, gridY))
-    return (gridY,gridX)
+    return self.gridCoordsYX
 
 
   def updatePosition(self):
@@ -636,6 +633,11 @@ class Shape(Pacsprite):
     self.rect.top = self.screenTopLeft[1]
     self.rect.left = self.screenTopLeft[0]
     #logging.debug("rect is: {0}".format(self.rect))
+    # calculate gridCoords also since
+    gridY = int(self.center[1] / self.map.grid_cellheight)
+    gridX = int(self.center[0] / self.map.grid_cellwidth)
+    #self.debug("in grid square {0},{1} (X,Y)".format(gridX, gridY))
+    self.gridCoordsYX = (gridY,gridX)
 
   def draw(self, surface):
     if self.map.player.shape == self:
