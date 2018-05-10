@@ -155,6 +155,9 @@ class Pacworld:
     
     # Initialize pygame
     pygame.init()
+    # reset allowed types on the events queue
+    pygame.event.set_allowed(None)
+    pygame.event.set_allowed(QUIT)
     
     self.sound = getPacsound()
     
@@ -168,6 +171,7 @@ class Pacworld:
     # Initialize keyboard
     self.cur_kb_map = KB_MAP[KB_DVORAK]
     self.input_mode = [INPUT_KEYBOARD]
+    pygame.event.set_allowed([KEYDOWN,KEYUP])
     
     # Initialize the joysticks (if present)
     pygame.joystick.init()
@@ -182,6 +186,7 @@ class Pacworld:
         logging.info("{} present, enabling joystick for input".format(joy_name))
         self.cur_pad_map = GAMEPAD_FUNCTION_MAP[joy_name]
         self.input_mode.append(INPUT_JOYSTICK)
+        pygame.event.set_allowed([JOYBUTTONDOWN,JOYBUTTONUP,JOYAXISMOTION])
       else:
         logging.error("Joystick present, but not currently mapped, name='{}'".format(joy_name))
     
