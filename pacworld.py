@@ -200,6 +200,12 @@ class Pacworld:
         self.button_status.append(self.joystick.get_button(i))
       self.joy_axis_x = self.cur_pad_map['move_x']
       self.joy_axis_y = self.cur_pad_map['move_y']
+      # check for variations on RPi
+      if(joy_name == INPUT_GAMEPAD):
+        if(pygame.joystick.Joystick(0).get_numaxes() == 2):
+          self.joy_axis_x = 0
+          self.joy_axis_y = 1
+          logging.debug("Adjusting x/y axes for RPi: x={}, y={}".format(self.joy_axis_x, self.joy_axis_y))
     
     
     # Set the window title
