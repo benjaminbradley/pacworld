@@ -16,6 +16,7 @@ from shape import *
 from map import Map
 import world
 from world import World
+import ArtRenderer
 from pacsounds import Pacsounds,getPacsound
 from pacdisplay import Pacdisplay
 from player import Player
@@ -250,6 +251,7 @@ class Pacworld:
 
     # Create the world map, passing through the display size and world map
     self.map = Map(mapSize, self.display, self.character_size, theworld)
+    ArtRenderer.renderArt(self.character_size)
     art = theworld.addArt(self.map)
     shapes = self.map.addShapes()
     self.sprites = sprite.Group(shapes, art)

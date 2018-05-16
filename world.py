@@ -10,7 +10,7 @@ import math  # for sqrt in move_cost
 
 import pacdefs
 import pacglobal
-from art import Art,STYLES
+from art import Art
 
 
 # helper functions
@@ -692,9 +692,9 @@ class World():
       placement_ok = False
       # calculate art style weights based on existing placements
       art_style_weights = []
-      for art_style in STYLES:
+      for art_style in pacdefs.STYLES:
         # ensure one of each before duplicating
-        if(len(artStyleCount.keys()) < len(STYLES)):
+        if(len(artStyleCount.keys()) < len(pacdefs.STYLES)):
           if(art_style in list(artStyleCount.keys())): weight = 0
           else: weight = 1
         else:
@@ -702,7 +702,7 @@ class World():
           remaining = minTotalArts - placed
           weight = remaining / minTotalArts
         art_style_weights.append(weight)
-      new_art_style = random.choices(STYLES, art_style_weights)[0]
+      new_art_style = random.choices(pacdefs.STYLES, art_style_weights)[0]
       #logging.debug("With current placement {0}, weights are {1} and this choice is {2}".format(artStyleCount, art_style_weights, new_art_style))
       if new_art_style not in list(artStyleCount.keys()):
         artStyleCount[new_art_style] = 0

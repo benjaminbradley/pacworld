@@ -41,19 +41,29 @@ SIDE_S = 2
 SIDE_W = 3
 SIDES = [SIDE_N, SIDE_E, SIDE_S, SIDE_W]
 
-# graphics
-WALL_LINE_WIDTH = 8  # pixel width for drawing
-
-#sound
-NEARBY_SOUND_PERCENT = 0.2
-ONSCREEN_SOUND_PERCENT = 0.5
-
 def opposite_side(side):
   # assumes an even number of sides
   opposite = (side + (len(SIDES)/2)) % len(SIDES)
-  #logging.debug("opposite side of {0} is {1}".format(side, opposite))
   return opposite
 
+
+# graphics
+WALL_LINE_WIDTH = 8  # pixel width for drawing
+
+
+# sound
+NEARBY_SOUND_PERCENT = 0.2
+ONSCREEN_SOUND_PERCENT = 0.5
+
+
+# art
+STYLE_TREE = 0
+STYLE_SPIRAL = 1
+STYLE_MANDALA = 2
+STYLES = [STYLE_TREE, STYLE_SPIRAL, STYLE_MANDALA]
+
+
+# debug flags
 DEBUG_SHAPE_SHOWID = False
 DEBUG_ART_SHOWID = False
 DEBUG_NUMSWIRLS = False
