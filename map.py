@@ -68,20 +68,6 @@ class Map(sprite.Sprite):
         else:
           right = (worldObj.left+worldObj.width) * grid_cellwidth
           bottom = (worldObj.top+worldObj.length) * grid_cellheight
-        topLt = (left, top)
-        topRt = (right, top)
-        bottomLt = (left, bottom)
-        bottomRt = (right, bottom)
-        # draw a line down each side of the path
-        if worldObj.direction_h:
-          logging.debug ("path line1 from {0} to {1}".format(topLt, topRt))
-          pygame.draw.line(self.image, colors.GREEN, topLt, topRt, pacdefs.WALL_LINE_WIDTH)
-          pygame.draw.line(self.image, colors.GREEN, bottomLt, bottomRt, pacdefs.WALL_LINE_WIDTH)
-        else:
-          logging.debug ("path line1 from {0} to {1}".format(topLt, bottomLt))
-          pygame.draw.line(self.image, colors.GREEN, topLt, bottomLt, pacdefs.WALL_LINE_WIDTH)
-          pygame.draw.line(self.image, colors.GREEN, topRt, bottomRt, pacdefs.WALL_LINE_WIDTH)
-        # note, these are NOT blocking walls
         width = right - left
         height = bottom - top
         rect = (left, top, width, height)
