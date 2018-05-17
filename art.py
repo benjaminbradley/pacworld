@@ -15,7 +15,7 @@ from effect import *  # Effect, EFFECT_*
 from swirl import *
 
 
-BURST_FREQUENCY = 3000
+BURST_FREQUENCY = 8000
 
 class Art(Pacsprite):
   def __init__(self, themap, left, top, style = None):

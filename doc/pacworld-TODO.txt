@@ -1,7 +1,6 @@
 ---------------------------------------------------- FUTURE TASKS:
 
 NEXT STEPS for MVP:
-- slow art burst frequency
 - remap gamepad so 'start' button no longer quits
 - shapes with same border are attracted to each other
 - once map is finished, do a polishing pass to extend pathways to whatever is at the logical end (i.e. don't stop just short of a room/field/path)
