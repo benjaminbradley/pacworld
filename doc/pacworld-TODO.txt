@@ -1,13 +1,16 @@
 ---------------------------------------------------- FUTURE TASKS:
 
 NEXT STEPS for MVP:
-- when the world reaches a certain level of swirl "saturation" (e.g. % of characters have # of swirls) then remake the world
 - increase swirl radius
 - slow art burst frequency
 - remap gamepad so 'start' button no longer quits
+- shapes with same border are attracted to each other
 - once map is finished, do a polishing pass to extend pathways to whatever is at the logical end (i.e. don't stop just short of a room/field/path)
 - bug fixes
+- check bug log from rpi2 (from redcamp mtg)
 - other TODOs in code
+- random shape fill color
+- dancing transfers fill color
 - performance improvements
 - get a swirl from another character "ask"
 - ? AI ability to detect wall collisions and shrink size when needed?  (test with initial size @ 120) otherwise they'll just stay stuck until they randomly activate the right sequence of swirls to get un-stuck
@@ -42,11 +45,14 @@ bench marking - on MacBook Air:
 - cache world def after generation, indexed by seed & version# (add version#)
 - profiler-based performance improvements (sprite#update, shape#update, map#wallCollision)
   ref: https://docs.python.org/3.6/library/profile.html
-  python3 -m cProfile pacworld.py -c 5 -a > pacprofile.tsv
+  python3 -m cProfile pacworld.py -c 5 -a | sed -e $'s/  /\t/g' > pacprofile.tsv
 
 ENHANCEMENTS:
+- immediately activate a swirl on the player when it is received for the first time
+- change direction of burst for up/down activation
 - consider getting rid of activate-able swirls, and instead have the art pieces change the shapes directly. swirls would just be a mark of having been changed.
-- identify inaccessible areas and color them, move any sprites in there
+- increase move cost for "blank" spaces (outside of rooms, pathways, fields) to discourage AI routing; slow down player movement in that terrain
+- identify inaccessible areas and color them, move any sprites out of there
 - different backgrounds for each room
 - allow multiple doors per room side
 - special ability to activate all of your swirls one after another

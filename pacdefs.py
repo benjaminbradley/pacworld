@@ -50,6 +50,7 @@ def opposite_side(side):
 # graphics
 WALL_LINE_WIDTH = 8  # pixel width for drawing
 
+MAX_SWIRL_SATURATION_PERCENT = 90 # when world reaches this swirl saturation, it is remade
 
 # sound
 NEARBY_SOUND_PERCENT = 0.2

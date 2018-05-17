@@ -150,9 +150,7 @@ class Pacworld:
     
     # if no random seed was given, make one up:
     if self.crazySeed is None:
-      self.crazySeed = random.randint(0, MAX_RANDOM_SEED)
-      logging.info("USING RANDOM SEED: {0}".format(self.crazySeed))
-      print("USING RANDOM SEED: {0}".format(self.crazySeed))
+      self.newRandomSeed()
     
     # Initialize pygame
     pygame.init()
@@ -210,7 +208,7 @@ class Pacworld:
     
     
     # Set the window title
-    pygame.display.set_caption("WORKING NAME: Pacworld")
+    pygame.display.set_caption("Flat Flip Foom")
     
     # capture current screen res for fullscreen mode
     self.fullscreen_resolution = (display.Info().current_w, display.Info().current_h)
@@ -228,30 +226,45 @@ class Pacworld:
     logging.debug("Character size set to {0}".format(self.character_size))
     # Create the window
     self.surface = pygame.display.set_mode(self.display.getDisplaySize(), flags)
-    font = pygame.font.Font(None, 30)
-    textBitmap = font.render("Generating world...", True, colors.WHITE)
-    #textRect = textBitmap.get_rect().width
-    #print "DEBUG: textRect is: {0}".format(textRect)
-    textWidth = textBitmap.get_rect().width
-    self.surface.blit(textBitmap, [self.display.getDisplaySize()[0]/2 - textWidth/2, self.display.getDisplaySize()[1]/2])
-    pygame.display.update()
     
+    ArtRenderer.renderArt(self.character_size)
     
     random.seed(self.crazySeed)
     
-    mapSize = [SCALE_FACTOR*x for x in self.display.getDisplaySize()]
+    self.mapSize = [SCALE_FACTOR*x for x in self.display.getDisplaySize()]
     
     gridSize = int(self.character_size * 1.5)
-    gridDisplaySize = (int(mapSize[0] / gridSize), int(mapSize[1] / gridSize))  # assumes square grid cells
-    logging.debug("gridDisplaySize is {0}".format(gridDisplaySize))
+    self.gridDisplaySize = (int(self.mapSize[0] / gridSize), int(self.mapSize[1] / gridSize))  # assumes square grid cells
+    logging.debug("gridDisplaySize is {0}".format(self.gridDisplaySize))
+
+    # generate world, map, and all the things in it
+    self.generateWorld(self.start_autonomous)
+
+    # play a "startup" sound
+    self.sound.play('3robobeat')
+
+
+  def newRandomSeed(self):
+    self.crazySeed = random.randint(0, MAX_RANDOM_SEED)
+    logging.info("USING RANDOM SEED: {0}".format(self.crazySeed))
+    print("USING RANDOM SEED: {0}".format(self.crazySeed))
+
+
+  def generateWorld(self, start_autonomous):
+    self.surface.fill((0,0,0))
+    # show notice
+    font = pygame.font.Font(None, 30)
+    textBitmap = font.render("Generating world...", True, colors.WHITE)
+    textWidth = textBitmap.get_rect().width
+    self.surface.blit(textBitmap, [self.display.getDisplaySize()[0]/2 - textWidth/2, self.display.getDisplaySize()[1]/2])
+    pygame.display.update()
 
     # Create the world, passing through the grid size
-    theworld = World(gridDisplaySize)
-    logging.debug ("rendered world:\n{0}".format(theworld.to_s()))
+    theworld = World(self.gridDisplaySize)
+    logging.debug("rendered world:\n{0}".format(theworld.to_s()))
 
     # Create the world map, passing through the display size and world map
-    self.map = Map(mapSize, self.display, self.character_size, theworld)
-    ArtRenderer.renderArt(self.character_size)
+    self.map = Map(self.mapSize, self.display, self.character_size, theworld)
     art = theworld.addArt(self.map)
     shapes = self.map.addShapes()
     self.sprites = sprite.Group(shapes, art)
@@ -262,14 +275,6 @@ class Pacworld:
     self.player.shape.autonomous = self.start_autonomous
 
     self.map.player = self.player
-    #self.player.shape.mapTopLeft = [int(5.5*self.map.grid_cellwidth-self.shape.side_length/2), int(5.5*self.map.grid_cellheight-self.shape.side_length/2)]
-    
-    logging.info("USING RANDOM SEED: {0}".format(self.crazySeed))
-
-    # play a "startup" sound
-    self.sound.play('3robobeat')
-  
-
 
   def get_framespeed_info(self, clock):
     rawtime = clock.get_rawtime()
@@ -322,14 +327,15 @@ class Pacworld:
         #logging.debug("drawing shape {0} at {1}".format(shape.id, shape.mapTopLeft))
         shape.draw(self.surface)
       
-      if pacdefs.DEBUG_NUMSWIRLS:
+      # check swirl saturation
+      (total_swirls, num_shapes, swirl_saturation_pct) = self.map.getSwirlSaturationPercent()
+      if swirl_saturation_pct >= pacdefs.MAX_SWIRL_SATURATION_PERCENT:
+        self.newRandomSeed()
+        self.generateWorld(self.player.shape.autonomous)
+      elif pacdefs.DEBUG_NUMSWIRLS:
         # debug number of swirls
-        num_shapes = len(self.map.shapes)
-        total_swirls = 0
-        for shape in self.map.shapes:
-          total_swirls += len(shape.swirls)
         font = pygame.font.Font(None, 30)
-        textBitmap = font.render("{} swirls / {} shapes / {} %".format(total_swirls, num_shapes, int(100*total_swirls/(num_shapes*3))), True, colors.WHITE)
+        textBitmap = font.render("{} swirls / {} shapes / {} %".format(total_swirls, num_shapes, swirl_saturation_pct), True, colors.WHITE)
         self.surface.blit(textBitmap, (10,10))
       
       # Update the full display surface to the screen

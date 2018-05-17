@@ -367,6 +367,14 @@ class Map(sprite.Sprite):
   def gridToScreenCoordCenter(self, gridCoord):
     return [gridCoord[0] * self.grid_cellwidth + int(self.grid_cellwidth/2), gridCoord[1] * self.grid_cellheight + int(self.grid_cellheight/2)]
 
+  def getSwirlSaturationPercent(self):
+    num_shapes = len(self.shapes)
+    total_swirls = 0
+    for shape in self.shapes:
+      total_swirls += len(shape.swirls)
+    swirl_saturation_pct = int(100*total_swirls/(num_shapes*3))
+    return [total_swirls, num_shapes, swirl_saturation_pct]
+
 # end of class Map
 
 
