@@ -3,7 +3,9 @@
 import pygame # Provides what we need to make a game
 import sys # Gives us the sys.exit function to close our program
 import getopt
+import gc
 import random
+import resource
 import logging
 
 from pygame.locals import *
@@ -251,6 +253,12 @@ class Pacworld:
 
 
   def generateWorld(self, start_autonomous):
+    # run garbage collection
+    gc.collect()
+    # log memory usage
+    usage = resource.getrusage(resource.RUSAGE_SELF)
+    logging.debug("Process memory usage is: {}".format(usage.ru_maxrss))
+    
     self.surface.fill((0,0,0))
     # show notice
     font = pygame.font.Font(None, 30)
@@ -345,7 +353,8 @@ class Pacworld:
       self.clock.tick(30)
 
       # display debug if enabled
-      pygame.display.set_caption("fps: " + str(int(self.clock.get_fps())) + " | framespeed: " + self.get_framespeed_info(self.clock))
+      if(pacdefs.DEBUG_FRAMESPEED):
+        pygame.display.set_caption("fps: " + str(int(self.clock.get_fps())) + " | framespeed: " + self.get_framespeed_info(self.clock))
 
       # advance frame counter
       pacglobal.nextframe()
