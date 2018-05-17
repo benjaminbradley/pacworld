@@ -1,7 +1,6 @@
 ---------------------------------------------------- FUTURE TASKS:
 
 NEXT STEPS for MVP:
-- increase swirl radius
 - slow art burst frequency
 - remap gamepad so 'start' button no longer quits
 - shapes with same border are attracted to each other

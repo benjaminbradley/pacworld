@@ -145,14 +145,13 @@ class Shape(Pacsprite):
     if num_swirls == 1:
       return (base_x,base_y)
     else:
-      SWIRL_ROTATE_RADIUS = max(4, int(self.side_length / 15))  #2 + num_swirls
+      SWIRL_ROTATE_RADIUS = max(4, int(self.side_length / 8))
       theta = 2 * math.pi * float(i) / float(num_swirls)
       theta = theta + self.swirlRotationAngle_rad;
       if(theta > 2*math.pi): theta -= 2*math.pi
       if(theta < 0): theta += 2*math.pi
       x = int(SWIRL_ROTATE_RADIUS * math.cos(theta))
       y = int(SWIRL_ROTATE_RADIUS * math.sin(theta))
-      #logging.debug("swirl x,y is {0},{1}".format(x,y))
       return (base_x + x, base_y + y)
   
   def getCenter(self):
