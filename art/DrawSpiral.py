@@ -19,6 +19,7 @@ def DrawSpiral(display, pos, radius, rotation = math.pi, numSpokes = 1, clockwis
         -startAngle: the starting angle of the first spoke
         -lineWidth: width of spiral lines
     """
+    if(radius == 0): radius = 0.1
     resolution = radius / 2.0
     radiusIncrement = radius / resolution
     rotationIncrement = rotation / resolution
