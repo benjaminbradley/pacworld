@@ -81,8 +81,8 @@ GAMEPAD_BUTTON_MAP = {
 }
 GAMEPAD_FUNCTION_MAP = {
   INPUT_GAMEPAD: {  # 8-button, SNES-like
-    'move_y': GAMEPAD_BUTTON_MAP[INPUT_GAMEPAD]['joy_axis_y'],
-    'move_x': GAMEPAD_BUTTON_MAP[INPUT_GAMEPAD]['joy_axis_x'],
+    'move_y':       GAMEPAD_BUTTON_MAP[INPUT_GAMEPAD]['joy_axis_y'],
+    'move_x':       GAMEPAD_BUTTON_MAP[INPUT_GAMEPAD]['joy_axis_x'],
     'ask':          [],
     'give':         [GAMEPAD_BUTTON_MAP[INPUT_GAMEPAD]['top']],
     'swirl_right':  [],
@@ -90,7 +90,7 @@ GAMEPAD_FUNCTION_MAP = {
     'doswirl_up':   [GAMEPAD_BUTTON_MAP[INPUT_GAMEPAD]['right']],
     'doswirl_dn':   [GAMEPAD_BUTTON_MAP[INPUT_GAMEPAD]['bottom']],
     'reset':        [GAMEPAD_BUTTON_MAP[INPUT_GAMEPAD]['Lcenter']],
-    'quit':         [GAMEPAD_BUTTON_MAP[INPUT_GAMEPAD]['Rcenter']],
+    'quit':         [],
   },
   INPUT_JOYSTICK: {  # 10-button, Playstation-like
     'move_y':       GAMEPAD_BUTTON_MAP[INPUT_JOYSTICK]['joy_axis_y'],
