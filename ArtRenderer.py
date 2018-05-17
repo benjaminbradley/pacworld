@@ -176,7 +176,7 @@ if __name__ == '__main__':  # Begin test code
   pygame.display.set_caption("Art Renderer")
 
   renderArt(screen_height / 6)
-  
+  current_frame = {}  # hash of style => current_frame
   while True:
     for event in pygame.event.get():
       if event.type == pygame.QUIT or event.type == pygame.KEYDOWN:
@@ -186,11 +186,12 @@ if __name__ == '__main__':  # Begin test code
     art_width = screen_width / len(pacdefs.STYLES)
     art_y = screen_height / 2
     for i,style in enumerate(pacdefs.STYLES):
+      if style not in current_frame.keys(): current_frame[style] = 0
       animation = rendered_art[style].getAnimation()
-      image = animation.getCurrentFrame()
+      image = animation.getFrame(current_frame[style])
       art_x = int(art_width * (i + 0.5))
       screen.blit(image, (art_x, art_y))
-      animation.nextFrame()
+      current_frame[style] = animation.getNextFrame(current_frame[style])
     
     pygame.time.Clock().tick(30)
     pygame.display.update()
