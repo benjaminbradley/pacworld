@@ -2,29 +2,29 @@
 
 NEXT STEPS for MVP:
 - shapes with same border are attracted to each other
-- once map is finished, do a polishing pass to extend pathways to whatever is at the logical end (i.e. don't stop just short of a room/field/path)
 - bug fixes
 - check bug log from rpi2 (from redcamp mtg)
 - other TODOs in code
 - random shape fill color
 - dancing transfers fill color
-- performance improvements
+- ? performance improvements
 - get a swirl from another character "ask"
 - ? AI ability to detect wall collisions and shrink size when needed?  (test with initial size @ 120) otherwise they'll just stay stuck until they randomly activate the right sequence of swirls to get un-stuck
-- show progress during world generation
+- show progress during world generation (may not be needed)
 - max time before forced reset - in case some art types or players are inaccessible, etc.
 
 FIXME:
 - door placement algorithm (world.py#negotiateDoorPlacement) will coordinate door location with existing door, but if 2 rooms are side-by-side next to the SAME side of one adjacent room, the second one will move the door during ITS 'coordinate door placement' (see topleft corner of -s 2357 -c 3)
 - giveSwirl should give a swirl of the type that is currently selected (looks like a random one is getting assigned?)
 - calculate newAngle based on lastPosition not oldestPosition (see stash)
-- intersections should override pathways, suppress path outlines
 
 META FEATURES:
 - segment logging by e.g. world generation, autonomous behavior, draw/rendering, etc. to easily toggle on/off and/or separate channels
 - add memory profiling to watch for memory leaks
 
 PERFORMANCE:
+- don't create a surface the size of the entire map for every wall : see Wall.__init__
+- monitor memory usage, manage if needed. see: https://docs.python.org/3/library/gc.html
 bench marking - on MacBook Air:
   base:
     scale=3   fps ~ 30; framespeed ~ 20
@@ -42,7 +42,7 @@ bench marking - on MacBook Air:
 - cache world def after generation, indexed by seed & version# (add version#)
 - profiler-based performance improvements (sprite#update, shape#update, map#wallCollision)
   ref: https://docs.python.org/3.6/library/profile.html
-  python3 -m cProfile pacworld.py -c 5 -a | sed -e $'s/  /\t/g' > pacprofile.tsv
+  python3 -m cProfile pacworld.py -c 3 -a > pacprofile.txt
 
 ENHANCEMENTS:
 - immediately activate a swirl on the player when it is received for the first time

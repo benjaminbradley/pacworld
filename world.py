@@ -671,6 +671,64 @@ class World():
 
     # step 4. place rocks
     #  - 4 or 5 randomly around the map? maybe skip this step? or it's used to identify inaccessible enclosed spaces?
+    
+    # polishing pass to extend pathways to whatever is at the logical end
+    # if all spaces are empty, or only other path crossing, extend the path
+    # continue until non-path obstruction or edge-of-map is hit
+    for path in self.objects:
+      if path.type != pacdefs.TYPE_PATH: continue
+      # check either end of path
+      for side in [-1,1]:
+        # handle horizontal paths
+        if path.direction_h:
+          bottom = path.top + path.width - 1
+          right = path.left + path.length - 1
+          if side == -1: startx = path.left  # check left side
+          else: startx = right # side == 1
+          dx = side
+          extraclear = True # is this extra row/column clear of non-path obstacles?
+          while extraclear:
+            if(startx+dx < 0 or self.cols <= startx+dx):
+              break
+            for y in range(path.top, bottom+1):
+              # check grid contents at startx + dx, y
+              gridsquare = self.grid[y][startx + dx]
+              if gridsquare != None and gridsquare.type != pacdefs.TYPE_PATH:
+                # if non-path obstacle encountered
+                extraclear = False
+            if extraclear == True: #for the whole row/col, then
+              # extend the path into this row/column
+              if side == -1: path.left -= 1
+              path.length += 1
+              for y in range(path.top, bottom+1):
+                self.grid[y][startx + dx] = path
+              #   and move on to the next adjacent row/col, if it's not beyond the edge of the map
+              dx += side
+        else: # vertical paths
+          bottom = path.top + path.length - 1
+          right = path.left + path.width - 1
+          if side == -1: starty = path.top  # check top side
+          else: starty = bottom # side == 1
+          dy = side
+          extraclear = True # is this extra row/column clear of non-path obstacles?
+          while extraclear:
+            if(starty+dy < 0 or self.rows <= starty+dy):
+              break
+            for x in range(path.left, right+1):
+              # check grid contents at x, starty + dy
+              gridsquare = self.grid[starty + dy][x]
+              if gridsquare != None and gridsquare.type != pacdefs.TYPE_PATH:
+                # if non-path obstacle encountered
+                extraclear = False
+            if extraclear == True: #for the whole row/col, then
+              # extend the path into this row/column
+              if side == -1: path.top -= 1
+              path.length += 1
+              for x in range(path.left, right+1):
+                self.grid[starty + dy][x] = path
+              #   and move on to the next adjacent row/col, if it's not beyond the edge of the map
+              dy += side
+    
   # end of World.__init__()
   
   
