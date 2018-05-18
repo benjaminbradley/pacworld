@@ -210,7 +210,7 @@ class Pacworld:
     
     
     # Set the window title
-    pygame.display.set_caption("Flat Flip Foom")
+    pygame.display.set_caption("Flat Flip Friends")
     
     # capture current screen res for fullscreen mode
     self.fullscreen_resolution = (display.Info().current_w, display.Info().current_h)
@@ -261,6 +261,11 @@ class Pacworld:
     
     self.surface.fill((0,0,0))
     # show notice
+    font = pygame.font.Font(None, 52)
+    textBitmap = font.render("Flat Flip Friends", True, colors.WHITE)
+    textWidth = textBitmap.get_rect().width
+    textHeight = textBitmap.get_rect().height
+    self.surface.blit(textBitmap, [self.display.getDisplaySize()[0]/2 - textWidth/2, self.display.getDisplaySize()[1]/2 - textHeight*2])
     font = pygame.font.Font(None, 30)
     textBitmap = font.render("Generating world...", True, colors.WHITE)
     textWidth = textBitmap.get_rect().width
