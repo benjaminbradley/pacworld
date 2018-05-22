@@ -1008,6 +1008,10 @@ class World():
     return gridstr
 
 
+  def map_distance(self, c1, c2):
+    """euclidian distance between the two pairs of map coordinates"""
+    return int(math.sqrt((c1[0] - c2[0]) ** 2 + (c1[1] - c2[1]) ** 2))
+
   #####################################
   # PATHFINDING METHODS
   #####################################
@@ -1017,7 +1021,19 @@ class World():
     another. 
     The cost is the Euclidean distance.
     """
-    return math.sqrt((c1[0] - c2[0]) ** 2 + (c1[1] - c2[1]) ** 2) 
+    # just check first/last squares to save time
+    c1gridx = min(c1[1], self.cols-1)
+    c1gridy = min(c1[0], self.rows-1)
+    c2gridx = min(c2[1], self.cols-1)
+    c2gridy = min(c2[0], self.rows-1)
+    first_square = self.grid[c1gridy][c1gridx]
+    last_square = self.grid[c2gridy][c2gridx]
+    # add a multiplier for unmapped terrain, to encourage AIs to stick to pathways
+    mult = 1
+    if(first_square == None): mult += 0.5
+    if(last_square == None): mult += 0.5
+    dist = math.sqrt((c1[0] - c2[0]) ** 2 + (c1[1] - c2[1]) ** 2)
+    return dist * mult
 
   def _successors__check_adjacent__accessible(self,coord_a,coord_b):
     if not (0 <= coord_b[0] <= self.rows - 1 and

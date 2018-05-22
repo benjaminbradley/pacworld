@@ -497,7 +497,7 @@ class Shape(Pacsprite):
       xoffset = (self.map.grid_cellwidth) / 2
       yoffset = (self.map.grid_cellheight) / 2
       destXY = (destGridLeftTopXY[0] + xoffset, destGridLeftTopXY[1] + yoffset)
-      dest_distance = int(self.map.world.move_cost(self.getCenter(), list(destXY)))
+      dest_distance = self.map.world.map_distance(self.getCenter(), list(destXY))
       #logging.debug("moving from {0} towards destination at {1} (based on destTopLeft of {2} adjusted by offset {5}) via node {3}, distance to target is {4}".format(self.getCenter(), destXY, destGridLeftTopXY, nextnodeGridYX, dest_distance, (xoffset, yoffset)))
       self.moveTowards(destXY)
 
