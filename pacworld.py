@@ -257,8 +257,7 @@ class Pacworld:
   def generateWorld(self, start_autonomous):
     now = int(time.time())
     worldage = now - self.last_worldgen
-    if(worldage > 1):
-      logging.debug("World regenerated after {} seconds".format(worldage))
+    logging.debug("World regenerated after {} seconds".format(worldage))
     self.last_worldgen = now
     # run garbage collection
     gc.collect()
@@ -349,7 +348,7 @@ class Pacworld:
       
       # check swirl saturation
       (total_swirls, num_shapes, swirl_saturation_pct) = self.map.getSwirlSaturationPercent()
-      if swirl_saturation_pct >= pacdefs.MAX_SWIRL_SATURATION_PERCENT:
+      if swirl_saturation_pct >= pacdefs.MAX_SWIRL_SATURATION_PERCENT or pacdefs.MAX_WORLD_REGEN_TIME < time.time() - self.last_worldgen:
         self.newRandomSeed()
         self.generateWorld(self.player.shape.autonomous)
       elif pacdefs.DEBUG_NUMSWIRLS:

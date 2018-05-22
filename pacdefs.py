@@ -51,6 +51,7 @@ def opposite_side(side):
 WALL_LINE_WIDTH = 8  # pixel width for drawing
 
 MAX_SWIRL_SATURATION_PERCENT = 90 # when world reaches this swirl saturation, it is remade
+MAX_WORLD_REGEN_TIME = 600 # max time that a world will go without being regenerated...
 
 # sound
 NEARBY_SOUND_PERCENT = 0.2
