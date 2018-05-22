@@ -7,9 +7,10 @@ import gc
 import random
 import resource
 import logging
+import time
 
 from pygame.locals import *
-from pygame import *
+import pygame
 
 import pacglobal
 #import colors
@@ -213,7 +214,7 @@ class Pacworld:
     pygame.display.set_caption("Flat Flip Friends")
     
     # capture current screen res for fullscreen mode
-    self.fullscreen_resolution = (display.Info().current_w, display.Info().current_h)
+    self.fullscreen_resolution = (pygame.display.Info().current_w, pygame.display.Info().current_h)
     # set window size
     self.windowed_resolution = (800,600)
     # initialize display system
@@ -239,6 +240,7 @@ class Pacworld:
     self.gridDisplaySize = (int(self.mapSize[0] / gridSize), int(self.mapSize[1] / gridSize))  # assumes square grid cells
     logging.debug("gridDisplaySize is {0}".format(self.gridDisplaySize))
 
+    self.last_worldgen = int(time.time())
     # generate world, map, and all the things in it
     self.generateWorld(self.start_autonomous)
 
@@ -253,6 +255,11 @@ class Pacworld:
 
 
   def generateWorld(self, start_autonomous):
+    now = int(time.time())
+    worldage = now - self.last_worldgen
+    if(worldage > 1):
+      logging.debug("World regenerated after {} seconds".format(worldage))
+    self.last_worldgen = now
     # run garbage collection
     gc.collect()
     # log memory usage
@@ -280,7 +287,7 @@ class Pacworld:
     self.map = Map(self.mapSize, self.display, self.character_size, theworld)
     art = theworld.addArt(self.map)
     shapes = self.map.addShapes()
-    self.sprites = sprite.Group(shapes, art)
+    self.sprites = pygame.sprite.Group(shapes, art)
 
     # Create the player object and add it's shape to a sprite group
     self.player = Player()
