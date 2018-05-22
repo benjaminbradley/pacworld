@@ -43,8 +43,11 @@ MIN_THOUGHTFORM_COMPLEXITY = 200
 
 DANCE_STEPS = 30  # number of steps to complete a single dance
 DANCE_PHASE1_MAXFRAMES = 30
-DANCE_PHASE2_MAXFRAMES = 60
-DANCE_PHASE3_MAXFRAMES = 90
+DANCE_PHASE2_MAXFRAMES = 30
+DANCE_PHASE3_MAXFRAMES = 30
+
+COLORFLASH_FRAMESPEED = 2
+COLORFLASH_CYCLES = 3
 
 # The class for Shapes
 class Shape(Pacsprite):
@@ -115,21 +118,22 @@ class Shape(Pacsprite):
   def setColor(self):
     self.color = colors.COLORWHEEL[self.colorIdx]
     self.eye_color = colors.YELLOW
-  
-  def colorUp(self):
-    self.colorIdx += 1
+
+  def changeColor(self, delta):
+    self.colorIdx += delta
     if(self.colorIdx >= len(colors.COLORWHEEL)):
       self.colorIdx = 0
-    self.setColor()
-    self.makeSprite()
-    return True  # always successful
-
-  def colorDn(self):
-    self.colorIdx -= 1
-    if(self.colorIdx < 0):
+    elif(self.colorIdx < 0):
       self.colorIdx = len(colors.COLORWHEEL)-1
     self.setColor()
     self.makeSprite()
+
+  def colorUp(self):
+    self.changeColor(1)
+    return True  # always successful
+
+  def colorDn(self):
+    self.changeColor(-1)
     return True  # always successful
 
   def setSpeed(self):
@@ -342,7 +346,17 @@ class Shape(Pacsprite):
         self.setAngle(newAngle)  # should happen after the object position is updated for movement so that collision detection test is accurate
         #logging.debug("new angle set by movement")
     # end checks for ongoing rotation or movement
-    
+
+    # color flash
+    if self.in_colorflash() and self.auto_status['colorflash']['last_update_frame'] + COLORFLASH_FRAMESPEED < pacglobal.get_frames():
+      if self.colorIdx == self.auto_status['colorflash']['orig_colorIdx']:
+        self.auto_status['colorflash']['cyclecount'] += 1
+        if(self.auto_status['colorflash']['cyclecount'] == COLORFLASH_CYCLES):
+          del self.auto_status['colorflash']
+      if 'colorflash' in self.auto_status.keys():
+        self.changeColor(1)
+        self.auto_status['colorflash']['last_update_frame'] = pacglobal.get_frames()
+
     # advance dancing!
     if self.in_dance():
       frames = pacglobal.get_frames()
@@ -356,6 +370,7 @@ class Shape(Pacsprite):
         # move on to phase 2
         self.auto_status['dancing']['phase'] = 2
       
+      phase2_maxframes = DANCE_PHASE1_MAXFRAMES + (DANCE_PHASE2_MAXFRAMES * self.auto_status['dancing']['numcycles'])
       if self.auto_status['dancing']['phase'] == 2:
         # move to next position in dance
         curAngleDeg = int((startAngleDeg + dir*360*curStep/DANCE_STEPS) % 360)
@@ -375,13 +390,17 @@ class Shape(Pacsprite):
         # advance to next step
         curStep += 1
         self.auto_status['dancing']['step'] = curStep
-        if((curStep > DANCE_STEPS) or ((frames - self.auto_status['dancing']['startFrames']) > DANCE_PHASE2_MAXFRAMES)):
+        if((curStep > DANCE_STEPS) or ((frames - self.auto_status['dancing']['startFrames']) > phase2_maxframes)):
           # one rotation of dance is complete
-          # move on to phase 3
-          self.auto_status['dancing']['phase'] = 3
-          self.animateToAngle(self.auto_status['dancing']['origAngle'])
+          self.auto_status['dancing']['curcycle'] += 1
+          self.auto_status['dancing']['step'] = curStep = 0
+          if(self.auto_status['dancing']['curcycle'] > self.auto_status['dancing']['numcycles']):
+            # move on to phase 3
+            self.auto_status['dancing']['phase'] = 3
+            self.animateToAngle(self.auto_status['dancing']['origAngle'])
       
-      if (self.auto_status['dancing']['phase'] == 3) and (self.turning is None or ((frames - self.auto_status['dancing']['startFrames']) > DANCE_PHASE3_MAXFRAMES)):
+      phase3_maxframes = phase2_maxframes + DANCE_PHASE3_MAXFRAMES
+      if (self.auto_status['dancing']['phase'] == 3) and (self.turning is None or ((frames - self.auto_status['dancing']['startFrames']) > phase3_maxframes)):
         # "return to original angle" is complete
         self.auto_status['dancing'] = None  # stop dancing
     
@@ -416,6 +435,9 @@ class Shape(Pacsprite):
 
   def in_dance(self):
     return 'dancing' in self.auto_status.keys() and self.auto_status['dancing'] != None
+
+  def in_colorflash(self):
+    return 'colorflash' in self.auto_status.keys() and self.auto_status['colorflash'] != None
 
   def spawnThoughtform(self, ticks):
     self.auto_status['thoughtform_id'] = random.randint(0, MAX_THOUGHTFORM_ID)
@@ -775,6 +797,23 @@ class Shape(Pacsprite):
       direction = random.choice([-1, 1])
       self.danceWith(shape, direction)
       shape.danceWith(self, direction)
+    if self.colorIdx == shape.colorIdx and self.color != colors.WHITE:
+      # trigger a colorflash
+      self.colorFlash()
+      shape.colorFlash()
+
+
+  def colorFlash(self):
+    """cycle through all the colors"""
+    if 'colorflash' in self.auto_status.keys():
+      # don't start another colorflash if one is already in progress
+      return
+    self.auto_status['colorflash'] = {
+      'orig_colorIdx': self.colorIdx,
+      'last_update_frame': pacglobal.get_frames(),
+      'cyclecount': 0,
+    }
+    self.changeColor(1)
 
 
   def danceWith(self, partner, direction):
@@ -793,6 +832,8 @@ class Shape(Pacsprite):
     dy = self.getCenter()[1] - center[1]
     startAngleDeg = int(math.degrees(math.atan2(dy, dx)))
     #self.debug("shape touch dancing radius = {0}, center = {2}, startAngle = {1} degrees".format(radius, startAngleDeg, center))
+    if(self.colorIdx == partner.colorIdx): numcycles = 2  # extra long dance if we have the same color
+    else: numcycles = 1
     self.auto_status['dancing'] = {
       'partner': partner,
       'phase': 1,
@@ -803,6 +844,8 @@ class Shape(Pacsprite):
       'step': 0,
       'origAngle': self.angle,
       'startFrames': pacglobal.get_frames(),
+      'curcycle': 1,
+      'numcycles': numcycles,
     }
     self.debug("shape touch beginning dance: " + str(self.auto_status['dancing']))
     # begin phase 1: turn to "center"
