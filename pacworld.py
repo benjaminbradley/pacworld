@@ -400,7 +400,7 @@ class Pacworld:
     if menu_choice == pacmenu.MENU_POWEROFF:
       confirm = pacmenu.getConfirmMenu().dialog(self.surface, self.pacjoy)
       if confirm == pacmenu.MENU_CONFIRM:
-        os.system("poweroff")
+        os.system("/sbin/poweroff")
 
 
   def handleEvents(self, ticks):
