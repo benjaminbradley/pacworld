@@ -4,6 +4,7 @@ import pygame # Provides what we need to make a game
 import sys # Gives us the sys.exit function to close our program
 import getopt
 import gc
+import os
 import random
 import resource
 import logging
@@ -20,6 +21,8 @@ from map import Map
 import world
 from world import World
 import ArtRenderer
+import pacmenu
+from pacjoy import Pacjoy
 from pacsounds import Pacsounds,getPacsound
 from pacdisplay import Pacdisplay
 from player import Player
@@ -186,6 +189,7 @@ class Pacworld:
       joy_name = pygame.joystick.Joystick(0).get_name().strip()
       if(joy_name in GAMEPAD_BUTTON_MAP.keys()):
         logging.info("{} present, enabling joystick for input".format(joy_name))
+        self.cur_button_map = GAMEPAD_BUTTON_MAP[joy_name]
         self.cur_pad_map = GAMEPAD_FUNCTION_MAP[joy_name]
         self.input_mode.append(INPUT_JOYSTICK)
         pygame.event.set_allowed([JOYBUTTONDOWN,JOYBUTTONUP,JOYAXISMOTION])
@@ -194,21 +198,23 @@ class Pacworld:
     
     
     if(INPUT_JOYSTICK in self.input_mode):
-      self.joystick = pygame.joystick.Joystick(0)
-      self.joystick.init()
+      self.pacjoy = Pacjoy(pygame.joystick.Joystick(0))
       self.button_status = []
-      self.num_buttons = self.joystick.get_numbuttons()
+      self.num_buttons = self.pacjoy.get_numbuttons()
       for i in range( self.num_buttons ):
-        self.button_status.append(self.joystick.get_button(i))
-      self.joy_axis_x = self.cur_pad_map['move_x']
-      self.joy_axis_y = self.cur_pad_map['move_y']
+        self.button_status.append(self.pacjoy.get_button(i))
+      joy_axis_x = self.cur_pad_map['move_x']
+      joy_axis_y = self.cur_pad_map['move_y']
       # check for variations on RPi
       if(joy_name == INPUT_GAMEPAD):
         if(pygame.joystick.Joystick(0).get_numaxes() == 2):
-          self.joy_axis_x = 0
-          self.joy_axis_y = 1
-          logging.debug("Adjusting x/y axes for RPi: x={}, y={}".format(self.joy_axis_x, self.joy_axis_y))
-    
+          joy_axis_x = 0
+          joy_axis_y = 1
+          logging.debug("Adjusting x/y axes for RPi: x={}, y={}".format(joy_axis_x, joy_axis_y))
+      self.pacjoy.setXaxis(joy_axis_x)
+      self.pacjoy.setYaxis(joy_axis_y)
+    else:
+      self.pacjoy = None
     
     # Set the window title
     pygame.display.set_caption("Flat Flip Friends")
@@ -389,8 +395,15 @@ class Pacworld:
     self.player.shape.updatePosition()
 
 
+  def doMenu(self):
+    menu_choice = pacmenu.getMenu().dialog(self.surface, self.pacjoy)
+    if menu_choice == pacmenu.MENU_POWEROFF:
+      confirm = pacmenu.getConfirmMenu().dialog(self.surface, self.pacjoy)
+      if confirm == pacmenu.MENU_CONFIRM:
+        os.system("poweroff")
+
+
   def handleEvents(self, ticks):
-    
     # Handle events, starting with the quit event
     for event in pygame.event.get():
       if event.type == QUIT:
@@ -405,8 +418,8 @@ class Pacworld:
 
       if(INPUT_JOYSTICK in self.input_mode):
         # check for joystick movement
-        joy_value_y = round(self.joystick.get_axis( self.joy_axis_y ))
-        joy_value_x = round(self.joystick.get_axis( self.joy_axis_x ))
+        joy_value_y = self.pacjoy.get_joy_axis_y()
+        joy_value_x = self.pacjoy.get_joy_axis_x()
         logging.debug("joystick movement = {0},{1}".format(joy_value_x, joy_value_y))
         if(joy_value_y != 0 or joy_value_x != 0):
           self.player.notIdle(ticks)
@@ -431,7 +444,7 @@ class Pacworld:
           #logging.debug("Joystick button pressed.")
           self.player.notIdle(ticks)
           for i in range( self.num_buttons ):
-            if(self.joystick.get_button(i) and not self.button_status[i]):
+            if(self.pacjoy.get_button(i) and not self.button_status[i]):
               self.button_status[i] = True
               logging.debug("joystick Button "+str(i+1)+" pressed.")
               if(i in self.cur_pad_map['ask']):
@@ -453,11 +466,16 @@ class Pacworld:
                 logging.debug("Quitting program.")
                 pygame.quit()
                 sys.exit()
-              
+          # multi-button combinations
+          if(self.pacjoy.get_button(self.cur_button_map['Lshoulder']) and self.pacjoy.get_button(self.cur_button_map['Rshoulder'])
+            and self.pacjoy.get_button(self.cur_button_map['Lcenter']) and self.pacjoy.get_button(self.cur_button_map['Rcenter'])):
+            self.doMenu()
+        
+        
         if event.type == pygame.JOYBUTTONUP:
           #logging.debug("Joystick button released.")
           for i in range( self.num_buttons ):
-            if(not self.joystick.get_button(i) and self.button_status[i]):
+            if(not self.pacjoy.get_button(i) and self.button_status[i]):
               self.button_status[i] = False
               #logging.debug("Button "+str(i+1)+" released.")
       # end of : input_mode == INPUT_JOYSTICK
@@ -501,7 +519,9 @@ class Pacworld:
               logging.debug("toggling autonomy for shape #{0}, now {1}".format(receiver.id, receiver.autonomous))
             else:
               logging.debug("no nearby shapes")
-      
+          elif event.key == K_BACKQUOTE:
+            self.doMenu()
+        
         if event.type == KEYUP:
           if event.key == K_DOWN:
             self.player.shape.stopMove(DIR_DOWN)
@@ -517,10 +537,10 @@ class Pacworld:
     # movement should be smooth, so not tied to event triggers
     if(INPUT_JOYSTICK in self.input_mode and \
       ('analog_axis_y' in self.cur_pad_map.keys() and 'analog_axis_x' in self.cur_pad_map.keys())):
-      fbAxis = round(self.joystick.get_axis(self.cur_pad_map['analog_axis_y']), 3)
+      fbAxis = round(self.pacjoy.get_axis(self.cur_pad_map['analog_axis_y']), 3)
       if(abs(fbAxis) > JOYSTICK_NOISE_LEVEL):
         self.player.shape.move(0, fbAxis * self.player.shape.linearSpeed)
-      lrAxis = round(self.joystick.get_axis(self.cur_pad_map['analog_axis_x']), 3)
+      lrAxis = round(self.pacjoy.get_axis(self.cur_pad_map['analog_axis_x']), 3)
       if(abs(lrAxis) > JOYSTICK_NOISE_LEVEL):
         self.player.shape.move(lrAxis * self.player.shape.linearSpeed, 0)
 
