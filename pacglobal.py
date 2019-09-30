@@ -33,3 +33,13 @@ def adjustColor(colorTuple, percent):
     if(newColor[n] < 0): newColor[n] = 0
     if(newColor[n] > 255): newColor[n] = 255
   return tuple(newColor)
+
+def blendColor(origColor, destColor, percent = 0.5):
+  """blends origColor towards destColor by percent. 0%=origColor, 100%=destColor"""
+  newColor = list(origColor)
+  for n in range(0,3):
+    totaldiff = max(destColor[n], origColor[n]) - min(destColor[n], origColor[n])
+    applieddiff = round(totaldiff * percent)
+    if(origColor[n] < destColor[n]): newColor[n] = origColor[n] + applieddiff
+    else: newColor[n] = origColor[n] - applieddiff
+  return tuple(newColor)

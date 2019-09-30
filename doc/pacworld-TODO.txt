@@ -41,8 +41,6 @@ bench marking - on MacBook Air:
 
 ENHANCEMENTS:
 - immediately activate a swirl on the player when it is received for the first time
-- random shape fill color
-- dancing transfers fill color
 - get a swirl from another character "ask"
 - change direction of burst for up/down activation
 - consider getting rid of activate-able swirls, and instead have the art pieces change the shapes directly. swirls would just be a mark of having been changed.

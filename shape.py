@@ -65,6 +65,7 @@ class Shape(Pacsprite):
     self.display = display
     
     self.colorIdx = 0
+    self.bgColor = pacglobal.adjustColor(random.choice(colors.COLORWHEEL), -0.25)
     self.setColor()
     
     # Get a radius value proportionate to the display size
@@ -191,6 +192,9 @@ class Shape(Pacsprite):
       pygame.draw.line(self.image, self.color, (0, y), (self.side_length, y), self.outlineWidth)
     elif(self.num_sides > MAX_SIDES):
       radius = int(float(self.side_length) / 2)
+      # fill with BG color first
+      pygame.draw.circle(self.image, self.bgColor, (radius,radius), radius, 0)
+      # then draw the outline
       pygame.draw.circle(self.image, self.color, (radius,radius), radius, self.outlineWidth)
     else:
       pointlist = []
@@ -200,6 +204,9 @@ class Shape(Pacsprite):
         x = r + int(r * math.cos(theta))
         y = r + int(r * math.sin(theta))
         pointlist.append((x,y))
+      # fill with BG color first
+      pygame.draw.polygon(self.image, self.bgColor, pointlist, 0)
+      # then draw the outline
       pygame.draw.polygon(self.image, self.color, pointlist, self.outlineWidth)
     
     # add the swirls
@@ -404,6 +411,8 @@ class Shape(Pacsprite):
       phase3_maxframes = phase2_maxframes + DANCE_PHASE3_MAXFRAMES
       if (self.auto_status['dancing']['phase'] == 3) and (self.turning is None or ((frames - self.auto_status['dancing']['startFrames']) > phase3_maxframes)):
         # "return to original angle" is complete
+        # adjust bgColor towards partner
+        self.bgColor = pacglobal.blendColor(self.bgColor, self.auto_status['dancing']['partner'].bgColor, 0.2)
         self.auto_status['dancing'] = None  # stop dancing
     
     
