@@ -25,3 +25,11 @@ def centerBetween(point1, point2):
   cx = int((x1 + x2) / 2)
   cy = int((y1 + y2) / 2)
   return (cx,cy)
+
+def adjustColor(colorTuple, percent):
+  newColor = list(colorTuple)
+  for n in range(0,3):
+    newColor[n] = round(colorTuple[n] * (1+percent))
+    if(newColor[n] < 0): newColor[n] = 0
+    if(newColor[n] > 255): newColor[n] = 255
+  return tuple(newColor)

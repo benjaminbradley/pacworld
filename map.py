@@ -72,6 +72,18 @@ class Map(sprite.Sprite):
         height = bottom - top
         rect = (left, top, width, height)
         pygame.draw.rect(self.image, (111,111,111), rect)
+        # draw markers along the path
+        marker_length = int(grid_cellwidth*.2)
+        if worldObj.direction_h:
+          midy = (top+bottom)/2
+          for gridx in range(worldObj.left, worldObj.left+worldObj.length):
+            ctrx = (gridx+.5)*grid_cellwidth
+            pygame.draw.line(self.image, (255,255,255), (ctrx-(marker_length/2),midy), (ctrx+(marker_length/2),midy))
+        else:
+          midx = (left+right)/2
+          for gridy in range(worldObj.top, worldObj.top+worldObj.length):
+            ctry = (gridy+.5)*grid_cellheight
+            pygame.draw.line(self.image, (255,255,255), (midx, ctry-(marker_length/2)), (midx, ctry+(marker_length/2)))
         
 
       elif worldObj.type == pacdefs.TYPE_ART:
@@ -102,7 +114,20 @@ class Map(sprite.Sprite):
         height = worldObj.height * grid_cellheight
         rect = (left, top, width, height)
         #print "DEBUG: field rect at {0}".format(rect)
+        field_color = (160,82,45)
         pygame.draw.rect(self.image, (160,82,45), rect)
+        # draw diagonal hashes on the field
+        hash_color = pacglobal.adjustColor(field_color, .4)  # hashes are slightly lighter than bg
+        hash_length = round(grid_cellwidth*.2)
+        for gridx in range(worldObj.left, worldObj.left+worldObj.width):
+          for gridy in range(worldObj.top, worldObj.top+worldObj.height):
+            # draw alternating slashes in the middle of each grid square
+            ctrx = (gridx+.5)*grid_cellwidth
+            ctry = (gridy+.5)*grid_cellheight
+            if (gridx+gridy) % 2 == 1:
+              pygame.draw.line(self.image, hash_color, (ctrx-hash_length/2, ctry-hash_length/2), (ctrx+hash_length/2, ctry+hash_length/2))
+            else:
+              pygame.draw.line(self.image, hash_color, (ctrx+hash_length/2, ctry-hash_length/2), (ctrx-hash_length/2, ctry+hash_length/2))
 
       elif worldObj.type == pacdefs.TYPE_ROOM:
         # calculate corners & dimensions
@@ -202,6 +227,13 @@ class Map(sprite.Sprite):
       newwall = Wall(self.mapSize, wallPoints[0], wallPoints[1])  # create the wall def
       self.addWall( newwall )  # add to walls array and index
       newwall.draw(self.image)  # draw on image
+    
+    if pacdefs.DEBUG_SHOWGRID:
+      for gridx in range(1, self.world.cols):
+        pygame.draw.line(self.image, (255,0,0), (gridx*grid_cellwidth, 0), (gridx*grid_cellwidth, self.world.rows*grid_cellwidth), 1)
+      for gridy in range(1, self.world.rows):
+        pygame.draw.line(self.image, (255,0,0), (0, gridy*grid_cellheight), (self.world.cols*grid_cellheight, gridy*grid_cellheight), 1)
+    
     
     # Create the sprite rectangle from the image
     self.rect = self.image.get_rect()
