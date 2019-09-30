@@ -509,6 +509,9 @@ class Pacworld:
             self.player.shape.startMove(DIR_LEFT)
           elif event.key == K_t:  # NOTE: "teleport" effect - FOR DEBUG ONLY ??
             self.player.shape.reset()
+          elif event.key == K_b:  # generate new world
+            self.newRandomSeed()
+            self.generateWorld(self.player.shape.autonomous)
           elif event.key == K_SPACE:
             # DEBUG - activate autonomosity
             nearby_shapes = self.map.nearShapes(self.player.shape.getCenter(), self.map.character_size * 1.5, self.player.shape)
