@@ -41,6 +41,8 @@ MAX_THOUGHTFORM_ID = 2147483647
 MAX_THOUGHTFORM_COMPLEXITY = 1000
 MIN_THOUGHTFORM_COMPLEXITY = 200
 
+PREFER_ONMAP = 3 # for random destinations, reject up to this many "empty" spaces on each attempt
+
 DANCE_STEPS = 30  # number of steps to complete a single dance
 DANCE_PHASE1_MAXFRAMES = 30
 DANCE_PHASE2_MAXFRAMES = 30
@@ -565,8 +567,11 @@ class Shape(Pacsprite):
           self.last_touched_art[art.id] = None  # adding the key to the dictionary marks this as "seen"
       # if we finish the for loop, there is no art on screen
     else:
-      # ACTIVITY: go to a random accessible square on screen, with preference for unvisited squares
+      # ACTIVITY: go to a random accessible square on screen,
+      #   with preference for unvisited squares
+      #   and preference for non-empty squares
       # wander around the map - use an exploratory algorithm ?
+      num_empty_rejections = 0
       destination = None
       while(destination is None):
         path = None
@@ -582,6 +587,11 @@ class Shape(Pacsprite):
         #self.debug("testing grid spot: {0},{1} (x,y)".format(destx, desty))
         destination = str(destx)+','+str(desty)
         if(self.map_knowledge[desty][destx] is None):
+          # reject up to PREFER_ONMAP "empty" spaces to enforce preference for populated spaces
+          if self.map.world.grid[desty][destx] is None and num_empty_rejections < PREFER_ONMAP:
+            num_empty_rejections += 1
+            destination = None
+            continue
           # try and compute path to destination if not already known...
           start = self.get_gridCoordsYX()
           goal = (desty, destx) # NOTE: pathfinder takes (y,x) coordinates
@@ -631,6 +641,9 @@ class Shape(Pacsprite):
   def get_gridCoordsYX(self):
     return self.gridCoordsYX
 
+  def getCurrentWorldGridSquare(self):
+    gridCoordsYX = self.get_gridCoordsYX()
+    return self.map.world.grid[gridCoordsYX[0]][gridCoordsYX[1]]
 
   def updatePosition(self):
     """place the shape's sprite on the screen based on it's current position on the map"""
@@ -884,13 +897,23 @@ class Shape(Pacsprite):
       self.updatePosition()
       return True
   
-  def moveTowards(self, destination):
-    (destx, desty) = destination
-    dx = destx - self.getCenter()[0]
+  
+  def getMaxSpeed(self):
+    """get shape's current max speed"""
     if self.autonomous:
       maxspeed = self.autoSpeed
     else:
       maxspeed = self.linearSpeed
+    # modify speed based on terrain
+    current_gridspace = self.getCurrentWorldGridSquare()
+    if current_gridspace is None:
+      maxspeed = round(maxspeed/2)  # halve speed if on a "blank" space
+    return maxspeed
+  
+  def moveTowards(self, destination):
+    (destx, desty) = destination
+    dx = destx - self.getCenter()[0]
+    maxspeed = self.getMaxSpeed()
     if(dx < -maxspeed): dx = -maxspeed
     elif(dx > maxspeed): dx = maxspeed
     dy = desty - self.getCenter()[1]
@@ -899,16 +922,16 @@ class Shape(Pacsprite):
     self.move(dx, dy)
   
   def moveUp(self):
-    self.move(0, -self.linearSpeed)
+    self.move(0, -self.getMaxSpeed())
 
   def moveDown(self):
-    self.move(0, self.linearSpeed)
+    self.move(0, self.getMaxSpeed())
   
   def moveLeft(self):
-    self.move(-self.linearSpeed, 0)
+    self.move(-self.getMaxSpeed(), 0)
 
   def moveRight(self):
-    self.move(self.linearSpeed, 0)
+    self.move(self.getMaxSpeed(), 0)
   
   def startMove(self, direction):
     self.going_in_dir[direction] = True
@@ -927,7 +950,7 @@ class Shape(Pacsprite):
     dx = math.sin(theta)
     #print "DEBUG: angle={0}, dx={1}, dy={2}".format(theta, dx, dy)
     #print "DEBUG: Shape.moveFwd(): old mapCenter={0}".format(self.center)
-    self.move(dx * self.linearSpeed, dy * self.linearSpeed)
+    self.move(dx * self.getMaxSpeed(), dy * self.getMaxSpeed())
     #print "DEBUG: Shape.moveFwd(): new mapCenter={0}".format(self.center)
 
   def moveBack(self):
@@ -935,7 +958,7 @@ class Shape(Pacsprite):
     theta = 2 * math.pi * ((float(self.angle)+90)%360 / 360)
     dy = math.cos(theta)
     dx = math.sin(theta)
-    self.move(dx * -self.linearSpeed, dy * -self.linearSpeed)
+    self.move(dx * -self.getMaxSpeed(), dy * -self.getMaxSpeed())
 
   ''' a wrapper for sizeUp/sizeDown changes that checks collisions'''
   def changeSize(self, newsize):
