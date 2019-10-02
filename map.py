@@ -129,6 +129,7 @@ class Map(sprite.Sprite):
               pygame.draw.line(self.image, hash_color, (ctrx+hash_length/2, ctry-hash_length/2), (ctrx-hash_length/2, ctry+hash_length/2))
 
       elif worldObj.type == pacdefs.TYPE_ROOM:
+        room_bgcolor = colors.BLUE
         # calculate corners & dimensions
         left = worldObj.left * grid_cellwidth
         top = worldObj.top * grid_cellheight
@@ -140,12 +141,92 @@ class Map(sprite.Sprite):
         # define interior & paint it
         rect = (left, top, width, height)
         #print "DEBUG: room rect at {0}".format(rect)
-        pygame.draw.rect(self.image, colors.BLUE, rect)
+        pygame.draw.rect(self.image, room_bgcolor, rect)
+        ROOM_RANDROTBG = 0.75 # percent chance that a room's background will have random rotation for each square
+        # draw pattern on room background
+        BGPAT_NONE = 0
+        BGPAT_SQUARE = 1
+        BGPAT_TRIANGLE = 2
+        BGPAT_STRIPEV = 3
+        BGPAT_STRIPEH = 4
+        BGPAT_STRIPED1 = 5
+        BGPAT_STRIPED2 = 6
+        BGPATTERNS = [BGPAT_NONE, BGPAT_SQUARE, BGPAT_TRIANGLE, BGPAT_STRIPEV, BGPAT_STRIPEH, BGPAT_STRIPED1, BGPAT_STRIPED2]
+        bgpat = random.choice(BGPATTERNS)
+        bgcolor_accent = pacglobal.adjustColor(room_bgcolor, -.2)
+        if bgpat in [BGPAT_SQUARE, BGPAT_TRIANGLE]:
+          # determine rotation, or random for each square
+          if(random.random() < ROOM_RANDROTBG):
+            rot_angle = -1
+          else:
+            rot_angle = random.randint(0, 359)
+          # cycle through each grid square
+          for gridx in range(worldObj.left, worldObj.left+worldObj.width):
+            for gridy in range(worldObj.top, worldObj.top+worldObj.height):
+              # draw square/triangle in each
+              if(rot_angle == -1): rotation_degrees = random.randint(0, 359)
+              else: rotation_degrees = rot_angle
+              ctrx = (gridx+.5)*grid_cellwidth
+              ctry = (gridy+.5)*grid_cellheight
+              ctr = (ctrx, ctry)
+              size = round(grid_cellheight*.15)
+              if(bgpat == BGPAT_TRIANGLE):
+                pacglobal.draw_triangle(self.image, ctr, size, bgcolor_accent, 1, rotation_degrees)
+              elif(bgpat == BGPAT_SQUARE):
+                pacglobal.draw_square(self.image, ctr, size, bgcolor_accent, 1, rotation_degrees)
+        elif bgpat in [BGPAT_STRIPEV, BGPAT_STRIPEH, BGPAT_STRIPED1, BGPAT_STRIPED2]:
+          # determine line spacing for room
+          linespacing_pct = .1*random.randint(1,5)
+          # draw background lines in room rect
+          if bgpat==BGPAT_STRIPEV:
+            linespacing = int(linespacing_pct*grid_cellwidth)
+            for x in range(left+linespacing, right, linespacing):
+              pygame.draw.line(self.image, bgcolor_accent, (x, top), (x, bottom), 1)
+          elif bgpat==BGPAT_STRIPEH:
+            linespacing = int(linespacing_pct*grid_cellheight)
+            for y in range(top+linespacing, bottom, linespacing):
+              pygame.draw.line(self.image, bgcolor_accent, (left, y), (right, y), 1)
+          elif bgpat in [BGPAT_STRIPED1, BGPAT_STRIPED2]:
+            linespacing_x = int(linespacing_pct*grid_cellwidth)
+            linespacing_y = int(linespacing_pct*grid_cellheight)
+            dx = linespacing_x
+            dy = linespacing_y
+            while(dx <= width+height or dy <= height+width):
+              if bgpat == BGPAT_STRIPED1:
+                #start at topleft corner and wrap around
+                if(dx <= width):
+                  liney1 = top
+                  linex1 = left+dx
+                else:
+                  liney1 = left+dx - right + top
+                  linex1 = right-1
+                if(dy <= height):
+                  linex2 = left
+                  liney2 = top+dy
+                else:
+                  linex2 = top+dy - bottom + left
+                  liney2 = bottom-1
+              else: #bgpat==BGPAT_STRIPED2
+                #start at bottomleft corner and wrap around
+                if(dx <= width):
+                  liney1 = bottom
+                  linex1 = left+dx
+                else:
+                  liney1 = bottom - (dx - width)
+                  linex1 = right-1
+                if(dy <= height):
+                  linex2 = left
+                  liney2 = bottom - dy
+                else:
+                  linex2 = dy - height + left
+                  liney2 = top
+              pygame.draw.line(self.image, bgcolor_accent, (linex1, liney1), (linex2, liney2), 1)
+              dx += linespacing_x
+              dy += linespacing_y
         #DEBUG MODE: draw the objectId in the middle
-        #font = pygame.font.Font(None, 20)
-        #textBitmap = font.render(str(worldObj.id), True, colors.BLACK)
-        #self.image.blit(textBitmap, [left+(width/2), top+(height/2)])
-          
+        if pacdefs.DEBUG_ROOM_SHOWID:
+          pacglobal.draw_text(self.image, str(worldObj.id), (left+(width/2), top+(height/2)))
+        
         # draw 4 walls
         roomWalls = {}  # dictionary of side to array of wallDefs (each wallDef is a tuple of 2 points, each one an (x,y) tuple)
         # draw walls that have doors in them

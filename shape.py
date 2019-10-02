@@ -28,7 +28,7 @@ DIRECTIONS = [DIR_UP, DIR_DOWN, DIR_LEFT, DIR_RIGHT]
 
 BURST_EFFECT_NUMFRAMES = 6
 ART_TOUCH_JITTER = 15  # time in game frames that re-touching the same art piece will not trigger a re-touch effect
-SHAPE_TOUCH_JITTER = 100   # time in game frames that re-touching the same shape will not trigger a re-touch effect
+SHAPE_TOUCH_JITTER = 200   # time in game frames that re-touching the same shape will not trigger a re-touch effect
 MOVE_HISTORY_SIZE = 5  # number of movements to use to calculating average movement over time to set character angle
 
 AUTO_SWIRL_ACTIVATION_MINTICKS = 5000
