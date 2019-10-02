@@ -29,6 +29,14 @@ class Map(sprite.Sprite):
     # Initialize the sprite base class
     super(Map, self).__init__()
     
+    # calculate grid size based on max possible map size
+    self.grid_cellheight = grid_cellheight = int(mapSize[1] / theworld.rows)
+    self.grid_cellwidth = grid_cellwidth = int(mapSize[0] / theworld.cols)
+    logging.debug ("cell size is {0} wide x {1} high".format(grid_cellwidth, grid_cellheight))
+    self.displayGridSize = (int(display.getDisplaySize()[0] / grid_cellwidth), int(display.getDisplaySize()[1] / grid_cellheight))
+    # re-calculate mapsize based on grid size
+    mapSize = (theworld.cols*grid_cellwidth, theworld.rows*grid_cellheight)
+
     # Set our image to a new surface, the size of the World Map
     self.display = display
     self.mapSize = mapSize
@@ -44,15 +52,6 @@ class Map(sprite.Sprite):
     self.wallgrid = [[[] for x in range(self.world.cols)] for y in range(self.world.rows)]  # [y][x] grid of arrays of walls in that grid square
     self.arts = []  # list to hold the arts
     self.shapes = []  # list to hold the shapes
-    
-    
-    
-    #print "DEBUG: Map.__init__(): rendering world:\n{0}".format(theworld.to_s())
-    self.grid_cellheight = grid_cellheight = int(mapSize[1] / theworld.rows)
-    self.grid_cellwidth = grid_cellwidth = int(mapSize[0] / theworld.cols)
-    logging.debug ("cell size is {0} wide x {1} high".format(grid_cellwidth, grid_cellheight))
-    self.displayGridSize = (int(display.getDisplaySize()[0] / grid_cellwidth), int(display.getDisplaySize()[1] / grid_cellheight))
-    
 
     # NEXT: render the world map from the 'world' class argument
     
