@@ -657,24 +657,25 @@ class Shape(Pacsprite):
   def updatePosition(self):
     """place the shape's sprite on the screen based on it's current position on the map"""
     """updates screenTopLeft and sprite.rect's position"""
-    mapTopLeft = self.calcMapTopLeft()
-    self.screenTopLeft = list(mapTopLeft)
-    if mapTopLeft[0] < self.display.getDisplaySize()[0]/2:
-      self.screenTopLeft[0] = mapTopLeft[0]
-    elif mapTopLeft[0] > self.map.mapSize[0]-self.display.getDisplaySize()[0]/2:
-      self.screenTopLeft[0] = self.display.getDisplaySize()[0] - (self.map.mapSize[0]-mapTopLeft[0])
-    else: 
-      self.screenTopLeft[0] = self.display.getDisplaySize()[0]/2
-
-    if mapTopLeft[1] < self.display.getDisplaySize()[1]/2:
-      self.screenTopLeft[1] = mapTopLeft[1]
-    elif mapTopLeft[1] > self.map.mapSize[1]-self.display.getDisplaySize()[1]/2:
-      self.screenTopLeft[1] = self.display.getDisplaySize()[1] - (self.map.mapSize[1]-mapTopLeft[1])
-    else: 
-      self.screenTopLeft[1] = self.display.getDisplaySize()[1]/2
+    #### make sure that when the shape gets close to the map border, the screen doesn't go outside of the map
+    mapCenter = self.getCenter()
+    self.screenCenter = list(mapCenter)
+    if mapCenter[0] < self.display.getDisplaySize()[0]/2:
+      self.screenCenter[0] = mapCenter[0]
+    elif mapCenter[0] > self.map.mapSize[0]-self.display.getDisplaySize()[0]/2:
+      self.screenCenter[0] = self.display.getDisplaySize()[0] - (self.map.mapSize[0]-mapCenter[0])
+    else:
+      self.screenCenter[0] = self.display.getDisplaySize()[0]/2
     
-    self.rect.top = self.screenTopLeft[1]
-    self.rect.left = self.screenTopLeft[0]
+    if mapCenter[1] < self.display.getDisplaySize()[1]/2:
+      self.screenCenter[1] = mapCenter[1]
+    elif mapCenter[1] > self.map.mapSize[1]-self.display.getDisplaySize()[1]/2:
+      self.screenCenter[1] = self.display.getDisplaySize()[1] - (self.map.mapSize[1]-mapCenter[1])
+    else:
+      self.screenCenter[1] = self.display.getDisplaySize()[1]/2
+    
+    self.rect.centery = self.screenCenter[1]
+    self.rect.centerx = self.screenCenter[0]
     #logging.debug("rect is: {0}".format(self.rect))
     # calculate gridCoords also since
     gridY = int(self.center[1] / self.map.grid_cellheight)
@@ -684,8 +685,7 @@ class Shape(Pacsprite):
 
   def draw(self, surface):
     if self.map.player.shape == self:
-      #print "DEBUG: drawing image at {0}".format(self.screenTopLeft)
-      surface.blit(self.image, self.screenTopLeft)
+      surface.blit(self.image, self.rect.topleft)
     else:
       windowRect = self.map.player.shape.getWindowRect()
       mapTopLeft = self.getMapTopLeft()

@@ -52,7 +52,7 @@ class Pacsprite(pygame.sprite.Sprite):
 
   def getWindowRect(self):
     """get the rect for the display window containing the center point"""
-    center = self.getMapTopLeft()
+    center = self.getCenter()
     windowLeft = center[0] - self.map.display.getDisplaySize()[0]/2
     if windowLeft+self.map.display.getDisplaySize()[0] >= self.map.mapSize[0]: windowLeft = self.map.mapSize[0]-self.map.display.getDisplaySize()[0]-1
     if windowLeft < 0: windowLeft = 0
