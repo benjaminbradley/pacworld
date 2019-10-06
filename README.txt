@@ -39,5 +39,10 @@ INSTALLATION REQUIREMENTS
 * Python 3.6+
 * Pygame  https://www.pygame.org/
 
+SETUP
+`pip3 install -r requirements.txt`
+
 OPERATION
-`python pacworld.py`
+`python3 pacworld.py [options]`
+
+Run `pacworld.py --help` to see a list of supported command-line options.
