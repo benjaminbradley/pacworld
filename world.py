@@ -326,7 +326,7 @@ def negotiateDoorPlacement(newRoom, adjacent_room, doorpos, doorside):
 # The class to create a symbolic 'world', will be translated into a map
 class World():
   
-  def __init__(self, gridDisplaySize):
+  def __init__(self, gridDisplaySize, updateStatusFn):
     # input: gridDisplaySize - the world is created as a 2-dimensional grid according with HxW as passed in
     # variables:
     #  grid - a grid of strings, each string identifying the contents of each grid square
@@ -356,7 +356,7 @@ class World():
 
 
     # step 1: generate pathways
-    
+    updateStatusFn("Creating paths...")
     #  goal is to have between 2s+o and s+2o total length of pathways
     a = int(shortside + 2*longside)
     b = int(2*shortside + longside)
@@ -368,7 +368,6 @@ class World():
     minPathArea = int(self.totalArea*pacdefs.PATH_AREA_MIN/100)
     numPaths_longWays = 0
     numPaths_shortWays = 0
-
 
     while(curTotalPathArea < minPathArea):
       pacglobal.checkAbort()
@@ -427,6 +426,7 @@ class World():
 
     # step 2. generate fields
     # basic implementation: randomly place fields
+    updateStatusFn("Creating fields...")
     curTotalFieldArea = 0
     numFields = 0
     minFieldArea = int(self.totalArea*pacdefs.FIELD_AREA_MIN/100)
@@ -480,6 +480,7 @@ class World():
     roomPlacementFailures = 0
     ROOM_PLACEMENT_MAX_FAILURES = 100
     while(curTotalRoomArea < minRoomArea and roomPlacementFailures < ROOM_PLACEMENT_MAX_FAILURES):
+      updateStatusFn("Creating rooms ({}%)...".format(int(100 * curTotalRoomArea / minRoomArea)))
       pacglobal.checkAbort()
       #print "DEBUG: World.__init__(): current total room area ({0}, {1}%) hasn't met minimum room area ({2}, {3}%)".format(curTotalRoomArea, int(100*curTotalRoomArea/self.totalArea), int(self.totalArea*ROOM_AREA_MIN/100), ROOM_AREA_MIN)
       
@@ -684,6 +685,7 @@ class World():
       logging.debug("Exceeded room placement failure threshhold {0} with only {1} total room area (minimum should be {2})".format(ROOM_PLACEMENT_MAX_FAILURES, curTotalRoomArea, minRoomArea))
 
     # step 4. place rocks to mark inaccessible areas
+    updateStatusFn("Placing rocks...")
     accessibility = [[0 for x in range(self.cols)] for y in range(self.rows)]
     pf = PacworldPathFinder.getInstance()
 
@@ -728,11 +730,13 @@ class World():
       gridstr += " "+str(i%10)+","
     logging.debug("\n"+gridstr)
 
+
     # polishing pass to extend pathways to whatever is at the logical end
     # if all spaces are empty, or only other path crossing, extend the path
     # continue until non-path obstruction or edge-of-map is hit
-    for path in self.objects:
+    for path_num,path in enumerate(self.objects):
       if path.type != pacdefs.TYPE_PATH: continue
+      updateStatusFn("Polishing ({}%)...".format(int(100 * path_num / len(self.objects))))
       # check either end of path
       for side in [-1,1]:
         # handle horizontal paths

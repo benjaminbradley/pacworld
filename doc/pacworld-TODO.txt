@@ -1,5 +1,4 @@
 NEXT:
-- show progress during world generation
 - cache world def after generation, indexed by seed & version# (add version#)
 
 ---------------------------------------------------- FUTURE TASKS:

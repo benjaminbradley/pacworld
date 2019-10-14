@@ -283,9 +283,12 @@ class Pacworld:
     textWidth = textBitmap.get_rect().width
     self.surface.blit(textBitmap, [self.display.getDisplaySize()[0]/2 - textWidth/2, self.display.getDisplaySize()[1]/2])
     pygame.display.update()
+    centery = int(self.display.getDisplaySize()[1]/2) + 30
+    def updateWorldgenStatus(message):
+      self.display.draw_text_centered(self.surface, message, centery)
 
     # Create the world, passing through the grid size
-    theworld = World(self.gridDisplaySize)
+    theworld = World(self.gridDisplaySize, updateWorldgenStatus)
     logging.debug("rendered world:\n{0}".format(theworld.to_s()))
 
     # Create the world map, passing through the display size and world map
