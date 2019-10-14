@@ -2,7 +2,17 @@ import logging
 import random  # for test
 
 from priorityqueueset import PriorityQueueSet
-from world import World  # for testing
+
+class PacworldPathFinder(object):
+  """singleton instance provider of a PathFinder specific to the Pacworld World grid"""
+  instance = None
+  @staticmethod
+  def getInstance():
+    return PacworldPathFinder.instance
+  @staticmethod
+  def setInstance(_instance):
+    PacworldPathFinder.instance = _instance
+
 
 class PathFinder(object):
     """ Computes a path in a graph using the A* algorithm.
@@ -156,6 +166,7 @@ class PathFinder(object):
 
 
 if __name__ == "__main__":
+  from world import World  # for testing
   logging.basicConfig(format='%(asctime)-15s:%(levelname)s:%(filename)s#%(funcName)s(): %(message)s', level=logging.DEBUG, filename='debug.log')
 
   crazySeed = random.randint(0, 65535)

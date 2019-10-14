@@ -5,7 +5,7 @@ import sys # Gives us the sys.exit function to close our program
 import math  # sin,cos,pi
 import logging
 
-from pathfinder import PathFinder
+from pathfinder import PacworldPathFinder
 
 import pacdefs
 import pacglobal
@@ -254,9 +254,14 @@ class Shape(Pacsprite):
   
   def reset(self):
     # put us in a random square
-    startRow = random.randint(0, self.map.world.rows-1)
-    startCol = random.randint(0, self.map.world.cols-1)
-    startPos = (startCol, startRow)
+    startPos = None
+    while(startPos is None):
+      startRow = random.randint(0, self.map.world.rows-1)
+      startCol = random.randint(0, self.map.world.cols-1)
+      startPos = (startCol, startRow)
+      # make sure the initial square is accessible
+      initial_square = self.map.world.grid[startRow][startCol]
+      if initial_square is None or initial_square.type == pacdefs.TYPE_ROCK: startPos = None
     # reset sprite
     self.angle = 0
     # Start the shape directly in the centre of the screen
@@ -562,7 +567,7 @@ class Shape(Pacsprite):
         start = self.get_gridCoordsYX()
         goal = (art.top, art.left) # grid square of art piece; NOTE: pathfinder takes (y,x) coordinates
         self.debug("[FORMAT (y,x)] looking for path from {0} to {1}".format(start, goal))
-        pf = PathFinder(self.map.world.successors, self.map.world.move_cost, self.map.world.move_cost)
+        pf = PacworldPathFinder.getInstance()
         path = list(pf.compute_path(start, goal))
         if(path):  # if we can get to it, set our destination
           if(len(path) > 1):  # but only if it's more than 1 step away
@@ -590,9 +595,13 @@ class Shape(Pacsprite):
         grid_miny = int(winRect[1] / self.map.grid_cellheight)
         grid_maxx = int((winRect[0]+winRect[2]) / self.map.grid_cellwidth)
         grid_maxy = int((winRect[1]+winRect[3]) / self.map.grid_cellheight)
-        #self.debug("on-screen grid coords are: {0} (topLeft) to {1} (botRight)".format((grid_minx,grid_miny), (grid_maxx, grid_maxy)))
         destx = random.randint(grid_minx,grid_maxx)
         desty = random.randint(grid_miny,grid_maxy)
+        dest_square = self.map.world.grid[desty][destx]
+        # don't try and wander into the rocks
+        if dest_square is not None and dest_square.type == pacdefs.TYPE_ROCK:
+          destination = None
+          continue
         #self.debug("testing grid spot: {0},{1} (x,y)".format(destx, desty))
         destination = str(destx)+','+str(desty)
         if(self.map_knowledge[desty][destx] is None):
@@ -604,7 +613,7 @@ class Shape(Pacsprite):
           # try and compute path to destination if not already known...
           start = self.get_gridCoordsYX()
           goal = (desty, destx) # NOTE: pathfinder takes (y,x) coordinates
-          pf = PathFinder(self.map.world.successors, self.map.world.move_cost, self.map.world.move_cost)
+          pf = PacworldPathFinder.getInstance()
           path = list(pf.compute_path(start, goal))
           # keep track of visited (and inaccessible) squares in the grid...
           if(path):  # if we can get to it, set our destination
@@ -625,7 +634,7 @@ class Shape(Pacsprite):
         # going to previously computed destination
         start = self.get_gridCoordsYX()
         goal = (desty, destx) # NOTE: pathfinder takes (y,x) coordinates
-        pf = PathFinder(self.map.world.successors, self.map.world.move_cost, self.map.world.move_cost)
+        pf = PacworldPathFinder.getInstance()
         path = list(pf.compute_path(start, goal))
       if(len(path) > 1):  # if len(path) <= 1 then we're already there
         self.auto_status['movement_path'] = path
@@ -801,6 +810,7 @@ class Shape(Pacsprite):
 
 
   def touchShape(self, shape):
+    if shape.in_dance(): return # don't touch other shapes while they're dancing
     frames = pacglobal.get_frames()
     # check the last time we touched this shape
     if shape.id in self.last_touched_shapes.keys():

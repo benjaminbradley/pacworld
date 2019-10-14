@@ -83,7 +83,24 @@ class Map(sprite.Sprite):
           for gridy in range(worldObj.top, worldObj.top+worldObj.length):
             ctry = (gridy+.5)*grid_cellheight
             pygame.draw.line(self.image, (255,255,255), (midx, ctry-(marker_length/2)), (midx, ctry+(marker_length/2)))
-        
+      
+      
+      elif worldObj.type == pacdefs.TYPE_ROCK:
+        left = worldObj.x * grid_cellwidth
+        top = worldObj.y * grid_cellheight
+        width = grid_cellwidth
+        height = grid_cellheight
+        rect = (left, top, width, height)
+        rock_color = (111, 111, 111)
+        pygame.draw.rect(self.image, rock_color, rect)
+        # draw a rock "peak"
+        peak_color = pacglobal.adjustColor(rock_color, .4)
+        linelength = int(.1*grid_cellwidth)
+        randx = left + random.randint(0, int(.6*grid_cellwidth))+linelength
+        randy = top + random.randint(0, int(.7*grid_cellheight))+2*linelength
+        pygame.draw.line(self.image, peak_color, (randx, randy), (randx+linelength, randy-linelength))
+        pygame.draw.line(self.image, peak_color, (randx+2*linelength, randy), (randx+linelength, randy-linelength))
+
 
       elif worldObj.type == pacdefs.TYPE_ART:
         # let the sprite manager draw it

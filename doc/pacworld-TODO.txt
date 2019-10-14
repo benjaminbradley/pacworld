@@ -1,3 +1,7 @@
+NEXT:
+- show progress during world generation
+- cache world def after generation, indexed by seed & version# (add version#)
+
 ---------------------------------------------------- FUTURE TASKS:
 
 NEXT STEPS for MVP:
@@ -6,7 +10,6 @@ NEXT STEPS for MVP:
 - other TODOs in code
 - ? performance improvements
 - ? AI ability to detect wall collisions and shrink size when needed?  (test with initial size @ 120) otherwise they'll just stay stuck until they randomly activate the right sequence of swirls to get un-stuck
-- show progress during world generation (may not be needed)
 
 FIXME:
 - door placement algorithm (world.py#negotiateDoorPlacement) will coordinate door location with existing door, but if 2 rooms are side-by-side next to the SAME side of one adjacent room, the second one will move the door during ITS 'coordinate door placement' (see topleft corner of -s 2357 -c 3)
@@ -34,7 +37,6 @@ bench marking - on MacBook Air:
 - change all shape.makeSprite calls to set a dirty flag, collapse into a single makeSprite call :: watch out to preserve in shape.update(): self.changeAngle() followed by self.move() in the same update, and collision test will matter /// maybe a flag that signals mask-only generation or full graphical mode
 - turn drawn swirls into sprites to speed animation
 - could do lazy sprite generation, only activated when near screen
-- cache world def after generation, indexed by seed & version# (add version#)
 - profiler-based performance improvements (sprite#update, shape#update, map#wallCollision)
   ref: https://docs.python.org/3.6/library/profile.html
   python3 -m cProfile pacworld.py -c 3 -a > pacprofile.txt
@@ -44,7 +46,6 @@ ENHANCEMENTS:
 - get a swirl from another character "ask"
 - change direction of burst for up/down activation
 - consider getting rid of activate-able swirls, and instead have the art pieces change the shapes directly. swirls would just be a mark of having been changed.
-- identify inaccessible areas and color them, move any sprites out of there
 - allow multiple doors per room side
 - special ability to activate all of your swirls one after another
 - add support for different colors to DrawSpiral()

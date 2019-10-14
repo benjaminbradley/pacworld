@@ -11,7 +11,9 @@ import math  # for sqrt in move_cost
 import pacdefs
 import pacglobal
 from art import Art
+from pathfinder import PacworldPathFinder, PathFinder
 
+INACCESSIBILITY_THRESHHOLD = 3  # check this many other squares to determine (in)accessibility of a square
 
 # helper functions
 def get_random_value(sizes):
@@ -124,6 +126,16 @@ def getsymbol(obj, pos):
     return '.'
   else:
     return obj.symbol
+
+
+# class for a Rock object
+class Rock():
+  def __init__(self, _x, _y):
+    self.type = pacdefs.TYPE_ROCK
+    self.x = _x
+    self.y = _y
+    self.symbol = pacdefs.ROCK_SYMBOL
+    self.id = None  # assigned when the room is successfully added to the map
 
 
 # class for a Room object
@@ -332,7 +344,9 @@ class World():
     longside = max(self.rows, self.cols)
     longdir_is_h = (shortside == self.rows)  # true = horizontal
     
-        
+    # initialize Pathfinder
+    PacworldPathFinder.setInstance(PathFinder(self.successors, self.move_cost, self.move_cost))
+
     ###################################################
     # generate a new world according to the algorithm
     ###################################################
@@ -669,9 +683,51 @@ class World():
     if(curTotalRoomArea < minRoomArea):
       logging.debug("Exceeded room placement failure threshhold {0} with only {1} total room area (minimum should be {2})".format(ROOM_PLACEMENT_MAX_FAILURES, curTotalRoomArea, minRoomArea))
 
-    # step 4. place rocks
-    #  - 4 or 5 randomly around the map? maybe skip this step? or it's used to identify inaccessible enclosed spaces?
-    
+    # step 4. place rocks to mark inaccessible areas
+    accessibility = [[0 for x in range(self.cols)] for y in range(self.rows)]
+    pf = PacworldPathFinder.getInstance()
+
+    for y in range(self.rows):
+      for x in range(self.cols):
+        if abs(accessibility[y][x]) > INACCESSIBILITY_THRESHHOLD: continue  # high confidence of inaccessibility
+        # test accessibility for grid square at x,y
+        # pick some other random squares
+        for i in range(INACCESSIBILITY_THRESHHOLD):
+          # pick a random 'faraway' square
+          otherx = random.randint(0, int(self.cols/2)-1)
+          if x <= int(self.cols/2): otherx += int(self.cols/2)
+          othery = random.randint(0, int(self.rows/2)-1)
+          if y <= int(self.rows/2): othery += int(self.rows/2)
+          # check path distance between squares
+          path = list(pf.compute_path((y,x), (othery, otherx)))
+          if(len(path) == 0):  # no path between squares
+            # decrease accessibility confidence of both squares
+            accessibility[y][x] -= 1
+            accessibility[othery][otherx] -= 1
+          else:
+            # increase accessibility confidence of both squares
+            accessibility[y][x] += 1
+            accessibility[othery][otherx] += 1
+    # sweep the accessibility map and convert any inaccessible squares to rocks
+    for y in range(self.rows):
+      for x in range(self.cols):
+        if accessibility[y][x] > -INACCESSIBILITY_THRESHHOLD: continue
+        newRock = Rock(x,y)
+        newid = self.addObject(newRock)
+    logging.debug("Accessibility map:")
+    gridstr = "_"
+    for i in range(self.cols):  # add number ruler at top
+      gridstr += " "+str(i%10)+","
+    gridstr += "\n"
+    for i,row in enumerate(accessibility):
+      disprow = [ ("%2d," % (obj)) for j,obj in enumerate(row) ]
+      rowstr = ''.join(disprow)
+      gridstr += str(i%10)+rowstr+str(i%10)+"\n"
+    gridstr += "_"
+    for i in range(self.cols):  # add number ruler at bottom
+      gridstr += " "+str(i%10)+","
+    logging.debug("\n"+gridstr)
+
     # polishing pass to extend pathways to whatever is at the logical end
     # if all spaces are empty, or only other path crossing, extend the path
     # continue until non-path obstruction or edge-of-map is hit
@@ -845,10 +901,21 @@ class World():
       
       elif(newObject.type == pacdefs.TYPE_ART):
         curSquare = newGrid[newObject.top][newObject.left]
-        if curSquare == None:  return False  # won't place art in no-mans-land
+        if curSquare == None or curSquare.type == pacdefs.TYPE_ROCK:  return False  # won't place art in no-mans-land
         # otherwise, proceed
         # object is added to the world and granted a unique ID via code below
         # do not add to world grid as background structure must be preserved  -- newGrid[newObject.top][newObject.left] = newObject
+
+
+      elif(newObject.type == pacdefs.TYPE_ROCK):
+        curSquare = newGrid[newObject.y][newObject.x]
+        if curSquare is not None:
+          # remove anything that's here already
+          if curSquare.type == pacdefs.TYPE_ROOM:
+            # just remove the room
+            self.removeObject(curSquare)
+        newGrid[newObject.y][newObject.x] = newObject
+
 
       elif(newObject.type == pacdefs.TYPE_PATH):
         x = newObject.left
@@ -991,6 +1058,22 @@ class World():
     self.objects.append(newObject)
     return newObject.id  # success
   # end of World.addObject()
+
+
+  def removeObject(self, theObject):
+    if(theObject.type == pacdefs.TYPE_ROOM):
+      basex = theObject.left
+      basey = theObject.top
+      for w in range(theObject.width):
+        posx = basex + w
+        for h in range(theObject.height):
+          posy = basey + h
+          self.grid[posy][posx] = pacdefs.SYMBOL_CLEAR
+    # elif
+    #TODO... other object types
+    if theObject in self.objects:
+      self.objects.remove(theObject)
+
 
   def to_s(self, highlights = []):
     """converts world grid to a string for display to console"""
