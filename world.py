@@ -691,7 +691,7 @@ class World():
     total_gridsize = self.rows * self.cols
     for y in range(self.rows):
       for x in range(self.cols):
-        updateStatusFn("Placing rocks ({}%)...".format(int(100 * (y*self.rows + x) / total_gridsize)))
+        updateStatusFn("Placing rocks ({}%)...".format(int(100 * (y*self.cols + x) / total_gridsize)))
         if abs(accessibility[y][x]) > INACCESSIBILITY_THRESHHOLD: continue  # high confidence of inaccessibility
         # test accessibility for grid square at x,y
         # pick some other random squares
