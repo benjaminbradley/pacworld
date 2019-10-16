@@ -685,12 +685,13 @@ class World():
       logging.debug("Exceeded room placement failure threshhold {0} with only {1} total room area (minimum should be {2})".format(ROOM_PLACEMENT_MAX_FAILURES, curTotalRoomArea, minRoomArea))
 
     # step 4. place rocks to mark inaccessible areas
-    updateStatusFn("Placing rocks...")
     accessibility = [[0 for x in range(self.cols)] for y in range(self.rows)]
     pf = PacworldPathFinder.getInstance()
 
+    total_gridsize = self.rows * self.cols
     for y in range(self.rows):
       for x in range(self.cols):
+        updateStatusFn("Placing rocks ({}%)...".format(int(100 * (y*self.rows + x) / total_gridsize)))
         if abs(accessibility[y][x]) > INACCESSIBILITY_THRESHHOLD: continue  # high confidence of inaccessibility
         # test accessibility for grid square at x,y
         # pick some other random squares
